@@ -1,12 +1,21 @@
-/* 기본 배경 및 폰트 설정 */
+/* 트렌디하게 움직이는 그라데이션 배경 */
 body {
     font-family: 'Arial', sans-serif;
-    background-color: #f4f7f6;
+    background: linear-gradient(-45deg, #a8edea, #fed6e3, #e0c3fc, #8ec5fc);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
     margin: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+}
+
+/* 배경이 움직이게 만드는 마법의 코드 */
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 .lobby-container {
@@ -16,40 +25,52 @@ body {
     padding: 20px;
 }
 
-h1 { font-size: 36px; color: #2c3e50; margin-bottom: 10px; }
-p { color: #7f8c8d; margin-bottom: 40px; }
+/* 글씨가 배경에 묻히지 않게 하얀색 + 그림자 효과 추가 */
+h1 { 
+    font-size: 42px; 
+    color: white; 
+    text-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    margin-bottom: 10px; 
+}
+.lobby-container > p { 
+    color: white; 
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+    font-size: 18px;
+    margin-bottom: 40px; 
+    font-weight: bold;
+}
 
 /* 카테고리 카드 메뉴 정렬 */
 .category-menu {
     display: flex;
     gap: 20px;
     justify-content: center;
-    flex-wrap: wrap; /* 화면이 좁아지면 밑으로 떨어지게 설정 */
+    flex-wrap: wrap; 
 }
 
-/* 카드 디자인 */
+/* 반투명한 흰색 카드로 고급스럽게 디자인 */
 .category-card {
-    background: white;
-    text-decoration: none; /* 링크 밑줄 제거 */
+    background: rgba(255, 255, 255, 0.9); 
+    text-decoration: none; 
     color: inherit;
     width: 220px;
     padding: 30px 20px;
-    border-radius: 15px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    border-radius: 20px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
     transition: transform 0.3s, box-shadow 0.3s;
     border-top: 6px solid #3498db;
 }
 
-/* 마우스 올렸을 때 효과 */
+/* 마우스 올렸을 때 카드 둥둥 뜨는 효과 */
 .category-card:hover {
     transform: translateY(-10px);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
 }
 
-/* 각 카드별 포인트 컬러 */
-#card-trig { border-top-color: #e74c3c; } /* 빨강 */
-#card-circle { border-top-color: #2ecc71; } /* 초록 */
-#card-stat { border-top-color: #f1c40f; } /* 노랑 */
+/* 각 카드별 포인트 컬러 (파스텔톤에 맞춰 수정) */
+#card-trig { border-top-color: #ff6b6b; } /* 코랄 레드 */
+#card-circle { border-top-color: #1dd1a1; } /* 민트 그린 */
+#card-stat { border-top-color: #feca57; } /* 머스타드 옐로우 */
 
-.category-card h2 { margin: 0 0 10px 0; color: #34495e; }
-.category-card p { margin: 0; font-size: 14px; }
+.category-card h2 { margin: 0 0 10px 0; color: #2d3436; }
+.category-card p { margin: 0; font-size: 14px; color: #636e72; }
