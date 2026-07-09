@@ -3,35 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>삼각비 퍼즐 게임</title>
-    <link rel="stylesheet" href="style.css"> <!-- 예쁜 배경화면 재사용 -->
-    <link rel="stylesheet" href="trig.css">
+    <title>삼각비 드래그 퍼즐</title>
+    <link rel="stylesheet" href="style.css"> <link rel="stylesheet" href="trig.css">
 </head>
 <body>
     <div class="game-container">
         <div class="header">
             <a href="index.html" class="back-btn">⬅ 메인으로</a>
-            <h2>📐 삼각비 퍼즐</h2>
+            <h2>📐 삼각비 드래그 퍼즐</h2>
         </div>
         
-        <p class="instruction">빈칸을 채워 공식을 완성하세요!</p>
+        <div class="triangle-diagram">
+            <img src="triangle_diagram.png" alt="직각삼각형 정의"> </div>
+
+        <p class="instruction">블록을 끌어서 빈칸에 쏙 집어넣으세요!</p>
 
         <div class="question-area">
             <h1 id="question-title">sin</h1>
         </div>
 
-        <!-- 분수 조립 영역 -->
         <div class="fraction-builder">
-            <div class="slot" id="slot-top">분자 (?)</div>
+            <div class="slot" id="slot-top" ondrop="drop(event)" ondragover="allowDrop(event)">분자 (?)</div>
             <div class="fraction-line"></div>
-            <div class="slot" id="slot-bottom">분모 (?)</div>
+            <div class="slot" id="slot-bottom" ondrop="drop(event)" ondragover="allowDrop(event)">분모 (?)</div>
         </div>
 
-        <!-- 선택할 수 있는 블록들 -->
         <div class="block-area">
-            <button class="word-block" onclick="selectWord('빗변')">빗변</button>
-            <button class="word-block" onclick="selectWord('밑변')">밑변</button>
-            <button class="word-block" onclick="selectWord('높이')">높이</button>
+            <div class="word-block" id="block-hypotenuse" draggable="true" ondragstart="drag(event)">빗변</div>
+            <div class="word-block" id="block-adjacent" draggable="true" ondragstart="drag(event)">밑변</div>
+            <div class="word-block" id="block-opposite" draggable="true" ondragstart="drag(event)">높이</div>
         </div>
 
         <button class="reset-btn" onclick="resetSlots()">비우기 🔄</button>

@@ -1,51 +1,41 @@
+/* trig.html에서 사용한 기존 CSS에 추가 및 수정 */
+
 .game-container {
     background: rgba(255, 255, 255, 0.95);
-    padding: 30px;
+    padding: 25px; /* 그림 추가로 여백 살짝 조정 */
     border-radius: 20px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.15);
     text-align: center;
-    width: 350px;
+    width: 380px; /* 그림이 잘 보이게 가로 너비 살짝 확대 */
 }
 
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 2px dashed #ddd;
-    padding-bottom: 15px;
+/* *** 직각삼각형 그림 스타일 *** */
+.triangle-diagram {
+    width: 100%;
     margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    overflow: hidden;
 }
 
-.back-btn {
-    text-decoration: none;
-    color: #3498db;
-    font-weight: bold;
-    padding: 5px 10px;
-    border-radius: 8px;
-    background: #ebf5fb;
+.triangle-diagram img {
+    width: 100%;
+    height: auto;
 }
 
-.back-btn:hover { background: #d6eaf8; }
-.header h2 { margin: 0; color: #2c3e50; font-size: 22px; }
-.instruction { color: #7f8c8d; font-weight: bold; }
-
-#question-title {
-    font-size: 48px;
-    color: #ff6b6b;
-    margin: 20px 0;
-    font-style: italic;
-}
+/* (기존 헤더 스타일은 유지) */
+.header h2 { margin: 0; color: #2c3e50; font-size: 20px; } /* 글씨 크기 살짝 조정 */
 
 /* 분수 모양 디자인 */
 .fraction-builder {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: 30px 0;
+    margin: 20px 0;
 }
 
 .slot {
-    width: 150px;
+    width: 160px; /* 드롭 영역 확대 */
     height: 50px;
     background-color: #f1f2f6;
     border: 2px dashed #a4b0be;
@@ -59,6 +49,12 @@
     transition: 0.3s;
 }
 
+/* *** 마우스가 위에 올라왔을 때 효과 *** */
+.slot:hover {
+    background-color: #e3e4e9;
+    border: 2px dashed #3498db;
+}
+
 .slot.filled {
     background-color: #eccc68;
     border: 2px solid #ffa502;
@@ -66,7 +62,7 @@
 }
 
 .fraction-line {
-    width: 180px;
+    width: 190px; /* 라인 확대 */
     height: 4px;
     background-color: #2f3542;
     margin: 10px 0;
@@ -77,42 +73,25 @@
 .block-area {
     display: flex;
     justify-content: center;
-    gap: 10px;
+    gap: 15px; /* 간격 확대 */
     margin-bottom: 20px;
 }
 
+/* *** 드래그 가능한 블록 스타일 (기존 .word-block 수정) *** */
 .word-block {
-    padding: 12px 20px;
+    padding: 12px 22px;
     font-size: 18px;
     font-weight: bold;
     color: white;
     background-color: #1dd1a1;
     border: none;
     border-radius: 10px;
-    cursor: pointer;
+    cursor: grab; /* 마우스를 올리면 손 모양으로 변경 */
     box-shadow: 0 4px 0 #10ac84;
 }
 
 .word-block:active {
-    transform: translateY(4px);
-    box-shadow: none;
+    cursor: grabbing; /* 드래그를 시작하면 잡는 손 모양으로 변경 */
 }
 
-.reset-btn {
-    padding: 8px 15px;
-    font-size: 14px;
-    border: none;
-    background: #dfe4ea;
-    color: #2f3542;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-.message {
-    margin-top: 20px;
-    font-size: 20px;
-    font-weight: bold;
-    min-height: 28px;
-}
-.success-msg { color: #2ecc71; }
-.error-msg { color: #e74c3c; }
+/* (메시지 스타일은 유지) *

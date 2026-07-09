@@ -1,3 +1,5 @@
+/* trig.js 내용 수정 */
+
 const questions = [
     { title: "sin (사인)", top: "높이", bottom: "빗변" },
     { title: "cos (코사인)", top: "밑변", bottom: "빗변" },
@@ -14,27 +16,47 @@ function loadQuestion() {
     document.getElementById("message").innerText = "";
 }
 
-function selectWord(word) {
+// *** 드래그 앤 드롭을 위한 함수들 *** //
+
+// 1. 드롭 타겟에 드래그 오버를 허용하는 함수
+function allowDrop(ev) {
+    ev.preventDefault(); // 브라우저의 기본 동작을 막음 (드롭 허용)
+}
+
+// 2. 드래그를 시작할 때 데이터를 전달하는 함수
+function drag(ev) {
+    // 드래그하는 요소의 id("빗변", "밑변", "높이")와 텍스트를 저장
+    ev.dataTransfer.setData("text", ev.target.innerText);
+    ev.dataTransfer.setData("id", ev.target.id);
+}
+
+// 3. 드롭했을 때 데이터를 처리하는 함수
+function drop(ev) {
+    ev.preventDefault();
+    const data = ev.dataTransfer.getData("text"); // 드래그한 텍스트("빗변" 등)
     const slotTop = document.getElementById("slot-top");
     const slotBottom = document.getElementById("slot-bottom");
 
-    // 분자(위쪽)가 비어있으면 먼저 채움
-    if (topValue === "") {
-        topValue = word;
-        slotTop.innerText = word;
+    // 드롭한 타겟이 분자(위) 슬롯이고, 비어있으면 채움
+    if (ev.target.id === "slot-top" && topValue === "") {
+        topValue = data;
+        slotTop.innerText = data;
         slotTop.classList.add("filled");
     } 
-    // 분자가 차있고 분모(아래쪽)가 비어있으면 채움
-    else if (bottomValue === "") {
-        bottomValue = word;
-        slotBottom.innerText = word;
+    // 드롭한 타겟이 분모(아래) 슬롯이고, 비어있으면 채움
+    else if (ev.target.id === "slot-bottom" && bottomValue === "") {
+        bottomValue = data;
+        slotBottom.innerText = data;
         slotBottom.classList.add("filled");
-        
-        // 두 개가 다 찼으니 정답 검사 실행
+    }
+
+    // 두 개가 다 찼으면 정답 검사 실행
+    if (topValue !== "" && bottomValue !== "") {
         setTimeout(checkAnswer, 300);
     }
 }
 
+// (resetSlots, checkAnswer 함수는 기존 로직을 그대로 사용)
 function resetSlots() {
     topValue = "";
     bottomValue = "";
