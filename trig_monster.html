@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>특수각 탈출 게임</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="monster.css">
+</head>
+<body>
+    <div class="game-container monster-theme">
+        <div class="header">
+            <a href="trig.html" class="back-btn">⬅ 메뉴로</a>
+            <h2>🏃 특수각 탈출 게임</h2>
+        </div>
+
+        <div class="track">
+            <div id="monster">👹</div>
+            <div id="player">🏃</div>
+            <div class="flag">🚩</div>
+        </div>
+        <p id="status-text">괴물이 쫓아옵니다! 빨리 정답을 고르세요!</p>
+
+        <div id="game-board">
+            <h1 id="monster-question">sin 30°</h1>
+            <div class="options-grid" id="options-area">
+                </div>
+        </div>
+
+        <div id="result-screen" class="hidden">
+            <h2 id="result-msg"></h2>
+            <button class="retry-btn" onclick="location.reload()">다시 도전하기 🔄</button>
+        </div>
+    </div>
+
+    <script src="monster.js"></script>
+</body>
+</html>

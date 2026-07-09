@@ -3,43 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>삼각비 드래그 퍼즐</title>
-    <link rel="stylesheet" href="style.css?v=2"> 
-    <link rel="stylesheet" href="trig.css?v=2">
+    <title>삼각비 게임 메뉴</title>
+    <link rel="stylesheet" href="style.css"> <style>
+        .menu-container { display: flex; gap: 20px; justify-content: center; margin-top: 40px; }
+        .menu-card { background: white; padding: 30px; border-radius: 15px; width: 250px; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.1); transition: 0.3s; }
+        .menu-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.2); }
+        .menu-card h2 { font-size: 24px; color: #2c3e50; }
+        .menu-card p { color: #7f8c8d; }
+    </style>
 </head>
 <body>
-    <div class="game-container">
-        <div class="header">
-            <a href="index.html" class="back-btn">⬅ 메인으로</a>
-            <h2>📐 삼각비 드래그 퍼즐</h2>
-        </div>
+    <div class="container">
+        <h1>📐 삼각비 마스터하기</h1>
+        <p>도전하고 싶은 활동을 선택하세요!</p>
         
-        <div class="triangle-diagram">
-            <img src="triangle_diagram.png" alt="직각삼각형 정의"> </div>
-
-        <p class="instruction">블록을 끌어서 빈칸에 쏙 집어넣으세요!</p>
-
-        <div class="question-area">
-            <h1 id="question-title">sin</h1>
+        <div class="menu-container">
+            <div class="menu-card" onclick="location.href='trig_drag.html'">
+                <h2>🧩 드래그 퍼즐</h2>
+                <p>선분을 끌어넣어 삼각비의 공식을 완성해보세요.</p>
+            </div>
+            <div class="menu-card" onclick="location.href='trig_monster.html'">
+                <h2>👹 특수각 탈출</h2>
+                <p>괴물을 피해 특수각의 값을 맞추고 도망치세요!</p>
+            </div>
         </div>
 
-        <div class="fraction-builder">
-            <div class="slot" id="slot-top" ondrop="drop(event)" ondragover="allowDrop(event)">분자 (?)</div>
-            <div class="fraction-line"></div>
-            <div class="slot" id="slot-bottom" ondrop="drop(event)" ondragover="allowDrop(event)">분모 (?)</div>
-        </div>
-
-        <div class="block-area">
-            <div class="word-block" id="block-ab" draggable="true" ondragstart="drag(event)">선분 AB</div>
-            <div class="word-block" id="block-bc" draggable="true" ondragstart="drag(event)">선분 BC</div>
-            <div class="word-block" id="block-ac" draggable="true" ondragstart="drag(event)">선분 AC</div>
-        </div>
-
-        <button class="reset-btn" onclick="resetSlots()">비우기 🔄</button>
-
-        <div id="message" class="message"></div>
+        <br><br>
+        <a href="index.html" class="back-btn" style="text-decoration:none; color:white; background:#34495e; padding:10px 20px; border-radius:10px;">⬅ 메인으로</a>
     </div>
-
-    <script src="trig.js"></script>
 </body>
 </html>
