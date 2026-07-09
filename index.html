@@ -2,10 +2,28 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>수학 게임</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>재미있는 사칙연산 수학 게임</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>나만의 수학 게임 배포 성공!</h1>
-    <p>축하합니다. 웹사이트가 정상적으로 작동합니다.</p>
+    <div class="game-container">
+        <h1>🔢 사칙연산 수학 게임</h1>
+        <div class="score-board">점수: <span id="score">0</span></div>
+        
+        <div class="question-box">
+            <span id="num1">0</span>
+            <span id="operator">+</span>
+            <span id="num2">0</span>
+            = ?
+        </div>
+
+        <input type="number" id="answer-input" placeholder="정답을 입력하세요" autofocus>
+        <button id="submit-btn">정답 확인</button>
+
+        <div id="result-message" class="result-message"></div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
