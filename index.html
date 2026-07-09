@@ -3,27 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>재미있는 사칙연산 수학 게임</title>
+    <title>중3 수학 마스터 게임</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="game-container">
-        <h1>🔢 사칙연산 수학 게임</h1>
-        <div class="score-board">점수: <span id="score">0</span></div>
+    <div class="lobby-container">
+        <h1>🎮 중3 수학 마스터</h1>
+        <p>도전할 단원을 선택하세요!</p>
         
-        <div class="question-box">
-            <span id="num1">0</span>
-            <span id="operator">+</span>
-            <span id="num2">0</span>
-            = ?
+        <div class="category-menu">
+            <a href="trig.html" class="category-card" id="card-trig">
+                <h2>📐 삼각비</h2>
+                <p>sin, cos, tan 특수각 정복하기</p>
+            </a>
+            
+            <a href="circle.html" class="category-card" id="card-circle">
+                <h2>⭕ 원의 성질</h2>
+                <p>원주각과 중심각의 비밀</p>
+            </a>
+            
+            <a href="stat.html" class="category-card" id="card-stat">
+                <h2>📊 대푯값과 통계</h2>
+                <p>자료의 분석과 상관관계</p>
+            </a>
         </div>
-
-        <input type="number" id="answer-input" placeholder="정답을 입력하세요" autofocus>
-        <button id="submit-btn">정답 확인</button>
-
-        <div id="result-message" class="result-message"></div>
     </div>
-
-    <script src="script.js"></script>
 </body>
 </html>

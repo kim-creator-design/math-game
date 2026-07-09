@@ -1,0 +1,55 @@
+/* 기본 배경 및 폰트 설정 */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f7f6;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.lobby-container {
+    text-align: center;
+    max-width: 800px;
+    width: 100%;
+    padding: 20px;
+}
+
+h1 { font-size: 36px; color: #2c3e50; margin-bottom: 10px; }
+p { color: #7f8c8d; margin-bottom: 40px; }
+
+/* 카테고리 카드 메뉴 정렬 */
+.category-menu {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap; /* 화면이 좁아지면 밑으로 떨어지게 설정 */
+}
+
+/* 카드 디자인 */
+.category-card {
+    background: white;
+    text-decoration: none; /* 링크 밑줄 제거 */
+    color: inherit;
+    width: 220px;
+    padding: 30px 20px;
+    border-radius: 15px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    transition: transform 0.3s, box-shadow 0.3s;
+    border-top: 6px solid #3498db;
+}
+
+/* 마우스 올렸을 때 효과 */
+.category-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+}
+
+/* 각 카드별 포인트 컬러 */
+#card-trig { border-top-color: #e74c3c; } /* 빨강 */
+#card-circle { border-top-color: #2ecc71; } /* 초록 */
+#card-stat { border-top-color: #f1c40f; } /* 노랑 */
+
+.category-card h2 { margin: 0 0 10px 0; color: #34495e; }
+.category-card p { margin: 0; font-size: 14px; }
