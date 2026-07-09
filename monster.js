@@ -61,15 +61,22 @@ function checkAnswer(selected, correct) {
     }
 }
 
-// 달리기 트랙 위치 업데이트
+// 달리기 트랙 위치 업데이트 (괴물과 주인공이 동시에 역동적으로 이동!)
 function updateTrack() {
+    const monster = document.getElementById("monster");
     const player = document.getElementById("player");
-    // 총 6단계에 걸쳐서 25% 위치에서 85% 위치(깃발)까지 이동
-    const progress = (currentStep / totalSteps) * 60; 
+    
+    // 총 6단계 동안 이동할 진행률 (0% ~ 55%)
+    const progress = (currentStep / totalSteps) * 55; 
+    
+    // 괴물은 처음에 5%에서 시작해서 주인공과 함께 전진
+    monster.style.left = (5 + progress) + "%";
+    
+    // 주인공은 처음에 25%에서 시작해서 괴물과 20% 간격을 유지하며 함께 전진
     player.style.left = (25 + progress) + "%";
 }
 
-// 게임 종료 처리
+// 게임 종료 처리 (잡혔을 때 괴물이 돌진하는 연출 유지)
 function endGame(isWin) {
     document.getElementById("game-board").classList.add("hidden");
     const resultScreen = document.getElementById("result-screen");
@@ -83,9 +90,9 @@ function endGame(isWin) {
         resultMsg.innerText = "🎉 탈출 성공! 특수각 마스터!";
         resultMsg.style.color = "#2ecc71";
     } else {
-        // 오답 시 괴물이 주인공 위치로 덮침
+        // 오답 시 괴물이 순식간에 주인공의 위치(간격 20%)를 좁히며 덮침!
         monster.style.left = player.style.left;
-        player.innerText = "💀"; // 주인공 뼈만 남음...
+        player.innerText = "💀"; 
         resultMsg.innerText = "🩸 괴물에게 잡혔습니다... (오답)";
         resultMsg.style.color = "#e74c3c";
         document.getElementById("status-text").innerText = "게임 오버!";
