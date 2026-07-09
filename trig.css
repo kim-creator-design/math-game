@@ -95,3 +95,13 @@
 }
 
 /* (메시지 스타일은 유지) *
+
+/* 문제 글씨 아주 크고 찐하게 만들기 */
+#question-title {
+    font-size: 56px; 
+    color: #c0392b; 
+    font-weight: 900; 
+    margin: 20px 0;
+    font-style: italic; 
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1); 
+}
