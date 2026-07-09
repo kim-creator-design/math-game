@@ -1,9 +1,9 @@
 /* trig.js 내용 수정 */
 
 const questions = [
-    { title: "sin (사인)", top: "높이", bottom: "빗변" },
-    { title: "cos (코사인)", top: "밑변", bottom: "빗변" },
-    { title: "tan (탄젠트)", top: "높이", bottom: "밑변" }
+    { title: "sin (A)", top: "높이", bottom: "빗변" },
+    { title: "cos (A)", top: "밑변", bottom: "빗변" },
+    { title: "tan (A)", top: "높이", bottom: "밑변" }
 ];
 
 let currentLevel = 0;
