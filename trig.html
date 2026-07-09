@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>삼각비 퍼즐 게임</title>
+    <link rel="stylesheet" href="style.css"> <!-- 예쁜 배경화면 재사용 -->
+    <link rel="stylesheet" href="trig.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <a href="index.html" class="back-btn">⬅ 메인으로</a>
+            <h2>📐 삼각비 퍼즐</h2>
+        </div>
+        
+        <p class="instruction">빈칸을 채워 공식을 완성하세요!</p>
+
+        <div class="question-area">
+            <h1 id="question-title">sin</h1>
+        </div>
+
+        <!-- 분수 조립 영역 -->
+        <div class="fraction-builder">
+            <div class="slot" id="slot-top">분자 (?)</div>
+            <div class="fraction-line"></div>
+            <div class="slot" id="slot-bottom">분모 (?)</div>
+        </div>
+
+        <!-- 선택할 수 있는 블록들 -->
+        <div class="block-area">
+            <button class="word-block" onclick="selectWord('빗변')">빗변</button>
+            <button class="word-block" onclick="selectWord('밑변')">밑변</button>
+            <button class="word-block" onclick="selectWord('높이')">높이</button>
+        </div>
+
+        <button class="reset-btn" onclick="resetSlots()">비우기 🔄</button>
+
+        <div id="message" class="message"></div>
+    </div>
+
+    <script src="trig.js"></script>
+</body>
+</html>
