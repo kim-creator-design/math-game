@@ -26,8 +26,19 @@
 /* 캐릭터 기본 설정 */
 #monster, #player, .flag {
     position: absolute;
-    font-size: 40px; /* 캐릭터 크기를 조금 더 키움 */
     top: 2px;
+}
+
+#player img {
+    height: 50px; /* 트랙 높이에 맞춤 */
+    width: auto;
+    border-radius: 8px; /* 배경색 경계 완화 */
+}
+
+#monster img {
+    height: 75px; /* 괴물을 더 크게 */
+    width: auto;
+    border-radius: 8px;
 }
 
 /* 쉴 새 없이 달리는 모션 (위아래로 들썩이며 살짝 기우뚱) */
@@ -43,8 +54,7 @@
 #monster { 
     left: 5%; 
     z-index: 2; 
-    font-size: 55px; /* 괴물을 더 크게 만들어 위협적으로 */
-    top: -8px; /* 커진 만큼 위치 조정 */
+    top: -15px; /* 커진 이미지에 맞춰 위치 조정 */
     filter: drop-shadow(0px 0px 8px #ff0000); 
     animation: running 0.4s infinite, scary-glow 0.5s infinite alternate; /* 무겁게 쿵쾅거림 + 무서운 발광 */
 }
