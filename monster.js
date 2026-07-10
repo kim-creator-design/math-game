@@ -127,7 +127,7 @@ function gameLoop(time) {
     const deltaTime = time - lastTime;
     lastTime = time;
     
-    const monsterSpeed = 7.0; // 추격 속도 7로 상향
+    const monsterSpeed = 8.0; // 추격 속도 8로 상향
     monsterPos += (monsterSpeed * deltaTime) / 1000;
     
     if (playerPos < targetPlayerPos) {
@@ -155,7 +155,7 @@ function gameLoop(time) {
     document.getElementById("monster-img").src = getImg(monsterImg);
     
     // 충돌
-    if (monsterPos >= playerPos - 12) { 
+    if (monsterPos >= playerPos - 10) { 
         endGame(false, "몬스터에게 따라잡혔습니다!");
         return;
     }
