@@ -58,8 +58,8 @@ function gameLoop(time) {
     const deltaTime = time - lastTime;
     lastTime = time;
     
-    // 몬스터는 초당 약 1.8% 이동 (난이도 조절)
-    const monsterSpeed = 1.8; // % per second
+    // 몬스터 속도 1.5배 증가 (기존 1.8 -> 2.7)
+    const monsterSpeed = 2.7; // % per second
     monsterPos += (monsterSpeed * deltaTime) / 1000;
     
     // 플레이어는 목표 위치를 향해 부드럽게 이동
@@ -71,9 +71,25 @@ function gameLoop(time) {
     document.getElementById("monster").style.left = monsterPos + "%";
     document.getElementById("player").style.left = playerPos + "%";
     
+    // 거리 비례 표정 변화
+    const distance = playerPos - monsterPos;
+    let catEmoji = "🐱";
+    let monsterEmoji = "👹";
+
+    if (distance <= 12) {
+        catEmoji = "🙀"; // 매우 당황
+        monsterEmoji = "😈"; // 매우 사악
+    } else if (distance <= 25) {
+        catEmoji = "🙀"; // 당황
+        monsterEmoji = "👺"; // 사악
+    }
+    
+    document.getElementById("player").innerText = catEmoji;
+    document.getElementById("monster").innerText = monsterEmoji;
+    
     // 충돌 확인 (몬스터가 플레이어를 잡음)
-    // 캐릭터 크기를 고려해 몬스터가 플레이어의 위치에 근접했는지 확인 (-3% 정도 여유)
-    if (monsterPos >= playerPos - 3) { 
+    // 일부분만 겹쳐도 잡히도록 판정 범위 넓힘 (기존 -3 -> -8)
+    if (monsterPos >= playerPos - 8) { 
         endGame(false, "몬스터에게 따라잡혔습니다!");
         return;
     }
@@ -147,10 +163,13 @@ function endGame(isWin, msg) {
         resultMsg.innerText = msg;
         resultMsg.style.color = "#2ecc71";
         document.getElementById("status-text").innerText = "게임 클리어!";
+        monster.innerText = "😩"; // 실망하는 괴물
+        player.innerText = "😸"; // 신난 고양이
     } else {
         // 오답 시 괴물이 순식간에 고양이의 위치를 덮침!
         monster.style.left = player.style.left;
         player.innerText = "😿"; // 뼈(💀) 대신 엉엉 우는 고양이로 변경
+        monster.innerText = "😈"; // 잡아서 신난 괴물
         resultMsg.innerText = msg;
         resultMsg.style.color = "#e74c3c";
         document.getElementById("status-text").innerText = "게임 오버!";
