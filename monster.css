@@ -26,20 +26,36 @@
 /* 캐릭터 기본 설정 */
 #monster, #player, .flag {
     position: absolute;
-    font-size: 35px;
-    top: 5px;
+    font-size: 40px; /* 캐릭터 크기를 조금 더 키움 */
+    top: 2px;
     transition: left 0.5s ease-in-out;
 }
 
-#monster { left: 5%; z-index: 2; }
-#player { left: 25%; z-index: 1; }
-.flag { right: 10px; }
-
-#status-text {
-    font-size: 14px;
-    color: #f1c40f;
-    margin-bottom: 30px;
+/* 쉴 새 없이 달리는 모션 (위아래로 들썩이며 살짝 기우뚱) */
+@keyframes running {
+    0% { transform: translateY(0px) rotate(0deg); }
+    25% { transform: translateY(-8px) rotate(-5deg); }
+    50% { transform: translateY(0px) rotate(0deg); }
+    75% { transform: translateY(-8px) rotate(5deg); }
+    100% { transform: translateY(0px) rotate(0deg); }
 }
+
+/* 무서운 괴물: 붉은 그림자로 으스스한 효과 추가 */
+#monster { 
+    left: 5%; 
+    z-index: 2; 
+    filter: drop-shadow(0px 0px 8px #ff0000); 
+    animation: running 0.4s infinite; /* 무겁게 쿵쾅거림 */
+}
+
+/* 귀여운 고양이: 괴물보다 발을 더 빨리 구름 */
+#player { 
+    left: 25%; 
+    z-index: 1; 
+    animation: running 0.25s infinite; /* 다급하게 다다다 달림 */
+}
+
+.flag { right: 10px; top: 10px; font-size: 30px; }
 
 /* 문제와 버튼 영역 */
 #monster-question {

@@ -86,13 +86,14 @@ function endGame(isWin) {
 
     resultScreen.classList.remove("hidden");
 
+   // (앞부분 생략) ...
     if (isWin) {
         resultMsg.innerText = "🎉 탈출 성공! 특수각 마스터!";
         resultMsg.style.color = "#2ecc71";
     } else {
-        // 오답 시 괴물이 순식간에 주인공의 위치(간격 20%)를 좁히며 덮침!
+        // 오답 시 괴물이 순식간에 고양이의 위치를 덮침!
         monster.style.left = player.style.left;
-        player.innerText = "💀"; 
+        player.innerText = "😿"; // 뼈(💀) 대신 엉엉 우는 고양이로 변경
         resultMsg.innerText = "🩸 괴물에게 잡혔습니다... (오답)";
         resultMsg.style.color = "#e74c3c";
         document.getElementById("status-text").innerText = "게임 오버!";
