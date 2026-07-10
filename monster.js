@@ -127,7 +127,7 @@ function gameLoop(time) {
     const deltaTime = time - lastTime;
     lastTime = time;
     
-    const monsterSpeed = 2.7; 
+    const monsterSpeed = 3.5; // 2.7의 1.3배 (약 3.5)
     monsterPos += (monsterSpeed * deltaTime) / 1000;
     
     if (playerPos < targetPlayerPos) {
