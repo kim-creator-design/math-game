@@ -33,18 +33,14 @@
 #player img {
     height: 90px;
     width: auto;
-    border-radius: 15px;
-    mix-blend-mode: multiply; /* 배경색이 레일에 자연스럽게 묻히게 함 */
-    animation: natural-run 0.3s infinite alternate; /* 들썩임 애니메이션 */
+    animation: natural-run 0.25s infinite alternate; /* 역동적인 달리기 모션 */
 }
 
 #monster img {
     height: 110px;
     width: auto;
-    border-radius: 15px;
-    mix-blend-mode: multiply;
     transform: scaleX(-1); /* 몬스터 방향 우측으로 반전 */
-    animation: natural-run-monster 0.4s infinite alternate, scary-glow 0.5s infinite alternate; 
+    animation: natural-run-monster 0.35s infinite alternate, scary-glow 0.5s infinite alternate; 
 }
 
 /* 몬스터는 -5px 올려서 밸런스 조정 */
@@ -60,15 +56,14 @@
 
 .flag { right: 20px; top: 35px; font-size: 50px; } 
 
-/* 자연스러운 달리기 애니메이션 (상하로 들썩이며 살짝 기울어짐) */
+/* 자연스러운 달리기 애니메이션 (상하로 들썩이며 다리가 교차하는 듯한 찌그러짐 추가) */
 @keyframes natural-run {
-    0% { transform: translateY(0px) rotate(-3deg); }
-    100% { transform: translateY(-8px) rotate(3deg); }
+    0% { transform: translateY(0px) rotate(-3deg) skewX(3deg); }
+    100% { transform: translateY(-8px) rotate(3deg) skewX(-3deg); }
 }
 @keyframes natural-run-monster {
-    /* 몬스터는 좌우반전이 적용된 상태이므로 scaleX(-1)을 계속 유지해야 함 */
-    0% { transform: scaleX(-1) translateY(0px) rotate(2deg); }
-    100% { transform: scaleX(-1) translateY(-10px) rotate(-2deg); }
+    0% { transform: scaleX(-1) translateY(0px) rotate(2deg) skewX(-3deg); }
+    100% { transform: scaleX(-1) translateY(-12px) rotate(-3deg) skewX(3deg); }
 }
 
 /* 무서운 발광 효과 (multiply 모드 특성상 밝아지진 않고 진해짐) */
