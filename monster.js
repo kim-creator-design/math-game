@@ -39,8 +39,8 @@ function initGame() {
     
     document.getElementById("monster").style.left = monsterPos + "%";
     document.getElementById("player").style.left = playerPos + "%";
-    document.getElementById("player-img").src = "cat_running.png";
-    document.getElementById("monster-img").src = "monster_running.png";
+    document.getElementById("player-face").innerText = "🐱";
+    document.getElementById("monster-face").innerText = "👹";
     
     document.getElementById("game-board").classList.remove("hidden");
     document.getElementById("result-screen").classList.add("hidden");
@@ -74,23 +74,23 @@ function gameLoop(time) {
     
     // 거리 비례 표정 변화
     const distance = playerPos - monsterPos;
-    let catImg = "cat_running.png";
-    let monsterImg = "monster_running.png";
+    let catEmoji = "🐱";
+    let monsterEmoji = "👹";
 
-    if (distance <= 12) {
-        catImg = "cat_scared.png"; // 매우 당황
-        monsterImg = "monster_evil.png"; // 매우 사악
+    if (distance <= 15) {
+        catEmoji = "🙀"; // 매우 당황
+        monsterEmoji = "😈"; // 매우 사악
     } else if (distance <= 25) {
-        catImg = "cat_scared.png"; // 당황
-        monsterImg = "monster_evil.png"; // 사악
+        catEmoji = "🙀"; // 당황
+        monsterEmoji = "👺"; // 사악
     }
     
-    document.getElementById("player-img").src = catImg;
-    document.getElementById("monster-img").src = monsterImg;
+    document.getElementById("player-face").innerText = catEmoji;
+    document.getElementById("monster-face").innerText = monsterEmoji;
     
     // 충돌 확인 (몬스터가 플레이어를 잡음)
-    // 일부분만 겹쳐도 잡히도록 판정 범위 넓힘 (기존 -3 -> -8)
-    if (monsterPos >= playerPos - 8) { 
+    // 캐릭터 크기가 커졌으므로 겹침 판정 기준 완화 (기존 -8 -> -12)
+    if (monsterPos >= playerPos - 12) { 
         endGame(false, "몬스터에게 따라잡혔습니다!");
         return;
     }
@@ -164,13 +164,13 @@ function endGame(isWin, msg) {
         resultMsg.innerText = msg;
         resultMsg.style.color = "#2ecc71";
         document.getElementById("status-text").innerText = "게임 클리어!";
-        document.getElementById("monster-img").src = "monster_running.png"; // 아쉬워하는 괴물 (대체 이미지)
-        document.getElementById("player-img").src = "cat_happy.png"; // 신난 고양이
+        document.getElementById("monster-face").innerText = "😩"; // 아쉬워하는 괴물
+        document.getElementById("player-face").innerText = "😸"; // 신난 고양이
     } else {
         // 오답 시 괴물이 순식간에 고양이의 위치를 덮침!
-        monster.style.left = player.style.left;
-        document.getElementById("player-img").src = "cat_caught.png"; // 울상짓는 고양이
-        document.getElementById("monster-img").src = "monster_evil.png"; // 잡아서 신난 괴물
+        document.getElementById("monster").style.left = document.getElementById("player").style.left;
+        document.getElementById("player-face").innerText = "😿"; // 울상짓는 고양이
+        document.getElementById("monster-face").innerText = "😈"; // 잡아서 신난 괴물
         resultMsg.innerText = msg;
         resultMsg.style.color = "#e74c3c";
         document.getElementById("status-text").innerText = "게임 오버!";

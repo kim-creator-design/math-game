@@ -1,7 +1,7 @@
 .monster-theme {
     background: #2c3e50;
     color: white;
-    width: 450px;
+    width: 600px; /* 레일 크기 확대를 위해 전체 컨테이너 너비 증가 */
     padding: 30px;
     border-radius: 20px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.5);
@@ -15,9 +15,9 @@
 .track {
     position: relative;
     width: 100%;
-    height: 60px;
+    height: 140px; /* 레일 높이 2배 이상 대폭 확대 */
     background: #34495e;
-    border-radius: 30px;
+    border-radius: 70px;
     margin: 30px 0 10px 0;
     overflow: hidden;
     border: 3px solid #7f8c8d;
@@ -26,52 +26,141 @@
 /* 캐릭터 기본 설정 */
 #monster, #player, .flag {
     position: absolute;
-    top: 2px;
+    top: 25px; /* 트랙 중앙으로 정렬 */
 }
 
-#player img {
-    height: 50px; /* 트랙 높이에 맞춤 */
-    width: auto;
-    border-radius: 8px; /* 배경색 경계 완화 */
-}
-
-#monster img {
-    height: 75px; /* 괴물을 더 크게 */
-    width: auto;
-    border-radius: 8px;
-}
-
-/* 쉴 새 없이 달리는 모션 (위아래로 들썩이며 살짝 기우뚱) */
-@keyframes running {
-    0% { transform: translateY(0px) rotate(0deg); }
-    25% { transform: translateY(-8px) rotate(-5deg); }
-    50% { transform: translateY(0px) rotate(0deg); }
-    75% { transform: translateY(-8px) rotate(5deg); }
-    100% { transform: translateY(0px) rotate(0deg); }
-}
-
-/* 무서운 괴물: 붉은 그림자로 으스스한 효과 추가 */
-#monster { 
-    left: 5%; 
-    z-index: 2; 
-    top: -15px; /* 커진 이미지에 맞춰 위치 조정 */
-    filter: drop-shadow(0px 0px 8px #ff0000); 
-    animation: running 0.4s infinite, scary-glow 0.5s infinite alternate; /* 무겁게 쿵쾅거림 + 무서운 발광 */
-}
-
-@keyframes scary-glow {
-    0% { filter: drop-shadow(0px 0px 10px #8b0000); }
-    100% { filter: drop-shadow(0px 0px 30px #ff0000); }
-}
-
-/* 귀여운 고양이: 괴물보다 발을 더 빨리 구름 */
+/* ================================= */
+/* 🐱 고양이 CSS Art 설정 */
+/* ================================= */
 #player { 
     left: 25%; 
     z-index: 1; 
-    animation: running 0.25s infinite; /* 다급하게 다다다 달림 */
+}
+.cat-body {
+    position: relative;
+    width: 70px;
+    height: 40px;
+    background-color: #f39c12;
+    border-radius: 25px;
+    top: 30px;
+    animation: body-bob 0.25s infinite alternate;
+}
+.cat-face {
+    position: absolute;
+    right: -15px; /* 고양이는 오른쪽을 향함 */
+    top: -25px;
+    font-size: 45px; /* 얼굴 이모지 확대 */
+    background-color: #f39c12;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    line-height: 1;
+}
+.cat-tail {
+    position: absolute;
+    left: -15px;
+    top: -5px;
+    width: 20px;
+    height: 35px;
+    background-color: #f39c12;
+    border-radius: 10px;
+    transform: rotate(-30deg);
+}
+.cat-leg {
+    position: absolute;
+    width: 14px;
+    height: 30px;
+    background-color: #e67e22;
+    border-radius: 7px;
+    top: 25px;
+    transform-origin: top center;
+}
+/* 네 다리가 앞뒤로 교차하며 달리는 애니메이션 */
+.cat-leg.front-right { right: 5px; animation: run-legs 0.25s infinite alternate; }
+.cat-leg.front-left { right: 25px; background-color: #d35400; animation: run-legs 0.25s infinite alternate-reverse; }
+.cat-leg.back-right { left: 20px; animation: run-legs 0.25s infinite alternate-reverse; }
+.cat-leg.back-left { left: 0px; background-color: #d35400; animation: run-legs 0.25s infinite alternate; }
+
+
+/* ================================= */
+/* 👹 몬스터 CSS Art 설정 */
+/* ================================= */
+#monster { 
+    left: 5%; 
+    z-index: 2; 
+    top: -5px; /* 크기 확대에 맞춘 위치 재조정 */
+}
+.monster-body {
+    position: relative;
+    width: 90px;
+    height: 100px;
+    background-color: #c0392b;
+    border-radius: 45px 45px 25px 25px;
+    animation: body-bob 0.4s infinite alternate, scary-glow 0.5s infinite alternate; 
+}
+.monster-face {
+    position: absolute;
+    right: -20px; /* 얼굴을 명확히 오른쪽으로 배치 (오른쪽 바라봄) */
+    top: 10px;
+    font-size: 70px; /* 괴물 이모지 확대 */
+    line-height: 1;
+}
+.monster-arm {
+    position: absolute;
+    width: 20px;
+    height: 50px;
+    background-color: #a1281d;
+    border-radius: 10px;
+    top: 40px;
+    transform-origin: top center;
+}
+.monster-arm.front { right: 10px; background-color: #e74c3c; z-index: 3; animation: run-arms 0.4s infinite alternate; }
+.monster-arm.back { right: 35px; animation: run-arms 0.4s infinite alternate-reverse; }
+
+.monster-leg {
+    position: absolute;
+    width: 25px;
+    height: 40px;
+    background-color: #a1281d;
+    border-radius: 12px;
+    top: 85px;
+    transform-origin: top center;
+}
+.monster-leg.front { right: 15px; background-color: #e74c3c; z-index: 3; animation: run-legs 0.4s infinite alternate-reverse; }
+.monster-leg.back { right: 45px; animation: run-legs 0.4s infinite alternate; }
+
+
+/* ================================= */
+/* 공통 애니메이션 & 깃발 */
+/* ================================= */
+
+.flag { right: 20px; top: 40px; font-size: 50px; } /* 깃발도 확대 */
+
+/* 다리와 팔 모션 */
+@keyframes run-legs {
+    0% { transform: rotate(-40deg); }
+    100% { transform: rotate(40deg); }
+}
+@keyframes run-arms {
+    0% { transform: rotate(50deg); }
+    100% { transform: rotate(-50deg); }
 }
 
-.flag { right: 10px; top: 10px; font-size: 30px; }
+/* 뛰면서 상하로 들썩임 */
+@keyframes body-bob {
+    0% { transform: translateY(0px); }
+    100% { transform: translateY(-8px); }
+}
+
+/* 무서운 발광 효과 */
+@keyframes scary-glow {
+    0% { filter: drop-shadow(0px 0px 10px #8b0000); }
+    100% { filter: drop-shadow(0px 0px 35px #ff0000); }
+}
+
 
 /* 문제와 버튼 영역 */
 #monster-question {
