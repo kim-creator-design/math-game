@@ -127,7 +127,7 @@ function gameLoop(time) {
     const deltaTime = time - lastTime;
     lastTime = time;
     
-    const monsterSpeed = 6.0; // 추격 속도 6로 상향
+    const monsterSpeed = 7.0; // 추격 속도 7로 상향
     monsterPos += (monsterSpeed * deltaTime) / 1000;
     
     if (playerPos < targetPlayerPos) {
