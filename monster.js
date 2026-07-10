@@ -18,7 +18,7 @@ const totalSteps = 6;
 // 게임 상태 변수
 let playerPos = 25;
 let targetPlayerPos = 25;
-let monsterPos = 5;
+let monsterPos = 0; // 시작 위치를 더 왼쪽으로 이동 (5 -> 0)
 const safeZone = 85;
 
 let isGameOver = false;
@@ -101,7 +101,7 @@ function initGame() {
     
     playerPos = 25;
     targetPlayerPos = 25;
-    monsterPos = 5;
+    monsterPos = 0; // 시작 위치 더 왼쪽으로 (5 -> 0)
     isGameOver = false;
     lastTime = performance.now();
     
@@ -127,7 +127,7 @@ function gameLoop(time) {
     const deltaTime = time - lastTime;
     lastTime = time;
     
-    const monsterSpeed = 3.5; // 2.7의 1.3배 (약 3.5)
+    const monsterSpeed = 4.0; // 추격 속도 4로 상향
     monsterPos += (monsterSpeed * deltaTime) / 1000;
     
     if (playerPos < targetPlayerPos) {
