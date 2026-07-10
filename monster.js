@@ -15,17 +15,82 @@ let gameQuestions = [];
 let currentStep = 0;
 const totalSteps = 6; // 6문제를 연속으로 맞춰야 탈출 성공!
 
+// 게임 상태 변수
+let playerPos = 25;
+let targetPlayerPos = 25;
+let monsterPos = 5;
+const safeZone = 85;
+
+let isGameOver = false;
+let animationId = null;
+let lastTime = 0;
+
 // 게임 초기화
 function initGame() {
     // 문제 리스트 섞기
     gameQuestions = allQuestions.sort(() => Math.random() - 0.5).slice(0, totalSteps);
     currentStep = 0;
-    updateTrack();
+    
+    playerPos = 25;
+    targetPlayerPos = 25;
+    monsterPos = 5;
+    isGameOver = false;
+    lastTime = performance.now();
+    
+    document.getElementById("monster").style.left = monsterPos + "%";
+    document.getElementById("player").style.left = playerPos + "%";
+    document.getElementById("player").innerText = "🐱";
+    
+    document.getElementById("game-board").classList.remove("hidden");
+    document.getElementById("result-screen").classList.add("hidden");
+    document.getElementById("status-text").innerText = "괴물이 쫓아옵니다! 빨리 정답을 고르세요!";
+    
     loadQuestion();
+    
+    if (animationId) cancelAnimationFrame(animationId);
+    animationId = requestAnimationFrame(gameLoop);
+}
+
+// 실시간 게임 루프 (괴물의 추격)
+function gameLoop(time) {
+    if (isGameOver) return;
+    
+    const deltaTime = time - lastTime;
+    lastTime = time;
+    
+    // 몬스터는 초당 약 1.8% 이동 (난이도 조절)
+    const monsterSpeed = 1.8; // % per second
+    monsterPos += (monsterSpeed * deltaTime) / 1000;
+    
+    // 플레이어는 목표 위치를 향해 부드럽게 이동
+    if (playerPos < targetPlayerPos) {
+        playerPos += (15 * deltaTime) / 1000; // 초당 15% 속도로 도약
+        if (playerPos > targetPlayerPos) playerPos = targetPlayerPos;
+    }
+    
+    document.getElementById("monster").style.left = monsterPos + "%";
+    document.getElementById("player").style.left = playerPos + "%";
+    
+    // 충돌 확인 (몬스터가 플레이어를 잡음)
+    // 캐릭터 크기를 고려해 몬스터가 플레이어의 위치에 근접했는지 확인 (-3% 정도 여유)
+    if (monsterPos >= playerPos - 3) { 
+        endGame(false, "몬스터에게 따라잡혔습니다!");
+        return;
+    }
+    
+    // 승리 확인 (안전지대 도달)
+    if (playerPos >= safeZone) {
+        endGame(true, "🎉 탈출 성공! 특수각 마스터!");
+        return;
+    }
+    
+    animationId = requestAnimationFrame(gameLoop);
 }
 
 // 문제 화면에 표시
 function loadQuestion() {
+    if (currentStep >= totalSteps) return;
+    
     const qData = gameQuestions[currentStep];
     document.getElementById("monster-question").innerText = qData.q;
     
@@ -45,39 +110,31 @@ function loadQuestion() {
 
 // 정답 확인 로직
 function checkAnswer(selected, correct) {
+    if (isGameOver) return;
+    
     if (selected === correct) {
-        // 정답! 주인공 전진
+        // 정답! 주인공 전진 목표 업데이트
         currentStep++;
-        updateTrack();
+        targetPlayerPos = 25 + (currentStep / totalSteps) * (safeZone - 25);
         
-        if (currentStep >= totalSteps) {
-            endGame(true); // 탈출 성공
-        } else {
+        if (currentStep < totalSteps) {
             loadQuestion(); // 다음 문제
+        } else {
+            // 모든 문제를 맞히면 안전지대 도착까지 잠시 대기
+            document.getElementById("options-area").innerHTML = "";
+            document.getElementById("monster-question").innerText = "안전지대로 달리는 중... 🏃💨";
         }
     } else {
         // 오답! 즉시 게임 오버
-        endGame(false);
+        endGame(false, "🩸 오답! 괴물에게 잡혔습니다...");
     }
 }
 
-// 달리기 트랙 위치 업데이트 (괴물과 주인공이 동시에 역동적으로 이동!)
-function updateTrack() {
-    const monster = document.getElementById("monster");
-    const player = document.getElementById("player");
+// 게임 종료 처리
+function endGame(isWin, msg) {
+    isGameOver = true;
+    cancelAnimationFrame(animationId);
     
-    // 총 6단계 동안 이동할 진행률 (0% ~ 55%)
-    const progress = (currentStep / totalSteps) * 55; 
-    
-    // 괴물은 처음에 5%에서 시작해서 주인공과 함께 전진
-    monster.style.left = (5 + progress) + "%";
-    
-    // 주인공은 처음에 25%에서 시작해서 괴물과 20% 간격을 유지하며 함께 전진
-    player.style.left = (25 + progress) + "%";
-}
-
-// 게임 종료 처리 (잡혔을 때 괴물이 돌진하는 연출 유지)
-function endGame(isWin) {
     document.getElementById("game-board").classList.add("hidden");
     const resultScreen = document.getElementById("result-screen");
     const resultMsg = document.getElementById("result-msg");
@@ -86,15 +143,15 @@ function endGame(isWin) {
 
     resultScreen.classList.remove("hidden");
 
-   // (앞부분 생략) ...
     if (isWin) {
-        resultMsg.innerText = "🎉 탈출 성공! 특수각 마스터!";
+        resultMsg.innerText = msg;
         resultMsg.style.color = "#2ecc71";
+        document.getElementById("status-text").innerText = "게임 클리어!";
     } else {
         // 오답 시 괴물이 순식간에 고양이의 위치를 덮침!
         monster.style.left = player.style.left;
         player.innerText = "😿"; // 뼈(💀) 대신 엉엉 우는 고양이로 변경
-        resultMsg.innerText = "🩸 괴물에게 잡혔습니다... (오답)";
+        resultMsg.innerText = msg;
         resultMsg.style.color = "#e74c3c";
         document.getElementById("status-text").innerText = "게임 오버!";
     }
