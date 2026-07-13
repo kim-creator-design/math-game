@@ -220,7 +220,7 @@
         }
     }
 
-    // 4. 발사 및 물리 엔진
+    // 4. 발사 및 물리 엔진 (엄격한 정답 판정 적용)
     function fireCannon() {
         if(isFiring) return; 
         
@@ -251,6 +251,7 @@
             ballX += vx;
             ballY += vy;
 
+            // 1. 화면 밖으로 나갔을 때 (완전한 오답)
             if (ballX > canvas.width || ballY < 0 || ballY > canvas.height) {
                 alert("앗! 빗나갔습니다. 높이/밑변 값을 표에서 다시 찾아보세요!");
                 isFiring = false;
@@ -262,16 +263,26 @@
             const targetCanvasY = originY - (targetHeight * scale) - 15;
             
             const dist = Math.hypot(ballX - targetCanvasX, ballY - targetCanvasY);
+            
+            // 2. 몬스터 근처에 닿았을 때 (충돌 판정)
             if (dist < 25) { 
-                // 명중 시 폭발 이모지
-                ctx.font = "50px Arial";
-                ctx.fillText("💥", targetCanvasX, targetCanvasY);
-                
-                setTimeout(() => {
-                    alert(`정확합니다! ${targetAngle}도를 완벽하게 계산하셨군요!`);
-                    initGame(); 
-                }, 200);
-                return;
+                // ★ 수학 게임을 위한 엄격한 정답 검사!
+                if (Math.round(inputAngle) === targetAngle) {
+                    // 완벽한 정답일 때만 폭발!
+                    ctx.font = "50px Arial";
+                    ctx.fillText("💥", targetCanvasX, targetCanvasY);
+                    
+                    setTimeout(() => {
+                        alert(`정확합니다! ${targetAngle}도를 완벽하게 계산하셨군요!`);
+                        initGame(); 
+                    }, 200);
+                } else {
+                    // 스치기만 하고 각도가 틀렸을 때 (오답 처리)
+                    alert(`앗! 머리카락을 스쳤습니다! 조금 더 정확한 각도가 필요합니다.\n(입력: ${inputAngle}도 / 정답 아님)`);
+                    isFiring = false;
+                    drawScene();
+                }
+                return; // 애니메이션 종료
             }
 
             requestAnimationFrame(animate);
@@ -279,7 +290,6 @@
         
         animate();
     }
-
     window.onload = initGame;
 </script>
 </body>
