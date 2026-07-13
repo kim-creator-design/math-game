@@ -155,7 +155,7 @@ function gameLoop(time) {
     document.getElementById("monster-img").src = getImg(monsterImg);
     
     // 충돌
-    if (monsterPos >= playerPos - 10) { 
+    if (monsterPos >= playerPos - 8) { 
         endGame(false, "몬스터에게 따라잡혔습니다!");
         return;
     }
