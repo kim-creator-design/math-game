@@ -127,7 +127,7 @@
     let visualTargetHeight = 0; // 시각적으로 1/3로 축소된 높이
     let isFiring = false;
 
-    let timeLeft = 5;
+    let timeLeft = 6;
     let timerInterval;
 
     const originX = 50;
@@ -334,7 +334,7 @@
                 ctx.font = "60px Arial";
                 ctx.fillText("💥", originX, originY - 10);
                 setTimeout(() => {
-                    alert("앗! 5초가 경과하여 몬스터의 대포에 맞았습니다!\n더 빨리 표에서 정답을 찾아야 합니다!");
+                    alert("앗! 6초가 경과하여 몬스터의 대포에 맞았습니다!\n더 빨리 표에서 정답을 찾아야 합니다!");
                     initGame();
                 }, 200);
                 return;
