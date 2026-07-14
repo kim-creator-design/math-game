@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>삼각비 대포 게임</title>
+<title>삼각비 대포 게임 - 타임어택</title>
 <style>
-    /* 전체 레이아웃 및 디자인 */
     body { 
         display: flex; 
         font-family: 'Malgun Gothic', sans-serif; 
@@ -38,6 +37,8 @@
         text-align: center;
     }
     .mission-text { font-size: 1.1em; margin-bottom: 15px; color: #00a8ff; font-weight: bold; }
+    #timer-text { font-size: 26px; color: #ff4757; font-weight: bold; margin-bottom: 10px; }
+    
     input[type="number"] { 
         padding: 10px; 
         width: 80px; 
@@ -83,10 +84,11 @@
 <body>
 
     <div id="game-wrapper">
-        <h2>🏰 성벽 방어: 몬스터를 명중시켜라!</h2>
+        <h2>🏰 성벽 방어: 타임어택!</h2>
         <canvas id="gameCanvas" width="600" height="400"></canvas>
         
         <div id="controls">
+            <div id="timer-text">⏳ 남은 시간: 5초</div>
             <div class="mission-text" id="mission-text">
                 적까지의 거리(밑변): 100m | 적의 높이(높이): ?m
             </div>
@@ -117,29 +119,60 @@
     const tableBody = document.getElementById('table-body');
     const missionText = document.getElementById('mission-text');
     const angleInput = document.getElementById('angle-input');
+    const timerText = document.getElementById('timer-text');
 
     let targetAngle = 0;
     let targetDistance = 100;
     let targetHeight = 0;
+    let visualTargetHeight = 0; // 시각적으로 1/3로 축소된 높이
     let isFiring = false;
+
+    let timeLeft = 5;
+    let timerInterval;
 
     const originX = 50;
     const originY = 350;
-    const scale = 4; 
+    const scale = 3; 
 
     function initGame() {
         isFiring = false;
         angleInput.value = '45';
         
-        targetAngle = Math.floor(Math.random() * 15) + 25; 
+        // 고각도(최대 70도)까지 문제를 확장했습니다!
+        targetAngle = Math.floor(Math.random() * 45) + 25; 
         
         const tanValue = Math.tan(targetAngle * Math.PI / 180);
         targetHeight = (targetDistance * tanValue).toFixed(4); 
+
+        // ★ 시각적 높이를 실제 픽셀 높이의 1/3로 축소 (화면 이탈 방지)
+        let realPixelHeight = targetHeight * scale;
+        visualTargetHeight = realPixelHeight / 3;
+        if(visualTargetHeight > 280) visualTargetHeight = 280; // 아무리 높아도 천장을 뚫지 않게 제한
 
         missionText.innerText = `거리(밑변): ${targetDistance}m | 적의 높이(높이): ${targetHeight}m`;
 
         drawScene();
         generateTable();
+        startTimer();
+    }
+
+    // ⏱️ 타이머 로직
+    function startTimer() {
+        clearInterval(timerInterval);
+        timeLeft = 5;
+        timerText.innerText = `⏳ 남은 시간: ${timeLeft}초`;
+        timerText.style.color = "#ff4757";
+
+        timerInterval = setInterval(() => {
+            if (isFiring) return; 
+            timeLeft--;
+            timerText.innerText = `⏳ 남은 시간: ${timeLeft}초`;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                enemyFire(); // 0초가 되면 적군이 공격!
+            }
+        }, 1000);
     }
 
     function drawScene() {
@@ -149,7 +182,7 @@
         ctx.fillRect(0, originY, canvas.width, canvas.height - originY);
 
         const targetCanvasX = originX + (targetDistance * scale);
-        const targetCanvasY = originY - (targetHeight * scale); 
+        const targetCanvasY = originY - visualTargetHeight; // 축소된 시각적 높이 적용
         
         ctx.fillStyle = '#7f8fa6';
         ctx.fillRect(targetCanvasX - 15, targetCanvasY, 30, originY - targetCanvasY);
@@ -196,31 +229,36 @@
         }
     }
 
+    // 🚀 아군(플레이어) 발사
     function fireCannon() {
         if(isFiring) return; 
         
         const inputAngle = parseFloat(angleInput.value);
-        if(isNaN(inputAngle) || inputAngle <= 0 || inputAngle >= 90) {
-            alert("0에서 90 사이의 각도를 정확히 입력해주세요!");
-            return;
-        }
+        if(isNaN(inputAngle) || inputAngle <= 0 || inputAngle >= 90) return;
 
         isFiring = true;
+        clearInterval(timerInterval); // 발사 버튼을 누르면 타이머 정지
+
         let ballX = originX;
         let ballY = originY - 10; 
-        
         const speed = 10; 
         
-        // ★ 핵심 수정 로직: 크면 위로, 작으면 아래로! (격차는 7.5도로 축소)
+        // ★ 축소된 몬스터에게 명중하기 위한 "시각적 필요 각도" 자동 계산
+        const targetCanvasX = originX + (targetDistance * scale);
+        const targetCanvasY = originY - visualTargetHeight - 15;
+        const dx = targetCanvasX - originX;
+        const dy = (originY - 10) - targetCanvasY;
+        const visualCorrectAngle = Math.atan2(dy, dx) * 180 / Math.PI;
+
         let finalAngleToShoot;
         let isCorrect = (Math.round(inputAngle) === targetAngle);
         
         if (isCorrect) {
-            finalAngleToShoot = targetAngle; // 정답: 명중
+            finalAngleToShoot = visualCorrectAngle; // 정답일 때는 시각적으로 완벽히 명중
         } else if (inputAngle > targetAngle) {
-            finalAngleToShoot = targetAngle + 7.5; // 너무 큰 각도: 살짝 위로 빗나감
+            finalAngleToShoot = visualCorrectAngle + 7.5; 
         } else {
-            finalAngleToShoot = targetAngle - 7.5; // 너무 작은 각도: 살짝 아래로 빗나감
+            finalAngleToShoot = visualCorrectAngle - 7.5; 
         }
 
         const rad = finalAngleToShoot * Math.PI / 180;
@@ -229,7 +267,6 @@
 
         function animate() {
             drawScene(); 
-            
             ctx.fillStyle = '#ff7f50';
             ctx.beginPath();
             ctx.arc(ballX, ballY, 8, 0, Math.PI * 2);
@@ -238,40 +275,73 @@
             ballX += vx;
             ballY += vy;
 
-            // ★ 바닥(originY)에 떨어지거나 화면 밖으로 나갔을 때
             if (ballX > canvas.width || ballY < 0 || ballY >= originY) {
                 if (!isCorrect) {
-                    if (inputAngle > targetAngle) {
-                        alert(`앗! 각도가 너무 큽니다. 몬스터 위로 날아갔군요!\n(입력: ${inputAngle}도 / 정답 아님)`);
-                    } else {
-                        alert(`앗! 각도가 너무 작습니다. 몬스터 아래 성벽에 맞았군요!\n(입력: ${inputAngle}도 / 정답 아님)`);
-                    }
+                    let msg = inputAngle > targetAngle ? "위로 날아갔군요!" : "아래 성벽에 맞았군요!";
+                    alert(`앗! 빗나갔습니다. 몬스터 ${msg}\n(입력: ${inputAngle}도 / 정답 아님)`);
                 }
-                isFiring = false;
-                drawScene();
+                initGame();
                 return;
             }
-
-            const targetCanvasX = originX + (targetDistance * scale);
-            const targetCanvasY = originY - (targetHeight * scale) - 15;
             
             const dist = Math.hypot(ballX - targetCanvasX, ballY - targetCanvasY);
-            
             if (isCorrect && dist < 25) { 
                 ctx.font = "50px Arial";
                 ctx.fillText("💥", targetCanvasX, targetCanvasY);
-                
                 setTimeout(() => {
                     alert(`정확합니다! ${targetAngle}도를 완벽하게 계산하셨군요!`);
                     initGame(); 
                 }, 200);
                 return; 
             }
-
             requestAnimationFrame(animate);
         }
-        
         animate();
+    }
+
+    // ☠️ 몬스터의 반격 (시간 초과 시)
+    function enemyFire() {
+        isFiring = true;
+        timerText.innerText = "☠️ 몬스터 반격 중!";
+        
+        let ballX = originX + (targetDistance * scale);
+        let ballY = originY - visualTargetHeight - 15;
+        
+        // 플레이어(대포)를 향하는 각도 계산
+        const dx = originX - ballX;
+        const dy = (originY - 10) - ballY;
+        const angle = Math.atan2(dy, dx);
+        
+        const speed = 8;
+        const vx = Math.cos(angle) * speed;
+        const vy = Math.sin(angle) * speed;
+
+        function animateEnemy() {
+            drawScene();
+
+            // 적의 포탄 (초록색 독가스)
+            ctx.fillStyle = '#2ed573';
+            ctx.beginPath();
+            ctx.arc(ballX, ballY, 10, 0, Math.PI * 2);
+            ctx.fill();
+
+            ballX += vx;
+            ballY += vy;
+
+            // 플레이어 대포에 맞았을 때
+            const dist = Math.hypot(ballX - originX, ballY - (originY - 10));
+            if (dist < 20 || ballX < originX) {
+                ctx.font = "60px Arial";
+                ctx.fillText("💥", originX, originY - 10);
+                setTimeout(() => {
+                    alert("앗! 5초가 경과하여 몬스터의 대포에 맞았습니다!\n더 빨리 표에서 정답을 찾아야 합니다!");
+                    initGame();
+                }, 200);
+                return;
+            }
+            requestAnimationFrame(animateEnemy);
+        }
+        animateEnemy();
     }
 
     window.onload = initGame;
