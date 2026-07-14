@@ -18,7 +18,6 @@
     }
     h2 { margin-top: 0; color: #fbc531; }
     
-    /* 게임 화면 영역 */
     #game-wrapper {
         background: #353b48;
         padding: 20px;
@@ -31,7 +30,6 @@
         border: 2px solid #7f8fa6;
     }
     
-    /* 조작부 영역 */
     #controls { 
         margin-top: 20px; 
         padding: 15px;
@@ -61,7 +59,6 @@
     }
     button:hover { background: #c23616; }
 
-    /* 삼각비 표 영역 */
     #sidebar { 
         background: #353b48; 
         padding: 20px; 
@@ -110,7 +107,7 @@
                 </tr>
             </thead>
             <tbody id="table-body">
-                </tbody>
+            </tbody>
         </table>
     </div>
 
@@ -130,12 +127,10 @@
     const originY = 350;
     const scale = 4; 
 
-    // 1. 게임 초기화
     function initGame() {
         isFiring = false;
         angleInput.value = '45';
         
-        // 25도 ~ 39도 사이 무작위
         targetAngle = Math.floor(Math.random() * 15) + 25; 
         
         const tanValue = Math.tan(targetAngle * Math.PI / 180);
@@ -147,40 +142,33 @@
         generateTable();
     }
 
-    // 2. 화면 그리기 (디테일한 대포와 적군 몬스터 - 실시간 회전 제거)
     function drawScene() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // 바닥 그리기
         ctx.fillStyle = '#2f3640';
         ctx.fillRect(0, originY, canvas.width, canvas.height - originY);
 
         const targetCanvasX = originX + (targetDistance * scale);
         const targetCanvasY = originY - (targetHeight * scale); 
         
-        // 타워 기둥
         ctx.fillStyle = '#7f8fa6';
         ctx.fillRect(targetCanvasX - 15, targetCanvasY, 30, originY - targetCanvasY);
         
-        // 👹 적군 이미지
         ctx.font = "40px Arial";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText("👹", targetCanvasX, targetCanvasY - 15);
 
-        // 🚀 대포 그리기 (고정된 각도로 되돌림 - 시각적 몰입감 유지)
         ctx.save();
         ctx.translate(originX, originY - 10); 
-        ctx.rotate(-45 * Math.PI / 180); // 시각적으로 멋진 45도 각도로 고정
+        ctx.rotate(-45 * Math.PI / 180); 
         
-        // 대포 포신
         ctx.fillStyle = '#718093'; 
         ctx.fillRect(0, -12, 55, 24); 
         ctx.fillStyle = '#2f3640'; 
         ctx.fillRect(45, -14, 10, 28);
         ctx.restore(); 
 
-        // 대포 바퀴
         ctx.fillStyle = '#e1b12c';
         ctx.beginPath();
         ctx.arc(originX, originY - 10, 18, 0, Math.PI * 2);
@@ -191,7 +179,6 @@
         ctx.fill();
     }
 
-    // 3. 삼각비 표 생성 (tan 값 10개)
     function generateTable() {
         tableBody.innerHTML = '';
         const startAngle = targetAngle - 4; 
@@ -209,7 +196,6 @@
         }
     }
 
-    // 4. 발사 및 정답/오답 칼각 판정 (새로운 궤적 로직)
     function fireCannon() {
         if(isFiring) return; 
         
@@ -223,18 +209,18 @@
         let ballX = originX;
         let ballY = originY - 10; 
         
-        const speed = 10; // 포탄 속도
+        const speed = 10; 
         
-        // ★ 핵심 로직: 입력값에 따라 완전히 다른 궤적을 할당합니다.
+        // ★ 핵심 수정 로직: 크면 위로, 작으면 아래로! (격차는 7.5도로 축소)
         let finalAngleToShoot;
         let isCorrect = (Math.round(inputAngle) === targetAngle);
         
         if (isCorrect) {
-            // 정답일 때: 완벽한 명중 궤적
-            finalAngleToShoot = targetAngle;
+            finalAngleToShoot = targetAngle; // 정답: 명중
+        } else if (inputAngle > targetAngle) {
+            finalAngleToShoot = targetAngle + 7.5; // 너무 큰 각도: 살짝 위로 빗나감
         } else {
-            // 오답일 때: 입력한 각도가 무엇이든, 1도 차이든, 무조건 하늘로 날아가는 빗나감 궤적 (예: 정답보다 15도 더 높게)
-            finalAngleToShoot = targetAngle + 15;
+            finalAngleToShoot = targetAngle - 7.5; // 너무 작은 각도: 살짝 아래로 빗나감
         }
 
         const rad = finalAngleToShoot * Math.PI / 180;
@@ -244,7 +230,6 @@
         function animate() {
             drawScene(); 
             
-            // 대포알
             ctx.fillStyle = '#ff7f50';
             ctx.beginPath();
             ctx.arc(ballX, ballY, 8, 0, Math.PI * 2);
@@ -253,10 +238,14 @@
             ballX += vx;
             ballY += vy;
 
-            // 1. 화면 밖으로 나갔을 때 (오답 시 최종 결과)
-            if (ballX > canvas.width || ballY < 0 || ballY > canvas.height) {
+            // ★ 바닥(originY)에 떨어지거나 화면 밖으로 나갔을 때
+            if (ballX > canvas.width || ballY < 0 || ballY >= originY) {
                 if (!isCorrect) {
-                    alert(`앗! 빗나갔습니다! 몬스터 위로 한참 지나갔군요!\n(입력: ${inputAngle}도 / 정답 아님)`);
+                    if (inputAngle > targetAngle) {
+                        alert(`앗! 각도가 너무 큽니다. 몬스터 위로 날아갔군요!\n(입력: ${inputAngle}도 / 정답 아님)`);
+                    } else {
+                        alert(`앗! 각도가 너무 작습니다. 몬스터 아래 성벽에 맞았군요!\n(입력: ${inputAngle}도 / 정답 아님)`);
+                    }
                 }
                 isFiring = false;
                 drawScene();
@@ -268,9 +257,7 @@
             
             const dist = Math.hypot(ballX - targetCanvasX, ballY - targetCanvasY);
             
-            // 2. 충돌 판정 (정답일 때만 충돌이 일어나도록 궤적을 짰습니다)
             if (isCorrect && dist < 25) { 
-                // 명중 시 폭발!
                 ctx.font = "50px Arial";
                 ctx.fillText("💥", targetCanvasX, targetCanvasY);
                 
