@@ -129,7 +129,7 @@ function gameLoop(time) {
     
     // ★ 수정된 부분: HTML에서 선택한 난이도(window.monsterSpeed)를 가져옵니다. 
     // 만약 값이 없으면 기본값인 8로 설정합니다.
-    const currentMonsterSpeed = window.monsterSpeed || 8.0; 
+    const currentMonsterSpeed = window.monsterSpeed || 9.0; 
     
     monsterPos += (currentMonsterSpeed * deltaTime) / 1000;
     
