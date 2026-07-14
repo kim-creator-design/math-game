@@ -127,8 +127,11 @@ function gameLoop(time) {
     const deltaTime = time - lastTime;
     lastTime = time;
     
-    const monsterSpeed = 8.0; // 추격 속도 8로 상향
-    monsterPos += (monsterSpeed * deltaTime) / 1000;
+    // ★ 수정된 부분: HTML에서 선택한 난이도(window.monsterSpeed)를 가져옵니다. 
+    // 만약 값이 없으면 기본값인 8로 설정합니다.
+    const currentMonsterSpeed = window.monsterSpeed || 8.0; 
+    
+    monsterPos += (currentMonsterSpeed * deltaTime) / 1000;
     
     if (playerPos < targetPlayerPos) {
         playerPos += (15 * deltaTime) / 1000; 
@@ -230,6 +233,3 @@ function endGame(isWin, msg) {
         document.getElementById("status-text").innerText = "게임 오버!";
     }
 }
-
-// 게임 시작 트리거
-initGame();

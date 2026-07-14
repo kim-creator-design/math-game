@@ -6,9 +6,38 @@
     <title>특수각 탈출 게임</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="monster.css">
+    <style>
+        /* 난이도 선택 버튼 스타일 추가 */
+        .difficulty-btn {
+            padding: 15px 30px;
+            margin: 15px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            transition: transform 0.2s;
+        }
+        .btn-easy { background-color: #4cd137; }
+        .btn-hard { background-color: #e84118; }
+        .difficulty-btn:hover { transform: scale(1.05); }
+    </style>
 </head>
 <body>
-    <div class="game-container monster-theme">
+    <div id="start-screen" class="game-container monster-theme" style="text-align: center; padding-bottom: 40px;">
+        <div class="header">
+            <a href="trig.html" class="back-btn">⬅ 메뉴로</a>
+            <h2>🏃 특수각 탈출 게임</h2>
+        </div>
+        <div style="margin-top: 30px;">
+            <h3 style="margin-bottom: 20px;">난이도를 선택하면 게임이 시작됩니다!</h3>
+            <button class="difficulty-btn btn-easy" onclick="startGame('easy')">🟢 쉬움 (괴물 속도: 느림)</button>
+            <button class="difficulty-btn btn-hard" onclick="startGame('hard')">🔴 어려움 (괴물 속도: 빠름)</button>
+        </div>
+    </div>
+
+    <div id="main-game" class="game-container monster-theme" style="display: none;">
         <div class="header">
             <a href="trig.html" class="back-btn">⬅ 메뉴로</a>
             <h2>🏃 특수각 탈출 게임</h2>
@@ -33,6 +62,30 @@
         </div>
     </div>
 
+    <script>
+        // 기본 괴물 속도 (어려움 기준)
+        window.monsterSpeed = 8; 
+
+        function startGame(difficulty) {
+            // 난이도에 따라 전역 변수로 속도 설정
+            if (difficulty === 'easy') {
+                window.monsterSpeed = 6;
+            } else {
+                window.monsterSpeed = 8;
+            }
+
+            // 난이도 창을 숨기고, 실제 게임 화면을 보여줌
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('main-game').style.display = 'block';
+
+            // monster.js에 있는 초기화 함수(게임 시작) 실행
+            // (함수 이름이 다를 경우 아래 initGame(); 부분을 수정해야 할 수 있습니다)
+            if (typeof initGame === 'function') {
+                initGame();
+            }
+        }
+    </script>
+    
     <script src="monster.js"></script>
 </body>
 </html>
