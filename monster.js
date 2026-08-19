@@ -200,8 +200,13 @@ function endGame(isWin, msg) {
         document.getElementById("status-text").innerText = "게임 오버!";
     }
 }
-// 난이도 버튼을 눌렀을 때 실행되는 함수 (이전 코드에서 누락된 부분)
+// 난이도 버튼을 눌렀을 때 실행되는 함수
 function startGame(speed) {
     window.monsterSpeed = speed; // 괴물 속도 설정
+    
+    // 🌟 첫 화면은 숨기고, 메인 게임 화면을 보여주는 마법의 두 줄!
+    document.getElementById("start-screen").style.display = "none";
+    document.getElementById("main-game").style.display = "block";
+    
     initGame(); // 대기 상태로 진입
 }
