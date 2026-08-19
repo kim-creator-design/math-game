@@ -1,109 +1,247 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>특수각 탈출 게임</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="monster.css">
-    <style>
-        /* 난이도 선택 버튼 스타일 추가 */
-        .difficulty-btn {
-            padding: 15px 30px;
-            margin: 15px;
-            font-size: 1.2em;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            color: white;
-            transition: transform 0.2s;
-        }
-        .btn-easy { background-color: #4cd137; }
-        .btn-hard { background-color: #e84118; }
-        .difficulty-btn:hover { transform: scale(1.05); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>특수각 괴물 추격전</title>
+<style>
+    body { font-family: 'Malgun Gothic', sans-serif; background-color: #2f3640; color: white; text-align: center; margin: 0; padding: 20px; }
+    .container { max-width: 800px; margin: 0 auto; background: #353b48; padding: 30px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
+    h1 { color: #fbc531; }
+    .btn { padding: 15px 30px; font-size: 20px; margin: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+    .btn:hover { transform: scale(1.05); }
+    .btn-easy { background: #2ecc71; color: white; }
+    .btn-normal { background: #f39c12; color: white; }
+    .btn-hard { background: #e74c3c; color: white; }
+    
+    /* 육상 트랙 스타일 */
+    #track { position: relative; width: 100%; height: 120px; background: #7f8fa6; border-radius: 10px; margin: 30px 0; overflow: hidden; border: 3px solid #dcdde1; }
+    .safe-zone { position: absolute; right: 0; top: 0; width: 15%; height: 100%; background: rgba(46, 204, 113, 0.5); border-left: 5px dashed #2ecc71; }
+    
+    /* 캐릭터 스타일 (이모지 사용) */
+    .character { position: absolute; bottom: 10px; width: 80px; height: 80px; font-size: 60px; line-height: 80px; text-align: center; transition: left 0.1s linear; }
+    #monster { left: 0%; z-index: 2; }
+    #player { left: 25%; z-index: 3; }
+    
+    .question-box { background: #f5f6fa; color: #2f3640; padding: 20px; border-radius: 10px; font-size: 28px; font-weight: bold; margin-bottom: 20px; }
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .option-btn { padding: 20px; font-size: 24px; background: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .option-btn:hover { background: #2980b9; }
+    
+    .hidden { display: none !important; }
+</style>
 </head>
 <body>
-    <div id="start-screen" class="game-container monster-theme" style="text-align: center; padding-bottom: 40px;">
-        <div class="header">
-            <a href="trig.html" class="back-btn">⬅ 메뉴로</a>
-            <h2>🏃 특수각 탈출 게임</h2>
+    <div class="container">
+        <!-- 뒤로가기 버튼 -->
+        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+            <a href="trig.html" style="color: white; text-decoration: none; background: #576574; padding: 10px 15px; border-radius: 8px; font-weight: bold;">⬅ 메뉴로</a>
         </div>
-        <div style="margin-top: 30px;">
-            <h3 style="margin-bottom: 20px;">난이도를 선택하면 게임이 시작됩니다!</h3>
-            <button class="difficulty-btn btn-easy" onclick="startGame('easy')">🟢 쉬움 (괴물 속도: 느림)</button>
-            <button class="difficulty-btn btn-hard" onclick="startGame('hard')">🔴 어려움 (괴물 속도: 빠름)</button>
-        </div>
-    </div>
-
-    <div id="main-game" class="game-container monster-theme" style="display: none;">
-        <div class="header">
-            <a href="trig.html" class="back-btn">⬅ 메뉴로</a>
-            <h2>🏃 특수각 탈출 게임</h2>
+        
+        <h1>🏃 특수각 괴물 추격전 👾</h1>
+        
+        <!-- 첫 화면: 난이도 선택 -->
+        <div id="start-screen">
+            <p style="font-size: 20px; margin-bottom: 30px;">특수각(30°, 45°, 60°) 문제를 풀고 괴물로부터 도망치세요!</p>
+            <button class="btn btn-easy" onclick="startGame(4)">🟢 쉬움</button>
+            <button class="btn btn-normal" onclick="startGame(6)">🟡 보통</button>
+            <button class="btn btn-hard" onclick="startGame(8.5)">🔴 어려움</button>
         </div>
 
-        <div class="track">
-            <div id="monster"><img src="monster_running.png" id="monster-img" alt="Monster"></div> 
-            <div id="player"><img src="cat_running.png" id="player-img" alt="Cat"></div> 
-            <div class="flag">🚩</div>
-        </div>
-        <p id="status-text">괴물이 쫓아옵니다! 빨리 정답을 고르세요!</p>
-<!-- 메인 게임 화면 -->
-    <div id="main-game" class="hidden">
-        <div id="game-board" class="hidden">
-            <div id="safe-zone">안전지대</div>
-            <img id="player-img" src="cat_running.png" alt="Player">
-            <div id="player">나</div>
-            <img id="monster-img" src="monster_running.png" alt="Monster">
-            <div id="monster">괴물</div>
+        <!-- 메인 게임 화면 -->
+        <div id="main-game" class="hidden">
+            <h2 id="status-text" style="color: #e1b12c;">대기 중...</h2>
+            
+            <!-- 직관적인 추격 시작 버튼 -->
+            <button id="action-btn" class="btn btn-hard hidden" onclick="startChase()" style="width: 100%; font-size: 24px; padding: 20px; background: #e74c3c;">🚨 추격 시작! (클릭 시 괴물 출발)</button>
+
+            <!-- 달리기 트랙 -->
+            <div id="track">
+                <div class="safe-zone"></div>
+                <div id="monster" class="character">👾</div>
+                <div id="player" class="character">😺</div>
+            </div>
+
+            <!-- 문제와 객관식 버튼 영역 -->
+            <div id="game-ui" class="hidden">
+                <div class="question-box" id="question-text">문제 준비 중...</div>
+                <div class="options-grid" id="options-area"></div>
+            </div>
         </div>
 
-        <!-- 🌟 새로 추가된 '추격 시작' 버튼 -->
-        <div style="text-align: center; margin-top: 15px;">
-            <button id="action-start-btn" onclick="startAction()" style="padding: 15px 30px; font-size: 24px; background-color: #e74c3c; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">🚨 추격 시작!</button>
-        </div>
-
-        <!-- 질문 및 보기 영역 -->
-        <h2 id="monster-question">준비가 되면 추격 시작 버튼을 누르세요!</h2>
-        <div id="options-area"></div>
-    </div>
-        <div id="game-board">
-            <h1 id="monster-question">sin 30°</h1>
-            <div class="options-grid" id="options-area">
-                </div>
-        </div>
-
-        <div id="result-screen" class="hidden">
-            <h2 id="result-msg"></h2>
-            <button class="retry-btn" onclick="location.reload()">다시 도전하기 🔄</button>
+        <!-- 결과 화면 -->
+        <div id="result-screen" class="hidden" style="margin-top: 30px;">
+            <h2 id="result-msg" style="font-size: 36px;"></h2>
+            <button class="btn btn-easy" onclick="location.reload()" style="font-size: 24px; padding: 15px 40px;">다시 도전하기 🔄</button>
         </div>
     </div>
 
-    <script>
-        // 기본 괴물 속도 (어려움 기준)
-        window.monsterSpeed = 9; 
+<script>
+// 특수각 문제 데이터
+const allQuestions = [
+    { q: "sin 30°", a: "1/2", options: ["1/2", "√2/2", "√3/2", "1"] },
+    { q: "cos 30°", a: "√3/2", options: ["1/2", "√2/2", "√3/2", "1"] },
+    { q: "tan 30°", a: "√3/3", options: ["√3/3", "1", "√3", "0"] },
+    { q: "sin 45°", a: "√2/2", options: ["1/2", "√2/2", "√3/2", "1"] },
+    { q: "cos 45°", a: "√2/2", options: ["1/2", "√2/2", "√3/2", "1"] },
+    { q: "tan 45°", a: "1", options: ["√3/3", "1", "√3", "0"] },
+    { q: "sin 60°", a: "√3/2", options: ["1/2", "√2/2", "√3/2", "1"] },
+    { q: "cos 60°", a: "1/2", options: ["1/2", "√2/2", "√3/2", "1"] },
+    { q: "tan 60°", a: "√3", options: ["√3/3", "1", "√3", "0"] }
+];
 
-        function startGame(difficulty) {
-            // 난이도에 따라 전역 변수로 속도 설정
-            if (difficulty === 'easy') {
-                window.monsterSpeed = 5;
-            } else {
-                window.monsterSpeed = 9;
-            }
+let monsterSpeed = 5;
+let playerPos = 25;
+let targetPlayerPos = 25;
+let monsterPos = 0;
+const safeZone = 85;
+let currentStep = 0;
+const totalSteps = 6;
+let gameQuestions = [];
+let isGameOver = false;
+let animationId = null;
+let lastTime = 0;
 
-            // 난이도 창을 숨기고, 실제 게임 화면을 보여줌
-            document.getElementById('start-screen').style.display = 'none';
-            document.getElementById('main-game').style.display = 'block';
-
-            // monster.js에 있는 초기화 함수(게임 시작) 실행
-            // (함수 이름이 다를 경우 아래 initGame(); 부분을 수정해야 할 수 있습니다)
-            if (typeof initGame === 'function') {
-                initGame();
-            }
-        }
-    </script>
+// 1. 난이도 버튼을 눌렀을 때
+function startGame(speed) {
+    monsterSpeed = speed;
+    document.getElementById("start-screen").classList.add("hidden");
+    document.getElementById("main-game").classList.remove("hidden");
     
-    <script src="monster.js"></script>
+    // 위치 초기화
+    playerPos = 25; targetPlayerPos = 25; monsterPos = 0;
+    currentStep = 0; isGameOver = false;
+    
+    document.getElementById("player").innerText = "😺";
+    document.getElementById("monster").innerText = "👾";
+    document.getElementById("player").style.left = playerPos + "%";
+    document.getElementById("monster").style.left = monsterPos + "%";
+    
+    // 문제 6개 무작위 뽑기
+    gameQuestions = [...allQuestions].sort(() => Math.random() - 0.5).slice(0, totalSteps);
+    
+    document.getElementById("status-text").innerText = "준비 완료! 아래 버튼을 누르면 괴물이 쫓아옵니다!";
+    document.getElementById("action-btn").classList.remove("hidden");
+    document.getElementById("game-ui").classList.add("hidden");
+}
+
+// 2. 추격 시작 버튼을 눌렀을 때
+function startChase() {
+    document.getElementById("action-btn").classList.add("hidden");
+    document.getElementById("game-ui").classList.remove("hidden");
+    document.getElementById("status-text").innerText = "🏃💨 빨리 정답을 고르세요!";
+    
+    loadQuestion();
+    lastTime = performance.now();
+    animationId = requestAnimationFrame(gameLoop);
+}
+
+// 3. 게임 애니메이션 루프 (괴물이 쫓아오는 역할)
+function gameLoop(time) {
+    if (isGameOver) return;
+    
+    const deltaTime = time - lastTime; 
+    lastTime = time;
+    
+    // 괴물은 시간에 따라 계속 전진
+    monsterPos += (monsterSpeed * deltaTime) / 1000;
+    
+    // 고양이는 정답을 맞혔을 때 목표 위치(targetPlayerPos)로 부드럽게 이동
+    if (playerPos < targetPlayerPos) {
+        playerPos += (20 * deltaTime) / 1000;
+        if (playerPos > targetPlayerPos) playerPos = targetPlayerPos;
+    }
+    
+    // 화면에 위치 반영
+    document.getElementById("monster").style.left = monsterPos + "%";
+    document.getElementById("player").style.left = playerPos + "%";
+    
+    // 괴물이 가까워지면 표정 변화
+    const distance = playerPos - monsterPos;
+    if (distance <= 15 && distance > 0) {
+        document.getElementById("player").innerText = "🙀"; // 놀란 고양이
+        document.getElementById("monster").innerText = "👹"; // 무서운 괴물
+    } else {
+        document.getElementById("player").innerText = "😺";
+        document.getElementById("monster").innerText = "👾";
+    }
+    
+    // 게임 종료 조건 확인
+    if (monsterPos >= playerPos - 5) {
+        endGame(false, "🩸 괴물에게 따라잡혔습니다...");
+        return;
+    }
+    if (playerPos >= safeZone) {
+        endGame(true, "🎉 무사히 탈출했습니다!");
+        return;
+    }
+    
+    animationId = requestAnimationFrame(gameLoop);
+}
+
+// 4. 문제 불러오기
+function loadQuestion() {
+    if (currentStep >= totalSteps) return;
+    
+    const qData = gameQuestions[currentStep];
+    document.getElementById("question-text").innerText = qData.q;
+    
+    const optionsArea = document.getElementById("options-area");
+    optionsArea.innerHTML = "";
+    
+    const shuffledOptions = [...qData.options].sort(() => Math.random() - 0.5);
+    shuffledOptions.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.innerText = opt;
+        btn.onclick = () => checkAnswer(opt, qData.a);
+        optionsArea.appendChild(btn);
+    });
+}
+
+// 5. 정답 확인
+function checkAnswer(selected, correct) {
+    if (isGameOver) return;
+    
+    if (selected === correct) {
+        currentStep++;
+        // 정답을 맞히면 목표 위치를 앞으로 전진시킴
+        targetPlayerPos = 25 + (currentStep / totalSteps) * (safeZone - 25);
+        
+        if (currentStep < totalSteps) {
+            loadQuestion();
+        } else {
+            document.getElementById("game-ui").classList.add("hidden");
+            document.getElementById("status-text").innerText = "안전지대로 전력 질주 중!! 🏃💨";
+        }
+    } else {
+        endGame(false, "❌ 오답! 괴물에게 덜미를 잡혔습니다!");
+    }
+}
+
+// 6. 게임 종료 처리
+function endGame(isWin, msg) {
+    isGameOver = true;
+    cancelAnimationFrame(animationId);
+    
+    document.getElementById("game-ui").classList.add("hidden");
+    document.getElementById("result-screen").classList.remove("hidden");
+    
+    const resultMsg = document.getElementById("result-msg");
+    if (isWin) {
+        resultMsg.innerText = msg;
+        resultMsg.style.color = "#2ecc71";
+        document.getElementById("player").innerText = "😸"; // 웃는 고양이
+        document.getElementById("status-text").innerText = "미션 성공!";
+    } else {
+        document.getElementById("monster").style.left = document.getElementById("player").style.left;
+        document.getElementById("player").innerText = "💀"; // 해골
+        document.getElementById("monster").innerText = "👹";
+        resultMsg.innerText = msg;
+        resultMsg.style.color = "#e74c3c";
+        document.getElementById("status-text").innerText = "게임 오버!";
+    }
+}
+</script>
 </body>
 </html>
