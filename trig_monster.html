@@ -46,10 +46,16 @@
 </style>
 
 <script>
-        const pwd = prompt("특수각 탈출 게임입니다. 비밀번호를 입력하세요 🔒");
-        if (pwd !== "1771") {
-            alert("비밀번호가 틀렸습니다! ❌");
-            location.href = "index.html"; 
+        // 브라우저의 '임시 기억 장치'에 비밀번호 통과 기록이 있는지 확인합니다.
+        if (!sessionStorage.getItem("monsterPass")) {
+            const pwd = prompt("특수각 탈출 게임입니다. 비밀번호를 입력하세요 🔒");
+            if (pwd === "1771") {
+                // 정답을 맞추면 통과했다는 도장을 찍어둡니다! (새로고침해도 유지됨)
+                sessionStorage.setItem("monsterPass", "true");
+            } else {
+                alert("비밀번호가 틀렸습니다! ❌");
+                location.href = "index.html"; 
+            }
         }
     </script>
 </head>
