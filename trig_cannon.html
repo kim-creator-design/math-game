@@ -12,29 +12,19 @@
     .header { width: 100%; max-width: 900px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .back-btn { text-decoration: none; color: white; background: #576574; padding: 10px 15px; border-radius: 8px; font-weight: bold; }
     
-    /* 화면을 양옆으로 나누는 레이아웃 */
     .main-wrapper { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; width: 100%; max-width: 1000px; }
     
-    /* 왼쪽: 삼각비표 영역 */
-    .table-container {
-        background: #353b48; padding: 20px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-        width: 300px; height: fit-content;
-    }
+    .table-container { background: #353b48; padding: 20px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); width: 300px; height: fit-content; }
     .trig-table { width: 100%; border-collapse: collapse; text-align: center; background: white; color: black; border-radius: 8px; overflow: hidden; }
     .trig-table th { background: #2980b9; color: white; padding: 10px; }
     .trig-table td { padding: 8px; border-bottom: 1px solid #ddd; }
     
-    /* 오른쪽: 게임 영역 */
-    .game-container {
-        background: #353b48; padding: 20px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-        flex: 1; min-width: 500px; text-align: center; position: relative;
-    }
+    .game-container { background: #353b48; padding: 20px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); flex: 1; min-width: 500px; text-align: center; position: relative; }
     canvas { background: linear-gradient(to bottom, #1e3799, #4a69bd); border-radius: 8px; border: 2px solid #7f8fa6; margin-top: 10px; width: 100%; }
     
     #status-header { font-size: 20px; margin-bottom: 10px; background: #f5f6fa; padding: 10px; border-radius: 8px; color: #2f3640; }
     #question-text { color: #fbc531; font-size: 28px; margin: 15px 0; }
     
-    /* 🌟 주관식 입력창 스타일 */
     .input-area { display: flex; justify-content: center; gap: 10px; margin-top: 15px; }
     #answer-input { padding: 15px; font-size: 20px; width: 200px; border-radius: 8px; border: 2px solid #3498db; text-align: center; font-weight: bold; outline: none; }
     .fire-btn { padding: 15px 30px; font-size: 20px; background: #e74c3c; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
@@ -49,21 +39,13 @@
     </div>
 
     <div class="main-wrapper">
-        <!-- 📊 왼쪽: 삼각비표 -->
+        <!-- 📊 왼쪽: 계속 바뀌는 삼각비표 -->
         <div class="table-container">
             <h3 style="color: #fbc531; text-align: center; margin-top: 0;">📊 삼각비표</h3>
             <table class="trig-table">
                 <thead><tr><th>각도</th><th>sin</th><th>cos</th><th>tan</th></tr></thead>
-                <tbody>
-                    <tr><td>15°</td><td>0.2588</td><td>0.9659</td><td>0.2679</td></tr>
-                    <tr><td>25°</td><td>0.4226</td><td>0.9063</td><td>0.4663</td></tr>
-                    <tr><td>34°</td><td>0.5592</td><td>0.8290</td><td>0.6745</td></tr>
-                    <tr><td>40°</td><td>0.6428</td><td>0.7660</td><td>0.8391</td></tr>
-                    <tr><td>55°</td><td>0.8192</td><td>0.5736</td><td>1.4281</td></tr>
-                    <tr><td>56°</td><td>0.8290</td><td>0.5592</td><td>1.4826</td></tr>
-                    <tr><td>65°</td><td>0.9063</td><td>0.4226</td><td>2.1445</td></tr>
-                    <tr><td>70°</td><td>0.9397</td><td>0.3420</td><td>2.7475</td></tr>
-                    <tr><td>80°</td><td>0.9848</td><td>0.1736</td><td>5.6713</td></tr>
+                <tbody id="trig-tbody">
+                    <!-- 자바스크립트가 무작위로 채워 넣습니다 -->
                 </tbody>
             </table>
         </div>
@@ -76,13 +58,11 @@
             
             <canvas id="gameCanvas" width="600" height="350"></canvas>
             
-            <!-- 대기 상태 -->
             <div id="start-section" style="margin: 20px 0;">
                 <p style="font-size: 1.1em; margin-bottom: 15px;">1분 동안 표를 보고 <strong>정확한 값(소수점 4자리)</strong>을 입력해 악당을 맞혀보세요!</p>
                 <button onclick="startCannonGame()" class="fire-btn" style="padding: 15px 40px; font-size: 24px;">🚨 게임 시작!</button>
             </div>
 
-            <!-- 플레이 상태 (주관식 입력) -->
             <div id="play-section" style="display: none; position: relative;">
                 <h2 id="question-text">문제</h2>
                 <div class="input-area">
@@ -91,7 +71,6 @@
                 </div>
             </div>
 
-            <!-- 종료 상태 -->
             <div id="result-section" style="display: none; margin-top: 20px;">
                 <h2 style="color: #fbc531; font-size: 36px; margin-bottom: 10px;">⏰ 시간 종료!</h2>
                 <p id="result-score" style="font-size: 24px; margin-bottom: 20px;"></p>
@@ -101,19 +80,7 @@
     </div>
 
 <script>
-// 각도가 포함된 문제 데이터
-const allQuestions = [
-    { q: "sin 34°", deg: 34, a: "0.5592" },
-    { q: "cos 56°", deg: 56, a: "0.5592" },
-    { q: "tan 40°", deg: 40, a: "0.8391" },
-    { q: "sin 70°", deg: 70, a: "0.9397" },
-    { q: "cos 25°", deg: 25, a: "0.9063" },
-    { q: "tan 65°", deg: 65, a: "2.1445" },
-    { q: "sin 15°", deg: 15, a: "0.2588" },
-    { q: "cos 80°", deg: 80, a: "0.1736" },
-    { q: "tan 55°", deg: 55, a: "1.4281" }
-];
-
+let currentQuestionPool = [];
 let score = 0;
 let timeLeft = 60;
 let gameTimer = null;
@@ -125,7 +92,36 @@ const ctx = canvas.getContext("2d");
 let isFiring = false;
 let cannonball = { progress: 0, startX: 0, startY: 0, destX: 0, destY: 0 };
 
-// 엔터키 누르면 발사되는 기능 추가
+// 🌟 무작위 삼각비표와 문제 목록 생성하는 함수
+function refreshTrigTable() {
+    let angles = [];
+    while(angles.length < 9) {
+        let deg = Math.floor(Math.random() * 89) + 1; // 1도 ~ 89도
+        if(!angles.includes(deg)) angles.push(deg);
+    }
+    angles.sort((a, b) => a - b); // 각도 순서대로 정렬
+
+    const tbody = document.getElementById("trig-tbody");
+    tbody.innerHTML = "";
+    currentQuestionPool = [];
+
+    angles.forEach(deg => {
+        const rad = deg * Math.PI / 180;
+        const s = Math.sin(rad).toFixed(4);
+        const c = Math.cos(rad).toFixed(4);
+        const t = Math.tan(rad).toFixed(4);
+
+        // 표에 추가
+        tbody.innerHTML += `<tr><td>${deg}°</td><td>${s}</td><td>${c}</td><td>${t}</td></tr>`;
+
+        // 문제 리스트에 추가
+        currentQuestionPool.push({ q: `sin ${deg}°`, deg: deg, a: s });
+        currentQuestionPool.push({ q: `cos ${deg}°`, deg: deg, a: c });
+        currentQuestionPool.push({ q: `tan ${deg}°`, deg: deg, a: t });
+    });
+}
+
+// 엔터키 누르면 발사
 document.getElementById("answer-input").addEventListener("keypress", function(event) {
     if (event.key === "Enter") {
         event.preventDefault();
@@ -133,6 +129,8 @@ document.getElementById("answer-input").addEventListener("keypress", function(ev
     }
 });
 
+// 처음 켰을 때 표 한번 그려주기
+refreshTrigTable();
 drawScene();
 
 function startCannonGame() {
@@ -159,11 +157,10 @@ function updateHeaderDisplay() {
 }
 
 function loadRandomQuestion() {
-    const randomIndex = Math.floor(Math.random() * allQuestions.length);
-    currentQuestion = allQuestions[randomIndex];
+    const randomIndex = Math.floor(Math.random() * currentQuestionPool.length);
+    currentQuestion = currentQuestionPool[randomIndex];
     document.getElementById("question-text").innerText = `조준 목표: ${currentQuestion.q}`;
     
-    // 새 문제 나올 때 입력창 비우고 포커스
     const input = document.getElementById("answer-input");
     input.value = "";
     input.focus();
@@ -173,28 +170,25 @@ function checkAnswer() {
     if (!isPlaying || isFiring) return; 
     
     const inputVal = document.getElementById("answer-input").value.trim();
-    if (inputVal === "") return; // 빈칸이면 무시
+    if (inputVal === "") return; 
     
     isFiring = true;
     cannonball.progress = 0;
     
     const isCorrect = (inputVal === currentQuestion.a);
     
-    // 수학적 물리 계산 (각도 반영)
     const rad = currentQuestion.deg * Math.PI / 180;
-    const targetDist = 220; // 타겟과의 거리
-    const cbX = canvas.width / 4; // 대포를 약간 왼쪽에 배치
+    const targetDist = 220; 
+    const cbX = canvas.width / 4; 
     const cbY = canvas.height - 20;
     
     cannonball.startX = cbX;
     cannonball.startY = cbY;
     
     if (isCorrect) {
-        // 정답이면 정확히 악당 위치로 조준
         cannonball.destX = cbX + Math.cos(rad) * targetDist;
         cannonball.destY = cbY - Math.sin(rad) * targetDist;
     } else {
-        // 오답이면 위나 아래로 각도가 비틀어짐 (오발탄)
         const missRad = rad + (Math.random() > 0.5 ? 0.4 : -0.4); 
         cannonball.destX = cbX + Math.cos(missRad) * (targetDist + 150);
         cannonball.destY = cbY - Math.sin(missRad) * (targetDist + 150);
@@ -210,6 +204,9 @@ function checkAnswer() {
                 score++;
                 updateHeaderDisplay();
                 showFeedback("💥 명중!", "#2ecc71");
+                
+                // 🌟 정답을 맞혔으니 표를 무작위로 새로 갱신!
+                refreshTrigTable(); 
                 loadRandomQuestion();
             } else {
                 showFeedback("❌ 빗나갔습니다!", "#e74c3c"); 
@@ -248,20 +245,17 @@ function drawScene() {
     const cbX = canvas.width / 4; 
     const cbY = canvas.height - 20;
     
-    // 악당 타겟 그리기
     if((isPlaying || document.getElementById("result-section").style.display.includes("block")) && currentQuestion) {
         const rad = currentQuestion.deg * Math.PI / 180;
         const targetDist = 220;
         const targetX = cbX + Math.cos(rad) * targetDist;
         const targetY = cbY - Math.sin(rad) * targetDist;
         
-        // 악당
         ctx.font = "50px Arial";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText("😈", targetX, targetY);
         
-        // 대포 몸통(배럴) - 실제 각도를 바라보게 회전!
         ctx.save();
         ctx.translate(cbX, cbY);
         ctx.rotate(-rad); 
@@ -269,7 +263,6 @@ function drawScene() {
         ctx.fillRect(0, -15, 60, 30);
         ctx.restore();
     } else {
-        // 대기 화면일 때 기본 대포 방향 (45도)
         ctx.save();
         ctx.translate(cbX, cbY);
         ctx.rotate(-Math.PI/4);
@@ -278,13 +271,11 @@ function drawScene() {
         ctx.restore();
     }
     
-    // 대포 바퀴 (고정)
     ctx.fillStyle = '#2f3640';
     ctx.beginPath();
     ctx.arc(cbX, cbY, 25, 0, Math.PI * 2);
     ctx.fill();
     
-    // 날아가는 포탄
     if (isFiring) {
         const currentX = cannonball.startX + (cannonball.destX - cannonball.startX) * cannonball.progress;
         const currentY = cannonball.startY + (cannonball.destY - cannonball.startY) * cannonball.progress;

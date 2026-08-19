@@ -22,9 +22,8 @@ const safeZone = 85;
 let isGameOver = false;
 let animationId = null;
 let lastTime = 0;
-let isActionStarted = false; // 시작 버튼이 눌렸는지 확인하는 변수
+let isActionStarted = false; 
 
-// 배경 투명화 처리 로직 (이전과 동일)
 const processedImages = {};
 let isImagesReady = false;
 
@@ -33,10 +32,8 @@ function removeBackground(imageSrc, callback) {
     img.crossOrigin = "Anonymous";
     img.onload = function() {
         const canvas = document.createElement("canvas");
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0);
+        canvas.width = img.width; canvas.height = img.height;
+        const ctx = canvas.getContext("2d"); ctx.drawImage(img, 0, 0);
         try {
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = imageData.data;
@@ -45,12 +42,10 @@ function removeBackground(imageSrc, callback) {
                     data[i+3] = 0;
                 }
             }
-            ctx.putImageData(imageData, 0, 0);
-            callback(canvas.toDataURL());
+            ctx.putImageData(imageData, 0, 0); callback(canvas.toDataURL());
         } catch (e) { callback(imageSrc); }
     };
-    img.onerror = () => callback(imageSrc);
-    img.src = imageSrc;
+    img.onerror = () => callback(imageSrc); img.src = imageSrc;
 }
 
 function loadAndProcessImages(callback) {
@@ -58,19 +53,21 @@ function loadAndProcessImages(callback) {
     let loadedCount = 0;
     imagesToProcess.forEach(src => {
         removeBackground(src, (dataUrl) => {
-            processedImages[src] = dataUrl;
-            loadedCount++;
-            if (loadedCount === imagesToProcess.length) {
-                isImagesReady = true;
-                callback();
-            }
+            processedImages[src] = dataUrl; loadedCount++;
+            if (loadedCount === imagesToProcess.length) { isImagesReady = true; callback(); }
         });
     });
 }
 
 function getImg(src) { return processedImages[src] || src; }
 
-// 난이도 선택 시 호출되는 초기화 함수 (대기 상태)
+function startGame(speed) {
+    window.monsterSpeed = speed; 
+    document.getElementById("start-screen").style.display = "none";
+    document.getElementById("main-game").style.display = "block";
+    initGame(); 
+}
+
 function initGame() {
     if (!isImagesReady) {
         document.getElementById("status-text").innerText = "캐릭터 렌더링 중...";
@@ -79,10 +76,8 @@ function initGame() {
     }
 
     gameQuestions = allQuestions.sort(() => Math.random() - 0.5).slice(0, totalSteps);
-    currentStep = 0;
-    playerPos = 25; targetPlayerPos = 25; monsterPos = 0;
-    isGameOver = false;
-    isActionStarted = false; // 아직 움직이지 않음
+    currentStep = 0; playerPos = 25; targetPlayerPos = 25; monsterPos = 0;
+    isGameOver = false; isActionStarted = false; 
     
     document.getElementById("monster").style.left = monsterPos + "%";
     document.getElementById("player").style.left = playerPos + "%";
@@ -90,10 +85,23 @@ function initGame() {
     document.getElementById("monster-img").src = getImg("monster_running.png");
     
     document.getElementById("game-board").classList.remove("hidden");
-    document.getElementById("result-screen").classList.add("hidden");
+    const resultScreen = document.getElementById("result-screen");
+    if (resultScreen) resultScreen.classList.add("hidden");
+
+    // 🌟 에러 방지: 자바스크립트가 직접 버튼을 만듭니다!
+    let startBtn = document.getElementById("auto-start-btn");
+    if (!startBtn) {
+        startBtn = document.createElement("button");
+        startBtn.id = "auto-start-btn";
+        startBtn.innerHTML = "🚨 추격 시작!";
+        startBtn.style.cssText = "display: block; margin: 20px auto; padding: 15px 40px; font-size: 24px; background-color: #e74c3c; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.3);";
+        startBtn.onclick = startAction;
+        
+        const gameBoard = document.getElementById("game-board");
+        gameBoard.insertBefore(startBtn, gameBoard.firstChild);
+    }
+    startBtn.style.display = "block";
     
-    // 버튼 보이기 및 문제 숨기기
-    document.getElementById("action-start-btn").style.display = "inline-block";
     document.getElementById("options-area").innerHTML = "";
     document.getElementById("monster-question").innerText = "준비가 되면 위 버튼을 누르세요!";
     document.getElementById("status-text").innerText = "대기 중...";
@@ -101,26 +109,19 @@ function initGame() {
     if (animationId) cancelAnimationFrame(animationId);
 }
 
-// 🌟 시작 버튼을 눌렀을 때 실행되는 함수
 function startAction() {
     isActionStarted = true;
     lastTime = performance.now();
-    
-    // 버튼 숨기기
-    document.getElementById("action-start-btn").style.display = "none";
+    document.getElementById("auto-start-btn").style.display = "none";
     document.getElementById("status-text").innerText = "괴물이 쫓아옵니다! 빨리 정답을 고르세요!";
-    
-    // 첫 문제 로드 및 애니메이션 시작
     loadQuestion();
     animationId = requestAnimationFrame(gameLoop);
 }
 
 function gameLoop(time) {
-    if (isGameOver || !isActionStarted) return; // 시작 전이면 멈춤
+    if (isGameOver || !isActionStarted) return; 
     
-    const deltaTime = time - lastTime;
-    lastTime = time;
-    
+    const deltaTime = time - lastTime; lastTime = time;
     const currentMonsterSpeed = window.monsterSpeed || 8.0; 
     monsterPos += (currentMonsterSpeed * deltaTime) / 1000;
     
@@ -179,14 +180,12 @@ function checkAnswer(selected, correct) {
 }
 
 function endGame(isWin, msg) {
-    isGameOver = true;
-    cancelAnimationFrame(animationId);
+    isGameOver = true; cancelAnimationFrame(animationId);
     document.getElementById("game-board").classList.add("hidden");
-    document.getElementById("action-start-btn").style.display = "none";
     
     const resultScreen = document.getElementById("result-screen");
     const resultMsg = document.getElementById("result-msg");
-    resultScreen.classList.remove("hidden");
+    if(resultScreen) resultScreen.classList.remove("hidden");
 
     if (isWin) {
         resultMsg.innerText = msg; resultMsg.style.color = "#2ecc71";
@@ -199,14 +198,4 @@ function endGame(isWin, msg) {
         resultMsg.innerText = msg; resultMsg.style.color = "#e74c3c";
         document.getElementById("status-text").innerText = "게임 오버!";
     }
-}
-// 난이도 버튼을 눌렀을 때 실행되는 함수
-function startGame(speed) {
-    window.monsterSpeed = speed; // 괴물 속도 설정
-    
-    // 🌟 첫 화면은 숨기고, 메인 게임 화면을 보여주는 마법의 두 줄!
-    document.getElementById("start-screen").style.display = "none";
-    document.getElementById("main-game").style.display = "block";
-    
-    initGame(); // 대기 상태로 진입
 }
