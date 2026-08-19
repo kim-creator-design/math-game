@@ -3,13 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>삼각비 대포 타임어택</title>
+<title>삼각비표 대포 타임어택</title>
 <style>
     body { 
         display: flex; flex-direction: column; align-items: center; 
         font-family: 'Malgun Gothic', sans-serif; background-color: #2f3640; color: #f5f6fa; margin: 0; padding: 30px; 
     }
-    #game-container, #start-screen, #result-screen {
+    .header {
+        width: 600px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+    }
+    .back-btn {
+        text-decoration: none; color: white; background: #576574; padding: 10px 15px; border-radius: 8px; font-weight: bold;
+    }
+    #game-container {
         background: #353b48; padding: 20px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.3);
         text-align: center; width: 600px;
     }
@@ -21,57 +27,63 @@
     }
     .option-btn:hover { background: #2980b9; transform: scale(1.05); }
     
-    .start-btn {
-        padding: 15px 40px; font-size: 24px; cursor: pointer; background: #e74c3c; color: white; border: none; border-radius: 10px; font-weight: bold; margin-top: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-    }
-    .start-btn:hover { background: #c0392b; }
-    
     #status-header { font-size: 22px; margin-bottom: 10px; background: #f5f6fa; padding: 10px; border-radius: 8px; color: #2f3640; }
     #question-text { color: #fbc531; font-size: 28px; margin: 15px 0; }
+    #options-area { display: flex; flex-wrap: wrap; justify-content: center; }
 </style>
 </head>
 <body>
 
-    <!-- 🌟 1. 시작 화면 -->
-    <div id="start-screen">
-        <h1 style="color: #fbc531;">🚀 대포 쏘기: 1분 타임어택!</h1>
-        <p style="font-size: 1.2em;">1분 동안 최대한 많은 악당을 맞춰보세요!</p>
-        <button class="start-btn" onclick="startCannonGame()">🚨 게임 시작!</button>
+    <div class="header">
+        <a href="trig.html" class="back-btn">⬅ 메뉴로</a>
+        <h2 style="margin: 0;">🚀 삼각비표 대포 쏘기</h2>
     </div>
 
-    <!-- 🌟 2. 게임 화면 (처음엔 숨김) -->
-    <div id="game-container" style="display: none;">
-        <div id="status-header"></div>
+    <!-- 🌟 게임 메인 화면 -->
+    <div id="game-container">
+        <div id="status-header">
+            <span style="color: #e74c3c; font-weight: bold;">⏳ 남은 시간: 60초</span> &nbsp;|&nbsp; <span style="color: #2980b9; font-weight: bold;">🎯 명중: 0회</span>
+        </div>
+        
+        <!-- 대포가 그려지는 캔버스 -->
         <canvas id="gameCanvas" width="600" height="300"></canvas>
-        <div style="position: relative;">
+        
+        <!-- 🌟 대기 상태: 시작 버튼 영역 -->
+        <div id="start-section" style="margin: 20px 0;">
+            <p style="font-size: 1.2em; margin-bottom: 15px;">1분 동안 삼각비표의 값을 최대한 많이 맞혀보세요!</p>
+            <button onclick="startCannonGame()" style="padding: 15px 40px; font-size: 24px; background: #e74c3c; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">🚨 게임 시작!</button>
+        </div>
+
+        <!-- 🌟 플레이 상태: 문제 및 보기 영역 (처음엔 숨김) -->
+        <div id="play-section" style="display: none; position: relative;">
             <h2 id="question-text">문제</h2>
-            <!-- 보기(정답) 버튼들이 들어갈 공간 -->
             <div id="options-area"></div> 
+        </div>
+
+        <!-- 🌟 종료 상태: 결과 영역 (처음엔 숨김) -->
+        <div id="result-section" style="display: none; margin-top: 20px;">
+            <h2 style="color: #fbc531; font-size: 36px; margin-bottom: 10px;">⏰ 시간 종료!</h2>
+            <p id="result-score" style="font-size: 24px; margin-bottom: 20px;"></p>
+            <button onclick="location.reload()" style="padding: 15px 30px; font-size: 20px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">다시 도전하기 🔄</button>
         </div>
     </div>
 
-    <!-- 🌟 3. 결과 화면 (처음엔 숨김) -->
-    <div id="result-screen" style="display: none;">
-        <div id="result-text"></div>
-        <button class="start-btn" onclick="location.reload()">다시 도전하기 🔄</button>
-    </div>
-
-<!-- 🌟 4. 게임 자바스크립트 로직 -->
 <script>
+// 삼각비표 문제 데이터 (소수점 4자리)
 const allQuestions = [
-    { q: "sin 30°", a: "1/2", options: ["1/2", "√2/2", "√3/2", "1"] },
-    { q: "cos 30°", a: "√3/2", options: ["1/2", "√2/2", "√3/2", "1"] },
-    { q: "tan 30°", a: "√3/3", options: ["√3/3", "1", "√3", "0"] },
-    { q: "sin 45°", a: "√2/2", options: ["1/2", "√2/2", "√3/2", "1"] },
-    { q: "cos 45°", a: "√2/2", options: ["1/2", "√2/2", "√3/2", "1"] },
-    { q: "tan 45°", a: "1", options: ["√3/3", "1", "√3", "0"] },
-    { q: "sin 60°", a: "√3/2", options: ["1/2", "√2/2", "√3/2", "1"] },
-    { q: "cos 60°", a: "1/2", options: ["1/2", "√2/2", "√3/2", "1"] },
-    { q: "tan 60°", a: "√3", options: ["√3/3", "1", "√3", "0"] }
+    { q: "sin 34°", a: "0.5592", options: ["0.5592", "0.8290", "0.6745", "0.5446"] },
+    { q: "cos 56°", a: "0.5592", options: ["0.5592", "0.8290", "0.8090", "0.6745"] },
+    { q: "tan 40°", a: "0.8391", options: ["0.8391", "0.6428", "0.7660", "1.1918"] },
+    { q: "sin 70°", a: "0.9397", options: ["0.9397", "0.3420", "2.7475", "0.8391"] },
+    { q: "cos 25°", a: "0.9063", options: ["0.9063", "0.4226", "0.4663", "0.8988"] },
+    { q: "tan 65°", a: "2.1445", options: ["2.1445", "0.4226", "0.9063", "1.1918"] },
+    { q: "sin 15°", a: "0.2588", options: ["0.2588", "0.9659", "0.2679", "0.5000"] },
+    { q: "cos 80°", a: "0.1736", options: ["0.1736", "0.9848", "5.6713", "0.3420"] },
+    { q: "tan 55°", a: "1.4281", options: ["1.4281", "0.5736", "0.8192", "0.8391"] }
 ];
 
 let score = 0;
-let timeLeft = 60; // 1분 타이머
+let timeLeft = 60;
 let gameTimer = null;
 let currentQuestion = null;
 let isPlaying = false;
@@ -81,19 +93,21 @@ const ctx = canvas.getContext("2d");
 let isFiring = false;
 let cannonball = { x: 0, y: 0, progress: 0 };
 
+// 초기 화면 렌더링용
+drawScene();
+
 function startCannonGame() {
     score = 0;
     timeLeft = 60;
     isPlaying = true;
     
-    document.getElementById("start-screen").style.display = "none";
-    document.getElementById("result-screen").style.display = "none";
-    document.getElementById("game-container").style.display = "block";
+    // UI 전환: 시작 버튼 숨기고 문제 영역 보이기
+    document.getElementById("start-section").style.display = "none";
+    document.getElementById("play-section").style.display = "block";
     
     updateHeaderDisplay();
     loadRandomQuestion();
     
-    // 1초마다 타이머 감소
     clearInterval(gameTimer);
     gameTimer = setInterval(() => {
         timeLeft--;
@@ -108,10 +122,8 @@ function startCannonGame() {
 }
 
 function updateHeaderDisplay() {
-    const header = document.getElementById("status-header");
-    if(header) {
-        header.innerHTML = `<span style="color: #e74c3c; font-weight: bold;">⏳ 남은 시간: ${timeLeft}초</span> &nbsp;|&nbsp; <span style="color: #2980b9; font-weight: bold;">🎯 명중: ${score}회</span>`;
-    }
+    document.getElementById("status-header").innerHTML = 
+        `<span style="color: #e74c3c; font-weight: bold;">⏳ 남은 시간: ${timeLeft}초</span> &nbsp;|&nbsp; <span style="color: #2980b9; font-weight: bold;">🎯 명중: ${score}회</span>`;
 }
 
 function loadRandomQuestion() {
@@ -140,7 +152,7 @@ function fireCannon(selectedAnswer, correctAnswer) {
     cannonball.progress = 0;
     
     const fireAnim = setInterval(() => {
-        cannonball.progress += 0.05; // 포탄 날아가는 속도
+        cannonball.progress += 0.05; 
         if (cannonball.progress >= 1) {
             clearInterval(fireAnim);
             isFiring = false;
@@ -149,19 +161,18 @@ function fireCannon(selectedAnswer, correctAnswer) {
                 score++;
                 updateHeaderDisplay();
                 showFeedback("💥 명중!", "#2ecc71");
-                loadRandomQuestion(); // 맞히면 새 문제 나옴
+                loadRandomQuestion();
             } else {
-                showFeedback("❌ 빗나갔습니다!", "#e74c3c"); // 틀리면 문제 그대로
+                showFeedback("❌ 빗나갔습니다!", "#e74c3c"); 
             }
         }
     }, 15);
 }
 
-// 명중/오답 시 화면에 글씨 띄우는 효과
 function showFeedback(text, color) {
     const feedbackMsg = document.createElement("div");
     feedbackMsg.style.position = "absolute";
-    feedbackMsg.style.top = "120px";
+    feedbackMsg.style.top = "80px";
     feedbackMsg.style.left = "50%";
     feedbackMsg.style.transform = "translateX(-50%)";
     feedbackMsg.style.fontSize = "40px";
@@ -181,29 +192,26 @@ function endCannonGame() {
     isPlaying = false;
     clearInterval(gameTimer);
     
-    document.getElementById("game-container").style.display = "none";
-    document.getElementById("result-screen").style.display = "block";
+    document.getElementById("play-section").style.display = "none";
+    document.getElementById("result-section").style.display = "block";
     
-    const resultText = document.getElementById("result-text");
-    resultText.innerHTML = `<h2 style="color: #fbc531; font-size: 36px;">⏰ 시간 종료!</h2>
-                            <p style="font-size: 24px;">총 <strong style="color: #e74c3c; font-size: 32px;">${score}명</strong>의 악당을 처치했습니다!</p>`;
+    document.getElementById("result-score").innerHTML = `총 <strong style="color: #e74c3c; font-size: 32px;">${score}명</strong>의 악당을 처치했습니다!`;
 }
 
-// 캔버스 애니메이션
 function drawScene() {
-    if (!isPlaying) return;
-    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // 😈 악당 그리기
     const targetX = canvas.width / 2;
     const targetY = 60;
-    ctx.font = "50px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("😈", targetX, targetY);
     
-    // 대포 본체 
+    // 악당 (시작 전이나 게임 중일 때만 보임)
+    if(isPlaying || !document.getElementById("result-section").style.display.includes("block")) {
+        ctx.font = "50px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("😈", targetX, targetY);
+    }
+    
     const cannonBaseX = canvas.width / 2;
     const cannonBaseY = canvas.height - 20;
     
@@ -214,7 +222,6 @@ function drawScene() {
     ctx.arc(cannonBaseX, cannonBaseY, 25, 0, Math.PI * 2);
     ctx.fill();
     
-    // 날아가는 포탄
     if (isFiring) {
         const currentX = cannonBaseX + (targetX - cannonBaseX) * cannonball.progress;
         const currentY = cannonBaseY - 30 + (targetY - (cannonBaseY - 30)) * cannonball.progress;
@@ -226,7 +233,9 @@ function drawScene() {
         ctx.closePath();
     }
     
-    requestAnimationFrame(drawScene);
+    if(isPlaying) {
+        requestAnimationFrame(drawScene);
+    }
 }
 </script>
 </body>

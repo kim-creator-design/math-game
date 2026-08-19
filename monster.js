@@ -200,3 +200,8 @@ function endGame(isWin, msg) {
         document.getElementById("status-text").innerText = "게임 오버!";
     }
 }
+// 난이도 버튼을 눌렀을 때 실행되는 함수 (이전 코드에서 누락된 부분)
+function startGame(speed) {
+    window.monsterSpeed = speed; // 괴물 속도 설정
+    initGame(); // 대기 상태로 진입
+}
