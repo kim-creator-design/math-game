@@ -100,7 +100,33 @@ const processedImages = {};
 let isImagesReady = false;
 
 function removeBackground(imageSrc, callback) {
-    callback(imageSrc);
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.onload = function() {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width; canvas.height = img.height;
+        const ctx = canvas.getContext("2d"); ctx.drawImage(img, 0, 0);
+        try {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            // 🌟 이미지의 맨 왼쪽 위(배경) 색상을 스스로 스캔합니다.
+            const bgR = data[0], bgG = data[1], bgB = data[2];
+            
+            for (let i = 0; i < data.length; i += 4) {
+                // 🌟 스캔한 배경색(검은색)과 비슷한 색상만 골라서 투명하게 지웁니다!
+                // 오차 범위(40)를 좁혀서 남색 괴물은 절대 지워지지 않게 방어!
+                if (Math.abs(data[i] - bgR) < 40 && 
+                    Math.abs(data[i+1] - bgG) < 40 && 
+                    Math.abs(data[i+2] - bgB) < 40) {
+                    data[i+3] = 0; // 투명하게 만들기
+                }
+            }
+            ctx.putImageData(imageData, 0, 0); callback(canvas.toDataURL());
+        } catch (e) { callback(imageSrc); } 
+    };
+    img.onerror = () => callback(imageSrc); 
+    img.src = imageSrc;
 }
 
 // 화면 열리자마자 미리 이미지 로딩 시작
