@@ -17,11 +17,24 @@
     #track { position: relative; width: 100%; height: 120px; background: #7f8fa6; border-radius: 10px; margin: 30px 0; overflow: hidden; border: 3px solid #dcdde1; }
     .safe-zone { position: absolute; right: 0; top: 0; width: 15%; height: 100%; background: rgba(46, 204, 113, 0.5); border-left: 5px dashed #2ecc71; }
     
-    /* 🌟 선생님의 원래 캐릭터 이미지 스타일 복구! */
-    .character { position: absolute; bottom: 10px; width: 80px; height: 80px; transition: left 0.1s linear; }
+.character { position: absolute; bottom: 10px; width: 80px; height: 80px; transition: left 0.1s linear; }
     #monster { left: 0%; z-index: 2; }
     #player { left: 25%; z-index: 3; }
-    .character img { width: 100%; height: 100%; object-fit: contain; }
+    
+    /* 🌟 역동적인 달리기 애니메이션 복구 */
+    @keyframes runAnim {
+        0% { transform: translateY(0) rotate(0deg); }
+        25% { transform: translateY(-8px) rotate(-5deg); }
+        50% { transform: translateY(0) rotate(0deg); }
+        75% { transform: translateY(-8px) rotate(5deg); }
+        100% { transform: translateY(0) rotate(0deg); }
+    }
+    .character img { 
+        width: 100%; 
+        height: 100%; 
+        object-fit: contain; 
+        animation: runAnim 0.4s infinite; /* 폴짝폴짝 뛰는 효과 */
+    }
     
     .question-box { background: #f5f6fa; color: #2f3640; padding: 20px; border-radius: 10px; font-size: 28px; font-weight: bold; margin-bottom: 20px; }
     .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
@@ -44,7 +57,7 @@
             <p style="font-size: 20px; margin-bottom: 30px;">특수각(30°, 45°, 60°) 문제를 풀고 괴물로부터 도망치세요!</p>
             <button class="btn btn-easy" onclick="startGame(4)">🟢 쉬움</button>
             <button class="btn btn-normal" onclick="startGame(6)">🟡 보통</button>
-            <button class="btn btn-hard" onclick="startGame(8.5)">🔴 어려움</button>
+            <button class="btn btn-hard" onclick="startGame(9)">🔴 어려움</button>
         </div>
 
         <div id="main-game" class="hidden">
