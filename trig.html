@@ -35,5 +35,19 @@
         <br><br>
         <a href="index.html" class="back-btn" style="text-decoration:none; color:white; background:#34495e; padding:10px 20px; border-radius:10px;">⬅ 메인으로</a>
     </div>
+    <script>
+// 비밀번호를 확인하고 맞으면 해당 페이지로 이동시키는 기능
+function checkPassword(targetUrl, correctPassword) {
+    const userInput = prompt("비밀번호를 입력하세요 🔒");
+    
+    if (userInput === correctPassword) {
+        // 비밀번호가 맞으면 게임으로 이동
+        location.href = targetUrl;
+    } else if (userInput !== null) { 
+        // 취소 버튼을 누르지 않고 틀린 번호를 입력했을 때
+        alert("비밀번호가 틀렸습니다! ❌");
+    }
+}
+</script>
 </body>
 </html>

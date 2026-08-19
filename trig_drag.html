@@ -6,6 +6,20 @@
     <title>삼각비 드래그 퍼즐</title>
     <link rel="stylesheet" href="style.css?v=2"> 
     <link rel="stylesheet" href="trig.css?v=2">
+    
+    <!-- 🌟 입장 검사소 (비밀번호 코드) 🌟 -->
+    <script>
+        // 화면이 열리자마자 비밀번호를 물어봅니다.
+        const pwd = prompt("드래그 퍼즐 게임입니다. 비밀번호를 입력하세요 🔒");
+        
+        // 비밀번호가 1234가 아니면
+        if (pwd !== "1234") {
+            alert("비밀번호가 틀렸습니다! 메인 화면으로 돌아갑니다. ❌");
+            location.href = "index.html"; // 메인 화면으로 쫓아냄
+        }
+    </script>
+    <!-- 여기까지 -->
+    
 </head>
 <body>
     <div class="game-container">
@@ -15,7 +29,8 @@
         </div>
         
         <div class="triangle-diagram">
-            <img src="triangle_diagram.png" alt="직각삼각형 정의"> </div>
+            <img src="triangle_diagram.png" alt="직각삼각형 정의"> 
+        </div>
 
         <p class="instruction">블록을 끌어서 빈칸에 쏙 집어넣으세요!</p>
 
