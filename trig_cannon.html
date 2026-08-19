@@ -33,12 +33,17 @@
 
 <!-- 🌟 여기에 비밀번호 확인 코드가 추가되었습니다! 🌟 -->
 <script>
-    const pwd = prompt("대포 쏘기 게임입니다. 비밀번호를 입력하세요 🔒");
-    if (pwd !== "0431") {
-        alert("비밀번호가 틀렸습니다! ❌");
-        location.href = "index.html"; 
-    }
-</script>
+        // 대포 쏘기 프리패스 도장 확인!
+        if (!sessionStorage.getItem("cannonPass")) {
+            const pwd = prompt("대포 쏘기 게임입니다. 비밀번호를 입력하세요 🔒");
+            if (pwd === "0431") {
+                sessionStorage.setItem("cannonPass", "true");
+            } else {
+                alert("비밀번호가 틀렸습니다! ❌");
+                location.href = "index.html"; 
+            }
+        }
+    </script>
 <!-- 여기까지 -->
 
 </head>
