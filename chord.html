@@ -39,7 +39,7 @@
             max-width: 950px;
             width: 100%;
             justify-content: center;
-            flex-wrap: wrap; /* 화면 좁으면 아래로 내려감 */
+            flex-wrap: wrap;
         }
 
         .guide-panel {
@@ -123,7 +123,6 @@
         .reset-btn:hover { background: #c0392b; }
     </style>
 
-    <!-- 🌟 깨진 그릇 복원하기 비밀번호 검사 🌟 -->
     <script>
         if (!sessionStorage.getItem("chordPass")) {
             const pwd = prompt("깨진 그릇 복원하기 게임입니다. 비밀번호를 입력하세요 🔒");
@@ -145,25 +144,23 @@
     </div>
 
     <div class="main-content">
-        <!-- 네비게이션 가이드 패널 -->
         <div class="guide-panel">
             <h3>📜 발굴 안내서</h3>
             <ul class="step-list">
-                <li id="guide-0" class="active">1. 테두리 위에 두 점을 찍어보세요.</li>
+                <li id="guide-0" class="active">1. 온전한 테두리 위에 두 점을 찍어보세요.</li>
                 <li id="guide-1">2. 수직이등분선을 그려보세요.</li>
                 <li id="guide-2">3. 다른 두 점을 찍어보세요.</li>
                 <li id="guide-3">4. 다시 수직이등분선을 그어보세요.</li>
-                <li id="guide-4">5. 교점(중심)을 찍어보세요.</li>
+                <li id="guide-4">5. 두 선의 교점(중심)을 찍어보세요.</li>
             </ul>
         </div>
 
-        <!-- 게임 캔버스 영역 -->
         <div class="game-area">
             <canvas id="gameCanvas" width="600" height="400"></canvas>
             
             <div class="controls">
                 <button id="actionBtn" onclick="nextStep()">수직이등분선 그리기 📏</button>
-                <button class="reset-btn" style="display:inline-block;" onclick="resetGame()">다시 하기 🔄</button>
+                <button class="reset-btn" style="display:inline-block;" onclick="resetGame()">다른 조각 발굴 🔄</button>
             </div>
         </div>
     </div>
@@ -173,7 +170,6 @@
         const ctx = canvas.getContext("2d");
         const actionBtn = document.getElementById("actionBtn");
 
-        // 원의 중심과 반지름 설정
         const centerX = 300;
         const centerY = 200;
         const radius = 130;
@@ -182,19 +178,42 @@
         let endAngle = 0;
         let points = []; 
         let step = 0;    
-        let animationAngle = 0; 
+        let animationProgress = 0; 
 
-        // 🌟 1. 도자기 모양 랜덤 생성 함수
+        // 도자기 파편 데이터를 담을 배열
+        let shardPath = [];
+        let bowlColor = "";
+        let bowlDarkColor = "";
+
+        const potteryStyles = [
+            { light: "#d35400", dark: "#a04000" }, // 토기 (갈색)
+            { light: "#16a085", dark: "#0e6655" }, // 고려청자 (옥색)
+            { light: "#ecf0f1", dark: "#bdc3c7" }  // 조선백자 (회백색)
+        ];
+
         function generateRandomArc() {
-            // 호의 길이를 원의 1/3 ~ 2/3 크기로 랜덤하게 설정
-            const arcLength = Math.PI * (0.6 + Math.random() * 0.8);
-            // 시작 위치를 360도(2PI) 중 아무 곳이나 랜덤 설정
+            const style = potteryStyles[Math.floor(Math.random() * potteryStyles.length)];
+            bowlColor = style.light;
+            bowlDarkColor = style.dark;
+
+            const arcLength = Math.PI * (0.5 + Math.random() * 0.7); // 반원 조금 넘거나 모자라게
             startAngle = Math.random() * Math.PI * 2;
             endAngle = startAngle + arcLength;
-            animationAngle = endAngle;
+            
+            shardPath = [];
+            // 1. 매끈한 바깥쪽 테두리 (정확한 원)
+            for(let a = startAngle; a <= endAngle; a += 0.05) {
+                shardPath.push({ x: centerX + radius * Math.cos(a), y: centerY + radius * Math.sin(a) });
+            }
+            
+            // 2. 삐뚤빼뚤한 안쪽 깨진 단면 생성
+            for(let a = endAngle; a >= startAngle; a -= 0.1) {
+                // 두께를 불규칙하게 (30px ~ 70px)
+                const innerRadius = radius - 30 - Math.random() * 40; 
+                shardPath.push({ x: centerX + innerRadius * Math.cos(a), y: centerY + innerRadius * Math.sin(a) });
+            }
         }
 
-        // 가이드 강조 함수
         function updateGuide(currentStep) {
             for (let i = 0; i <= 4; i++) {
                 document.getElementById(`guide-${i}`).classList.remove("active");
@@ -207,23 +226,45 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // 깨진 그릇 그리기
+            // 🌟 리얼한 깨진 도자기 조각 그리기
             ctx.beginPath();
-            ctx.arc(centerX, centerY, radius, startAngle, animationAngle);
-            ctx.lineWidth = 6;
-            ctx.strokeStyle = "#e67e22";
-            ctx.stroke();
-
-            if (step === 5) {
-                ctx.fillStyle = "rgba(230, 126, 34, 0.2)";
+            if (shardPath.length > 0) {
+                ctx.moveTo(shardPath[0].x, shardPath[0].y);
+                for(let i = 1; i < shardPath.length; i++) {
+                    ctx.lineTo(shardPath[i].x, shardPath[i].y);
+                }
+                ctx.closePath();
+                
+                ctx.fillStyle = bowlColor;
                 ctx.fill();
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = bowlDarkColor;
+                ctx.stroke();
+
+                // 바깥쪽 온전한 테두리(점 찍을 곳)만 눈에 띄게 한 번 더 선을 그어줌
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.lineWidth = 5;
+                ctx.strokeStyle = "#fbc531"; // 노란색으로 가이드라인
+                ctx.stroke();
+            }
+
+            // 정답 맞힌 후 복원 애니메이션 (투명한 원이 채워짐)
+            if (step === 5) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2 * animationProgress);
+                ctx.fillStyle = bowlColor + "80"; // 반투명
+                ctx.fill();
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = bowlDarkColor;
+                ctx.stroke();
             }
 
             // 찍은 점 그리기
-            ctx.fillStyle = "#f1c40f";
+            ctx.fillStyle = "#ff4757";
             points.forEach(p => {
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+                ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.stroke();
             });
@@ -235,7 +276,7 @@
 
             if (step === 5) {
                 ctx.fillStyle = "#ffdd59";
-                ctx.font = "30px Arial";
+                ctx.font = "40px Arial";
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 ctx.fillText("⭐", centerX, centerY);
@@ -266,12 +307,11 @@
             ctx.lineTo(midX + px, midY + py);
             ctx.strokeStyle = "#e74c3c";
             ctx.lineWidth = 2;
-            ctx.setLineDash([5, 5]); 
+            ctx.setLineDash([8, 8]); 
             ctx.stroke();
             ctx.setLineDash([]); 
         }
 
-        // 클릭 이벤트 (점 찍기 제어)
         canvas.addEventListener("mousedown", function(e) {
             const rect = canvas.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
@@ -279,10 +319,10 @@
 
             if (step === 4) {
                 const distToCenter = Math.sqrt((mouseX - centerX)**2 + (mouseY - centerY)**2);
-                if (distToCenter < 20) { 
+                if (distToCenter < 25) { // 교차점 판정 약간 후하게
                     step = 5;
-                    updateGuide(5); // 가이드 끝
-                    document.getElementById("guide-4").innerHTML = "🎉 정답! 그릇이 복원됩니다.";
+                    updateGuide(5); 
+                    document.getElementById("guide-4").innerHTML = "🎉 정답! 유물이 완벽하게 복원되었습니다.";
                     animateRestore(); 
                 } else {
                     alert("❌ 거기가 아니에요! 두 점선이 만나는 십자가 교차점을 정확히 클릭하세요.");
@@ -290,19 +330,28 @@
                 return;
             }
 
-            // 🌟 점 개수 엄격하게 제한 (2개 이상, 4개 이상 안 찍히도록 방어)
             if (step === 0 && points.length >= 2) return;
             if (step === 2 && points.length >= 4) return;
 
             if (step === 0 || step === 2) {
                 const dist = Math.sqrt((mouseX - centerX)**2 + (mouseY - centerY)**2);
-                let clickAngle = Math.atan2(mouseY - centerY, mouseX - centerX);
                 
-                // 클릭한 각도가 렌더링된 호 안에 있는지 수학적 검사
-                while (clickAngle < startAngle) clickAngle += Math.PI * 2;
-                while (clickAngle >= startAngle + Math.PI * 2) clickAngle -= Math.PI * 2;
+                // 🌟 클릭 판정 로직 완벽 수정!
+                let clickAngle = Math.atan2(mouseY - centerY, mouseX - centerX);
+                if (clickAngle < 0) clickAngle += 2 * Math.PI; // 각도를 무조건 0 ~ 360도로 변환
 
-                if (Math.abs(dist - radius) < 15 && clickAngle <= endAngle) { 
+                let s = startAngle % (2 * Math.PI);
+                let e = endAngle % (2 * Math.PI);
+
+                let angleValid = false;
+                if (s < e) {
+                    angleValid = (clickAngle >= s && clickAngle <= e);
+                } else {
+                    angleValid = (clickAngle >= s || clickAngle <= e);
+                }
+
+                // 오차 허용 범위를 25px로 넓혀서 아주 쉽게 찍히게 함
+                if (Math.abs(dist - radius) < 25 && angleValid) { 
                     points.push({
                         x: centerX + radius * Math.cos(clickAngle),
                         y: centerY + radius * Math.sin(clickAngle)
@@ -310,7 +359,6 @@
                     
                     draw();
 
-                    // 버튼 활성화 및 단계 변경
                     if (points.length === 2 && step === 0) {
                         step = 1;
                         updateGuide(1);
@@ -322,20 +370,20 @@
                         actionBtn.style.display = "inline-block";
                     }
                 } else {
-                    alert("⚠️ 눈에 보이는 주황색 그릇 테두리 위에 점을 찍어주세요!");
+                    alert("⚠️ 노란색으로 칠해진 매끈한 바깥쪽 테두리 위에 점을 찍어주세요!");
                 }
             }
         });
 
         function nextStep() {
             if (step === 1) {
-                step = 2; // 두 번째 점 찍기 활성화
+                step = 2; 
                 updateGuide(2);
                 actionBtn.style.display = "none";
                 draw();
             } 
             else if (step === 3) {
-                step = 4; // 중심 클릭 활성화
+                step = 4; 
                 updateGuide(4);
                 actionBtn.style.display = "none";
                 draw();
@@ -343,8 +391,8 @@
         }
 
         function animateRestore() {
-            if (animationAngle < startAngle + Math.PI * 2) {
-                animationAngle += 0.05; 
+            if (animationProgress < 1) {
+                animationProgress += 0.02; 
                 draw();
                 requestAnimationFrame(animateRestore);
             }
@@ -353,14 +401,14 @@
         function resetGame() {
             points = [];
             step = 0;
+            animationProgress = 0;
             actionBtn.style.display = "none";
-            document.getElementById("guide-4").innerHTML = "5. 교점(중심)을 찍어보세요.";
+            document.getElementById("guide-4").innerHTML = "5. 두 선의 교점(중심)을 찍어보세요.";
             updateGuide(0);
             generateRandomArc();
             draw();
         }
 
-        // 초기 시작
         resetGame();
     </script>
 </body>
