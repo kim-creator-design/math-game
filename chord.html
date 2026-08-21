@@ -78,6 +78,19 @@
         }
         .reset-btn:hover { background: #c0392b; }
     </style>
+
+<script>
+        if (!sessionStorage.getItem("chordPass")) {
+            const pwd = prompt("깨진 그릇 복원하기 게임입니다. 비밀번호를 입력하세요 🔒");
+            if (pwd === "5352") {
+                sessionStorage.setItem("chordPass", "true");
+            } else {
+                alert("비밀번호가 틀렸습니다! 메인 화면으로 돌아갑니다. ❌");
+                location.href = "index.html"; 
+            }
+        }
+    </script>
+
 </head>
 <body>
 
