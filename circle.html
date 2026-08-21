@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>원의 성질 - 메뉴</title>
+    <style>
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background-color: #2f3640; /* 배경색 (다크) */
+            color: #f5f6fa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        h1 {
+            font-size: 3rem;
+            color: #fbc531; /* 노란색 포인트 */
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 50px;
+            color: #dcdde1;
+        }
+        .menu-container {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .menu-btn {
+            background-color: #3498db; /* 파란색 버튼 */
+            color: white;
+            text-decoration: none;
+            padding: 25px 50px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            border-radius: 15px;
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .menu-btn span {
+            font-size: 2.5rem; /* 이모지 크기 */
+        }
+        .menu-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-5px) scale(1.05); /* 마우스 올리면 커지며 떠오름 */
+        }
+        .back-btn {
+            margin-top: 60px;
+            background-color: #7f8fa6;
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .back-btn:hover {
+            background-color: #718093;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>⭕ 원의 성질</h1>
+    <div class="subtitle">도전할 단원을 선택하세요!</div>
+
+    <div class="menu-container">
+        <!-- 앞으로 만들 게임 파일 이름들 (chord.html, tangent.html, angle.html) -->
+        <a href="chord.html" class="menu-btn">
+            <span>📏</span> 깨진 그릇 복원하기
+        </a>
+        <a href="tangent.html" class="menu-btn">
+            <span>📐</span> 가시거리 계산하기
+        </a>
+        <a href="angle.html" class="menu-btn">
+            <span>🍕</span> 골 넣기
+        </a>
+    </div>
+
+    <a href="index.html" class="back-btn">⬅ 메인 화면으로</a>
+
+</body>
+</html>
