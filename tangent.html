@@ -30,18 +30,17 @@
     </div>
 
     <script>
-        // 1. 처음 들어왔을 때만 비밀번호(4885)를 묻도록 처리합니다.
+        // 비밀번호(4885) 세션 관리
         if (!sessionStorage.getItem("tangentUnlocked")) {
             let pwd = prompt("가시거리 계산기입니다. 비밀번호를 입력하세요 🔒");
             if (pwd === "4885") {
-                sessionStorage.setItem("tangentUnlocked", "true"); // 통과 기록 저장
+                sessionStorage.setItem("tangentUnlocked", "true");
             } else {
                 alert("비밀번호가 틀렸습니다! 메인 화면으로 돌아갑니다.");
                 window.location.href = "index.html";
             }
         }
 
-        // 2. 비밀번호를 통과한 상태라면 게임을 준비합니다.
         if (sessionStorage.getItem("tangentUnlocked") === "true") {
             let canvas = document.getElementById("gameCanvas");
             let ctx = canvas.getContext("2d");
@@ -54,20 +53,22 @@
 
             const earthX = 300, earthY = 450, earthR = 200; 
 
-            // 동탄 기준 가시거리에 따른 관측 가능 도시 판별 함수
+            // 동탄 기준 (남북한 주요 도시 및 명산 포함)
             function getVisibleCity(km) {
-                if (km < 40) return "서울(강남), 성남, 용인, 평택";
-                if (km < 70) return "인천, 과천, 천안, 아산";
-                if (km < 110) return "청주, 세종, 당진, 충주";
-                if (km < 160) return "대전, 전주, 원주, 군산";
-                if (km < 210) return "대구, 광주, 상주, 지리산";
-                return "부산, 울산, 창원, 목포 (한반도 남단!)";
+                if (km < 40) return "수원, 오산, 서울(강남), 용인";
+                if (km < 80) return "인천, 천안, 원주, <b>[북한] 개성</b>";
+                if (km < 120) return "대전, 세종, 청주, <b>[북한] 해주</b>";
+                if (km < 170) return "전주, 안동, <b>[북한] 사리원, 금강산</b>";
+                if (km < 210) return "대구, 포항, <b>[북한] 평양, 원산, 남포</b>";
+                if (km < 240) return "광주, 진주, <b>[북한] 안주, 함흥 입구</b>";
+                return "여수, 목포, <b>[북한] 묘향산 부근</b>";
             }
 
-            // 게임을 초기화하고 시작하는 함수 (새로고침 없이 재시작할 때 쓰임)
             function initGame() {
-                // 고도는 100m ~ 5000m 사이로 설정
-                realHeight = Math.floor(Math.random() * 4901) + 100;
+                // Math.pow(Math.random(), 2)를 사용하여 낮은 고도 확률 증가 (100m~5000m)
+                let weightedRandom = Math.pow(Math.random(), 2);
+                realHeight = Math.floor(weightedRandom * 4901) + 100; 
+                
                 document.getElementById("heightDisplay").innerHTML = `현재 관측 고도: <b>${realHeight} m</b>`;
                 document.getElementById("msg").innerHTML = "목표: 레이저가 지구와 딱 스치는 접선(90도)이 될 때 정지하세요!";
                 document.getElementById("msg").style.color = "#4cd137";
@@ -75,7 +76,6 @@
                 document.getElementById("actionBtn").innerText = "정지! 🛑";
                 document.getElementById("actionBtn").style.background = "#e74c3c";
 
-                // 비율에 맞게 캔버스에 그릴 높이 계산
                 canvasHeight = 20 + (realHeight / 5000) * 80; 
                 personY = earthY - earthR - canvasHeight;
                 
@@ -92,13 +92,13 @@
             function draw() {
                 ctx.clearRect(0, 0, 600, 400);
 
-                // 지구 그리기
+                // 지구
                 ctx.beginPath();
                 ctx.arc(earthX, earthY, earthR, 0, Math.PI * 2);
                 ctx.fillStyle = "#3498db";
                 ctx.fill();
 
-                // 타워 및 사람 그리기
+                // 관측 타워
                 ctx.fillStyle = "#95a5a6";
                 ctx.fillRect(earthX - 5, personY, 10, canvasHeight);
                 ctx.fillStyle = "#ff4757";
@@ -106,7 +106,7 @@
                 ctx.arc(earthX, personY, 6, 0, Math.PI*2);
                 ctx.fill();
 
-                // 레이저 그리기
+                // 레이저
                 let rad = currentAngle * (Math.PI / 180);
                 let endX = earthX + 700 * Math.sin(rad);
                 let endY = personY + 700 * Math.cos(rad);
@@ -116,21 +116,18 @@
                 ctx.lineTo(endX, endY);
                 ctx.strokeStyle = "#ff4757";
                 ctx.lineWidth = 3;
-                if(!isPlaying) ctx.setLineDash([10, 5]); // 멈추면 점선으로 변경
+                if(!isPlaying) ctx.setLineDash([10, 5]);
                 ctx.stroke();
                 ctx.setLineDash([]);
 
                 if (isPlaying) {
                     currentAngle += angleSpeed;
-                    // 레이저 범위를 5도(거의 수직) ~ 85도(우주 허공)까지 넒게 스윙하도록 수정
                     if (currentAngle > 85 || currentAngle < 5) angleSpeed *= -1;
                     animId = requestAnimationFrame(draw);
                 } else {
-                    // 정지 시 결과 판정 (오차범위 2도 이내면 정답 처리)
                     if (Math.abs(currentAngle - targetAngle) <= 2) {
                         let R = 6371; 
                         let h = realHeight / 1000; 
-                        // 피타고라스 정리: d = √( (R+h)² - R² )
                         let dist = Math.sqrt(Math.pow(R + h, 2) - Math.pow(R, 2));
                         let city = getVisibleCity(dist);
                         
@@ -144,18 +141,16 @@
                 }
             }
 
-            // 버튼 클릭 시 정지하거나 재시작하는 함수
             window.toggleGame = function() {
                 if (isPlaying) {
                     isPlaying = false;
                     document.getElementById("actionBtn").innerText = "새로운 고도에서 다시 하기 🔄";
                     document.getElementById("actionBtn").style.background = "#2ecc71";
                 } else {
-                    initGame(); // 새로고침 없이 바로 게임 재시작
+                    initGame();
                 }
             };
 
-            // 처음 시작
             initGame(); 
         }
     </script>
