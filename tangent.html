@@ -17,7 +17,7 @@
         }
         .header {
             width: 100%;
-            max-width: 800px;
+            max-width: 700px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -33,53 +33,46 @@
         }
         h2 { color: #fbc531; margin: 0; }
 
-        /* 탭 버튼 스타일 */
-        .tab-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .tab-btn {
-            background: #7f8fa6;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .tab-btn.active {
-            background: #fbc531;
-            color: #2f3640;
-            box-shadow: 0 4px 10px rgba(251, 197, 49, 0.4);
-        }
-
-        /* 게임 영역 */
         .game-panel {
             background: #353b48;
-            padding: 20px;
+            padding: 25px;
             border-radius: 15px;
             box-shadow: 0 8px 16px rgba(0,0,0,0.3);
             text-align: center;
-            display: none; /* 기본으로 숨김 */
             width: 100%;
             max-width: 650px;
         }
-        .game-panel.active {
-            display: block; /* 활성화된 탭만 보임 */
+
+        .status-board {
+            background: #222f3e;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 2px solid #576574;
+        }
+        
+        #heightDisplay {
+            font-size: 1.2rem;
+            color: #00d2d3;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        #msg {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #4cd137;
+            min-height: 30px;
         }
 
         canvas {
-            background-color: #222f3e;
+            background-color: #1e272e;
             border: 3px solid #7f8fa6;
             border-radius: 10px;
-            margin-top: 10px;
             box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
         }
 
-        /* 컨트롤 버튼들 */
         button.action-btn {
             background: #e74c3c;
             color: white;
@@ -89,49 +82,15 @@
             font-weight: bold;
             border-radius: 10px;
             cursor: pointer;
-            margin-top: 20px;
             transition: 0.2s;
         }
-        button.action-btn:hover { transform: scale(1.05); background: #c0392b; }
-        
-        button.reset-btn {
-            background: #3498db;
-            color: white;
-            border: none;
-            padding: 15px 20px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            border-radius: 10px;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-
-        /* 슬라이더 스타일 */
-        .slider-container {
-            margin-top: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            font-size: 1.2rem;
-        }
-        input[type=range] {
-            width: 300px;
-            cursor: pointer;
-        }
-        
-        #msg1, #msg2 {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: #4cd137;
-            height: 30px;
-        }
+        button.action-btn:hover { transform: scale(1.05); }
     </style>
 
-    <!-- 비밀번호 확인 스크립트 -->
     <script>
+        // 힌트 제거된 비밀번호 확인
         if (!sessionStorage.getItem("tangentPass")) {
-            const pwd = prompt("가시거리 계산 게임입니다. 비밀번호를 입력하세요 🔒 (힌트: 2024)");
+            const pwd = prompt("가시거리 계산 게임입니다. 비밀번호를 입력하세요 🔒");
             if (pwd === "2024") {
                 sessionStorage.setItem("tangentPass", "true");
             } else {
@@ -145,262 +104,208 @@
 
     <div class="header">
         <a href="circle.html" class="back-btn">⬅ 메뉴로</a>
-        <h2>🔭 가시거리 계산하기 (원의 접선)</h2>
+        <h2>🔭 타워에서 어디까지 보일까?</h2>
         <div style="width: 80px;"></div>
     </div>
 
-    <!-- 탭 버튼 -->
-    <div class="tab-container">
-        <button class="tab-btn active" id="btn-tab1" onclick="switchTab(1)">💡 후보 1: 접선 타이밍 게임</button>
-        <button class="tab-btn" id="btn-tab2" onclick="switchTab(2)">💡 후보 2: 고도와 피타고라스</button>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- 🎮 후보 1: 레이저 타이밍 게임 (선생님 아이디어) -->
-    <!-- ========================================== -->
-    <div id="tab1" class="game-panel active">
-        <div id="msg1">목표: 레이저가 지구와 정확히 '접선(90도)'이 될 때 멈추세요!</div>
-        <canvas id="canvas1" width="600" height="400"></canvas>
-        <div>
-            <button class="action-btn" id="stopBtn" onclick="toggleLaser()">정지! 🛑</button>
-            <button class="reset-btn" onclick="resetGame1()">다시하기 🔄</button>
+    <div class="game-panel">
+        <div class="status-board">
+            <div id="heightDisplay">현재 전망대 높이: 준비 중...</div>
+            <div id="msg">목표: 레이저가 지구와 정확히 '접선(90도)'이 될 때 멈추세요!</div>
         </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- 🎮 후보 2: 고도 슬라이더 게임 (AI 아이디어) -->
-    <!-- ========================================== -->
-    <div id="tab2" class="game-panel">
-        <div id="msg2">건물이 높아질수록 가시거리(접선)가 얼마나 길어지는지 관찰하세요.</div>
-        <canvas id="canvas2" width="600" height="400"></canvas>
-        <div class="slider-container">
-            <span>건물 고도: </span>
-            <input type="range" id="heightSlider" min="10" max="250" value="10" oninput="updateGame2()">
-            <span id="heightValue" style="color:#fbc531; font-weight:bold; width: 80px;">10 m</span>
+        
+        <canvas id="gameCanvas" width="600" height="400"></canvas>
+        
+        <div>
+            <button class="action-btn" id="actionBtn" onclick="toggleGame()">정지! 🛑</button>
         </div>
     </div>
 
     <script>
-        // ---------------------------------------------------
-        // 탭 전환 로직
-        // ---------------------------------------------------
-        function switchTab(tabNum) {
-            document.getElementById('tab1').classList.remove('active');
-            document.getElementById('tab2').classList.remove('active');
-            document.getElementById('btn-tab1').classList.remove('active');
-            document.getElementById('btn-tab2').classList.remove('active');
-            
-            document.getElementById('tab' + tabNum).classList.add('active');
-            document.getElementById('btn-tab' + tabNum).classList.add('active');
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
 
-            if(tabNum === 1) resetGame1();
-            if(tabNum === 2) updateGame2();
-        }
-
-        // 공통 지구 설정
+        // 지구 기본 설정 (캔버스 상의 크기)
         const earthX = 300;
         const earthY = 450;
-        const earthR = 200;
+        const earthR = 200; 
+
+        // 게임 변수들
+        let realHeight = 0;      // 실제 건물 높이 (m)
+        let canvasHeight = 0;    // 화면에 그릴 건물 기둥 높이
+        let personY = 0;         // 사람(관찰자)의 캔버스 Y좌표
         
-        // ---------------------------------------------------
-        // 🎮 게임 1 (레이저 타이밍) 스크립트
-        // ---------------------------------------------------
-        const ctx1 = document.getElementById("canvas1").getContext("2d");
-        const personY = 120; // 사람(관찰자)의 Y좌표
-        const OP_dist = earthY - personY; // 중심부터 사람까지 거리 (330)
-        
-        // 접선이 될 때의 정확한 각도 계산 (수학 공식: sin(θ) = R / 거리)
-        const targetAngleRad = Math.asin(earthR / OP_dist);
-        const targetAngleDeg = targetAngleRad * (180 / Math.PI); // 약 37.3도
+        let laserTargetAngleDeg = 0;  // 맞춰야 하는 정답 레이저 각도
+        let centerTargetAngleRad = 0; // 중심에서 접점까지의 실제 각도(라디안)
 
         let currentAngle = 10;
         let angleSpeed = 1.2;
-        let isPlaying = true;
+        let isPlaying = false;
         let animId;
 
-        function drawGame1() {
-            ctx1.clearRect(0, 0, 600, 400);
+        // 게임 초기화 (새로운 높이 생성)
+        function initGame() {
+            // 1. 랜덤 높이 생성 (10m ~ 555m 롯데타워 급까지)
+            realHeight = Math.floor(Math.random() * 546) + 10;
+            document.getElementById("heightDisplay").innerText = `현재 전망대 높이: ${realHeight} m`;
+            document.getElementById("msg").innerHTML = "목표: 레이저가 지구와 정확히 '접선(90도)'이 될 때 멈추세요!";
+            document.getElementById("msg").style.color = "#4cd137";
 
-            // 1. 지구 그리기
-            ctx1.beginPath();
-            ctx1.arc(earthX, earthY, earthR, 0, Math.PI * 2);
-            ctx1.fillStyle = "#27ae60";
-            ctx1.fill();
-            ctx1.strokeStyle = "#2ecc71";
-            ctx1.lineWidth = 4;
-            ctx1.stroke();
+            // 2. 캔버스 비율에 맞게 높이 계산
+            // 실제 10~555m를 캔버스 20~100픽셀로 매핑
+            canvasHeight = 20 + (realHeight / 555) * 80; 
+            personY = earthY - earthR - canvasHeight;
+            
+            // 3. 수학 계산 (접선 각도 구하기)
+            const dist_OP = earthY - personY; // 중심(O)부터 사람(P)까지 캔버스 거리
+            
+            // 레이저가 스윙해야 하는 정답 각도 (수직선 기준)
+            laserTargetAngleDeg = Math.asin(earthR / dist_OP) * (180 / Math.PI); 
+            // 중심에서 접점을 향하는 반지름 각도
+            centerTargetAngleRad = Math.acos(earthR / dist_OP);
 
-            // 2. 타워 및 사람 (간단히 표현)
-            ctx1.fillStyle = "#bdc3c7";
-            ctx1.fillRect(earthX - 10, personY, 20, earthY - earthR - personY); // 기둥
-            ctx1.fillStyle = "#e74c3c";
-            ctx1.beginPath();
-            ctx1.arc(earthX, personY, 8, 0, Math.PI*2); // 사람(빨간점)
-            ctx1.fill();
+            // 4. 애니메이션 상태 리셋
+            currentAngle = 10;
+            angleSpeed = 1.2;
+            isPlaying = true;
+            document.getElementById("actionBtn").innerText = "정지! 🛑";
+            document.getElementById("actionBtn").style.background = "#e74c3c";
+            
+            cancelAnimationFrame(animId);
+            drawGame();
+        }
 
-            // 3. 레이저 그리기
+        function drawGame() {
+            ctx.clearRect(0, 0, 600, 400);
+
+            // 1. 지구
+            ctx.beginPath();
+            ctx.arc(earthX, earthY, earthR, 0, Math.PI * 2);
+            ctx.fillStyle = "#2980b9";
+            ctx.fill();
+            ctx.strokeStyle = "#3498db";
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            // 2. 타워 기둥과 관찰자(빨간점)
+            ctx.fillStyle = "#95a5a6";
+            ctx.fillRect(earthX - 10, personY, 20, canvasHeight);
+            ctx.fillStyle = "#ff4757";
+            ctx.beginPath();
+            ctx.arc(earthX, personY, 6, 0, Math.PI*2);
+            ctx.fill();
+
+            // 3. 레이저 선
             const rad = currentAngle * (Math.PI / 180);
-            // 수직(아래쪽) 기준으로 각도 계산
-            const laserEndX = earthX + 500 * Math.sin(rad);
-            const laserEndY = personY + 500 * Math.cos(rad);
+            const laserEndX = earthX + 600 * Math.sin(rad);
+            const laserEndY = personY + 600 * Math.cos(rad);
 
-            ctx1.beginPath();
-            ctx1.moveTo(earthX, personY);
-            ctx1.lineTo(laserEndX, laserEndY);
-            ctx1.strokeStyle = "#ff4757";
-            ctx1.lineWidth = 3;
-            if(!isPlaying) ctx1.setLineDash([10, 5]); // 멈추면 점선으로
-            ctx1.stroke();
-            ctx1.setLineDash([]);
+            ctx.beginPath();
+            ctx.moveTo(earthX, personY);
+            ctx.lineTo(laserEndX, laserEndY);
+            ctx.strokeStyle = "#ff4757";
+            ctx.lineWidth = 3;
+            if(!isPlaying) ctx.setLineDash([10, 5]); // 정지 시 점선
+            ctx.stroke();
+            ctx.setLineDash([]);
 
-            // 4. 정답 판정 연출 (멈췄을 때)
+            // 4. 멈췄을 때의 정답 판정
             if (!isPlaying) {
                 // 오차 허용 범위 (± 1.5도)
-                if (Math.abs(currentAngle - targetAngleDeg) <= 1.5) {
-                    // 정답! 접점 그리기
-                    const tangentX = earthX + earthR * Math.sin(targetAngleRad);
-                    const tangentY = earthY - earthR * Math.cos(targetAngleRad);
+                if (Math.abs(currentAngle - laserTargetAngleDeg) <= 1.5) {
                     
-                    // 반지름(파란점선) 긋기
-                    ctx1.beginPath();
-                    ctx1.moveTo(earthX, earthY);
-                    ctx1.lineTo(tangentX, tangentY);
-                    ctx1.strokeStyle = "#3498db";
-                    ctx1.setLineDash([5, 5]);
-                    ctx1.stroke();
-                    ctx1.setLineDash([]);
+                    // 정확한 접점(Tangent Point) 좌표 계산
+                    const tangentX = earthX + earthR * Math.sin(centerTargetAngleRad);
+                    const tangentY = earthY - earthR * Math.cos(centerTargetAngleRad);
+                    
+                    // 중심에서 접점까지 파란 점선 (반지름)
+                    ctx.beginPath();
+                    ctx.moveTo(earthX, earthY);
+                    ctx.lineTo(tangentX, tangentY);
+                    ctx.strokeStyle = "#3498db";
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 5]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
 
-                    // 직각(90도) 표시 
-                    // (조금 복잡한 수학이지만 시각적 효과를 위해 추가!)
-                    ctx1.beginPath();
-                    ctx1.arc(tangentX, tangentY, 15, targetAngleRad + Math.PI/2, targetAngleRad + Math.PI);
-                    ctx1.strokeStyle = "#fbc531";
-                    ctx1.lineWidth = 3;
-                    ctx1.stroke();
+                    // 직각(90도) 마크 그리기 (정확한 수학적 위치 계산)
+                    drawRightAngle(tangentX, tangentY, earthX, earthY, earthX, personY);
 
-                    document.getElementById("msg1").innerHTML = "🎉 가시거리 측정 성공! (접선과 반지름은 90도입니다)";
-                    document.getElementById("msg1").style.color = "#ffdd59";
+                    // 실제 가시거리 계산 (피타고라스 정리: d^2 = (R+h)^2 - R^2)
+                    const R_km = 6371; // 실제 지구 반지름(km)
+                    const h_km = realHeight / 1000; // m -> km 변환
+                    const viewDistance = Math.sqrt(Math.pow(R_km + h_km, 2) - Math.pow(R_km, 2));
+
+                    // 성공 메시지 및 계산 결과 출력
+                    let resultMsg = `🎉 완벽한 90도! 가시거리는 약 <span style="color:#fbc531;">${viewDistance.toFixed(1)} km</span> 입니다.`;
+                    if(viewDistance > 80) resultMsg += " (엄청 멀리 보이네요!)";
+                    
+                    document.getElementById("msg").innerHTML = resultMsg;
+                    document.getElementById("msg").style.color = "#00d2d3";
+
                 } else {
-                    document.getElementById("msg1").innerHTML = "❌ 실패! 접선이 아닙니다. (지구를 관통하거나 허공을 가릅니다)";
-                    document.getElementById("msg1").style.color = "#ff4757";
+                    document.getElementById("msg").innerHTML = "❌ 실패! 접선이 아닙니다. (지구를 관통하거나 허공을 가릅니다)";
+                    document.getElementById("msg").style.color = "#ff4757";
                 }
             }
 
+            // 레이저 애니메이션 계속 진행
             if (isPlaying) {
                 currentAngle += angleSpeed;
-                // 10도 ~ 65도 사이를 왔다갔다
+                // 각도 왕복 (10도 ~ 65도)
                 if (currentAngle > 65 || currentAngle < 10) angleSpeed *= -1;
-                animId = requestAnimationFrame(drawGame1);
+                animId = requestAnimationFrame(drawGame);
             }
         }
 
-        function toggleLaser() {
+        // 직각(90도) 표시를 정확히 그려주는 헬퍼 함수
+        function drawRightAngle(tX, tY, oX, oY, pX, pY) {
+            // T->O 벡터
+            const toX = oX - tX;
+            const toY = oY - tY;
+            const toLen = Math.hypot(toX, toY);
+            const ux = toX / toLen;
+            const uy = toY / toLen;
+
+            // T->P 벡터
+            const tpX = pX - tX;
+            const tpY = pY - tY;
+            const tpLen = Math.hypot(tpX, tpY);
+            const vx = tpX / tpLen;
+            const vy = tpY / tpLen;
+
+            // 15px 크기의 정사각형 모서리 그리기
+            const size = 18;
+            const p1x = tX + size * ux;
+            const p1y = tY + size * uy;
+            const p2x = tX + size * ux + size * vx;
+            const p2y = tY + size * uy + size * vy;
+            const p3x = tX + size * vx;
+            const p3y = tY + size * vy;
+
+            ctx.beginPath();
+            ctx.moveTo(p1x, p1y);
+            ctx.lineTo(p2x, p2y);
+            ctx.lineTo(p3x, p3y);
+            ctx.strokeStyle = "#fbc531";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+
+        function toggleGame() {
             if (isPlaying) {
+                // 게임 멈춤
                 isPlaying = false;
-                document.getElementById("stopBtn").innerText = "다시 발사 🔫";
-                document.getElementById("stopBtn").style.background = "#2ecc71";
+                document.getElementById("actionBtn").innerText = "다시 발사 🔫 (랜덤 높이)";
+                document.getElementById("actionBtn").style.background = "#2ecc71";
             } else {
-                isPlaying = true;
-                document.getElementById("msg1").innerHTML = "목표: 레이저가 지구와 정확히 '접선(90도)'이 될 때 멈추세요!";
-                document.getElementById("msg1").style.color = "#4cd137";
-                document.getElementById("stopBtn").innerText = "정지! 🛑";
-                document.getElementById("stopBtn").style.background = "#e74c3c";
-                drawGame1();
+                // 새로운 랜덤 높이로 다시 시작
+                initGame();
             }
         }
 
-        function resetGame1() {
-            isPlaying = true;
-            currentAngle = 10;
-            angleSpeed = 1.2;
-            document.getElementById("msg1").innerHTML = "목표: 레이저가 지구와 정확히 '접선(90도)'이 될 때 멈추세요!";
-            document.getElementById("msg1").style.color = "#4cd137";
-            document.getElementById("stopBtn").innerText = "정지! 🛑";
-            document.getElementById("stopBtn").style.background = "#e74c3c";
-            cancelAnimationFrame(animId);
-            drawGame1();
-        }
-
-
-        // ---------------------------------------------------
-        // 🎮 게임 2 (고도 슬라이더) 스크립트
-        // ---------------------------------------------------
-        const ctx2 = document.getElementById("canvas2").getContext("2d");
-        
-        function updateGame2() {
-            const h = parseInt(document.getElementById("heightSlider").value);
-            document.getElementById("heightValue").innerText = h + " m";
-            
-            const towerY = earthY - earthR - h; // 건물의 현재 높이
-            
-            ctx2.clearRect(0, 0, 600, 400);
-
-            // 1. 지구 그리기
-            ctx2.beginPath();
-            ctx2.arc(earthX, earthY, earthR, 0, Math.PI * 2);
-            ctx2.fillStyle = "#2980b9";
-            ctx2.fill();
-            ctx2.strokeStyle = "#3498db";
-            ctx2.lineWidth = 4;
-            ctx2.stroke();
-
-            // 2. 타워 그리기
-            ctx2.fillStyle = "#f39c12";
-            ctx2.fillRect(earthX - 8, towerY, 16, h);
-
-            // 3. 접선(시야) 및 피타고라스 삼각형 그리기
-            const dist_OP = earthY - towerY; // 빗변 (R + h)
-            const angle = Math.acos(earthR / dist_OP); // 접선이 이루는 각도
-            
-            const tangentX = earthX + earthR * Math.sin(angle);
-            const tangentY = earthY - earthR * Math.cos(angle);
-
-            // 반지름 (O -> T)
-            ctx2.beginPath();
-            ctx2.moveTo(earthX, earthY);
-            ctx2.lineTo(tangentX, tangentY);
-            ctx2.strokeStyle = "#95a5a6";
-            ctx2.setLineDash([5, 5]);
-            ctx2.lineWidth = 2;
-            ctx2.stroke();
-
-            // 중심축 (O -> P)
-            ctx2.beginPath();
-            ctx2.moveTo(earthX, earthY);
-            ctx2.lineTo(earthX, towerY);
-            ctx2.stroke();
-            ctx2.setLineDash([]);
-
-            // 🚀 가시거리 접선 (P -> T)
-            ctx2.beginPath();
-            ctx2.moveTo(earthX, towerY);
-            // 끝까지 쭉 뻗어나가는 느낌을 주기 위해 선을 연장
-            const viewLength = 600;
-            ctx2.lineTo(earthX + viewLength * Math.sin(angle), towerY + viewLength * Math.cos(angle));
-            ctx2.strokeStyle = "#e74c3c";
-            ctx2.lineWidth = 3;
-            ctx2.stroke();
-            
-            // 직각 표시
-            ctx2.fillStyle = "#fbc531";
-            ctx2.font = "20px Arial";
-            ctx2.fillText("90°", tangentX + 10, tangentY - 10);
-
-            // 수학 계산 (피타고라스) : d^2 + R^2 = (R+h)^2
-            const d = Math.sqrt(Math.pow(dist_OP, 2) - Math.pow(earthR, 2));
-            const viewKm = Math.floor(d * 0.5); // 수치 보정
-
-            // 상태 메시지 업데이트
-            let msg = `높이 ${h}m ➔ 가시거리 약 ${viewKm}km`;
-            if(viewKm > 110) msg += " (✨저 멀리 부산까지 보입니다!)";
-            else if(viewKm > 70) msg += " (✨대전이 보이기 시작합니다!)";
-            else msg += " (서울 시내만 보입니다)";
-            
-            document.getElementById("msg2").innerHTML = msg;
-        }
-
-        // 초기 실행
-        resetGame1();
+        // 최초 실행
+        initGame();
     </script>
 </body>
 </html>
