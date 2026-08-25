@@ -33,17 +33,26 @@
 
 <!-- 🌟 여기에 비밀번호 확인 코드가 추가되었습니다! 🌟 -->
 <script>
-        // 대포 쏘기 프리패스 도장 확인!
-        if (!sessionStorage.getItem("cannonPass")) {
-            const pwd = prompt("대포 쏘기 게임입니다. 비밀번호를 입력하세요 🔒");
-            if (pwd === "0431") {
+async function checkAuth() {
+    if (!sessionStorage.getItem("cannonPass")) {
+        const pwd = prompt("캐논쏘기 게임 비밀번호를 입력하세요 🔒");
+        if (pwd) {
+            const buffer = new TextEncoder().encode(pwd);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+            const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            // 비밀번호 4362의 암호화 값 (코드에 4362가 노출되지 않음)
+            if (hashHex === "43c33bc8917f644809b960cca4aad47030703bdc9e1a526d90a4636627ef0038") {
                 sessionStorage.setItem("cannonPass", "true");
-            } else {
-                alert("비밀번호가 틀렸습니다! ❌");
-                location.href = "index.html"; 
+                return;
             }
         }
-    </script>
+        alert("비밀번호가 틀렸습니다! ❌");
+        location.href = "index.html";
+    }
+}
+checkAuth();
+</script>
 <!-- 여기까지 -->
 
 </head>

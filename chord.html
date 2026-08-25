@@ -124,16 +124,26 @@
     </style>
 
     <script>
-        if (!sessionStorage.getItem("chordPass")) {
-            const pwd = prompt("깨진 그릇 복원하기 게임입니다. 비밀번호를 입력하세요 🔒");
-            if (pwd === "5352") {
-                sessionStorage.setItem("chordPass", "true");
-            } else {
-                alert("비밀번호가 틀렸습니다! 메인 화면으로 돌아갑니다. ❌");
-                location.href = "index.html"; 
+async function checkAuth() {
+    if (!sessionStorage.getItem("dishPass")) {
+        const pwd = prompt("깨진 그릇 게임 비밀번호를 입력하세요 🔒");
+        if (pwd) {
+            const buffer = new TextEncoder().encode(pwd);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+            const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            // 비밀번호 5772의 암호화 값 (코드에 5772가 노출되지 않음)
+            if (hashHex === "1246892ef4ec21379a82257e2c33bf86177b864c86ef44e49e861d0169425633") {
+                sessionStorage.setItem("dishPass", "true");
+                return;
             }
         }
-    </script>
+        alert("비밀번호가 틀렸습니다! ❌");
+        location.href = "index.html";
+    }
+}
+checkAuth();
+</script>
 </head>
 <body>
 

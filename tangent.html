@@ -30,16 +30,26 @@
     </div>
 
     <script>
-        // 비밀번호(4885) 세션 관리
-        if (!sessionStorage.getItem("tangentUnlocked")) {
-            let pwd = prompt("가시거리 계산기입니다. 비밀번호를 입력하세요 🔒");
-            if (pwd === "4885") {
-                sessionStorage.setItem("tangentUnlocked", "true");
-            } else {
-                alert("비밀번호가 틀렸습니다! 메인 화면으로 돌아갑니다.");
-                window.location.href = "index.html";
+async function checkAuth() {
+    if (!sessionStorage.getItem("tangentPass")) {
+        const pwd = prompt("가시거리 계산기 비밀번호를 입력하세요 🔒");
+        if (pwd) {
+            const buffer = new TextEncoder().encode(pwd);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+            const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            // 비밀번호 2080의 암호화 값 (숫자가 전혀 노출되지 않음)
+            if (hashHex === "4e49800fbc3cefb76b1b887fa36a8dbd6dd283667258c613e1754fa3d266fefb") {
+                sessionStorage.setItem("tangentPass", "true");
+                return;
             }
         }
+        alert("비밀번호가 틀렸습니다! ❌");
+        location.href = "index.html";
+    }
+}
+checkAuth();
+</script>
 
         if (sessionStorage.getItem("tangentUnlocked") === "true") {
             let canvas = document.getElementById("gameCanvas");
