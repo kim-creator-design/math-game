@@ -79,7 +79,6 @@ window.onload = function() {
     let realHeight, canvasHeight, personY, dist_OP, targetAngle;
     const earthX = 300, earthY = 450, earthR = 200;
 
-    // 🌟 동탄 기준 실제 직선거리에 맞게 도시 구간을 재조정했습니다.
     function getVisibleCity(km) {
         if (km < 40) return "수원, 오산, 용인, 평택";
         if (km < 80) return "서울 전역, 인천, 천안, 아산";
@@ -135,8 +134,8 @@ window.onload = function() {
         const cities = [
             { name: "동탄", x: dtX, y: dtY, color: "#ff4757" },
             { name: "서울", x: 110, y: 195, color: "white" },
-            { name: "대전", x: 125, y: 245, color: "white" }, // 대전 추가
-            { name: "해주", x: 75, y: 175, color: "white" },  // 해주 추가
+            { name: "대전", x: 125, y: 245, color: "white" },
+            { name: "해주", x: 75, y: 175, color: "white" },
             { name: "평양", x: 95, y: 145, color: "white" },
             { name: "부산", x: 175, y: 300, color: "white" },
             { name: "광주", x: 110, y: 290, color: "white" }
@@ -155,8 +154,10 @@ window.onload = function() {
     }
 
     function initGame() {
+        // 🌟 100m ~ 5000m 사이에서 100m 간격(100, 200, ... 5000)으로만 생성
         let weightedRandom = Math.pow(Math.random(), 2);
-        realHeight = Math.floor(weightedRandom * 4901) + 100;
+        realHeight = (Math.floor(weightedRandom * 50) + 1) * 100;
+        
         document.getElementById("heightDisplay").innerHTML = `현재 관측 고도: ${realHeight} m`;
         document.getElementById("msg").innerHTML = "목표: 레이저가 지구와 딱 스치는 접선(90도)이 될 때 정지하세요!";
         document.getElementById("msg").style.color = "#4cd137";
