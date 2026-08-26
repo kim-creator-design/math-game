@@ -31,16 +31,17 @@
 
     <script>
 async function checkAuth() {
-    if (!sessionStorage.getItem("tangentPass")) {
+    // 기존에 사용하시던 tangentUnlocked 키 이름으로 원상 복구
+    if (!sessionStorage.getItem("tangentUnlocked")) {
         const pwd = prompt("가시거리 계산기 비밀번호를 입력하세요 🔒");
         if (pwd) {
             const buffer = new TextEncoder().encode(pwd);
             const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
             const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
             
-            // 비밀번호 2080의 암호화 값 (숫자가 전혀 노출되지 않음)
             if (hashHex === "4e49800fbc3cefb76b1b887fa36a8dbd6dd283667258c613e1754fa3d266fefb") {
-                sessionStorage.setItem("tangentPass", "true");
+                sessionStorage.setItem("tangentUnlocked", "true");
+                location.reload(); // 정답을 맞히면 화면을 한 번 새로고침해서 게임을 정상적으로 띄움
                 return;
             }
         }
