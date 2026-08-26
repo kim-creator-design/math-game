@@ -1,169 +1,162 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>동탄 가시거리 계산기</title>
-    <style>
-        body { font-family: 'Malgun Gothic', sans-serif; background-color: #2f3640; color: white; text-align: center; margin-top: 50px; }
-        .game-panel { background: #353b48; padding: 20px; border-radius: 15px; display: inline-block; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        canvas { background-color: #1e272e; border: 3px solid #7f8fa6; border-radius: 10px; margin-top: 15px; }
-        button { background: #e74c3c; color: white; border: none; padding: 15px 30px; font-size: 1.2rem; font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 20px; transition: 0.2s; }
-        button:hover { transform: scale(1.05); }
-        h1 { color: #fbc531; margin-bottom: 5px; }
-        #msg { color: #4cd137; font-size: 1.2rem; font-weight: bold; margin-top: 15px; min-height: 50px; line-height: 1.5; }
-        .back-btn { display: inline-block; margin-bottom: 20px; color: #f5f6fa; text-decoration: none; background: #576574; padding: 10px 20px; border-radius: 5px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>동탄 가시거리 계산기</title>
+<style>
+    body { font-family: 'Malgun Gothic', sans-serif; background-color: #2f3640; color: white; text-align: center; margin: 0; padding: 20px; }
+    .container { max-width: 700px; margin: 0 auto; background: #353b48; padding: 30px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
+    h1 { color: #fbc531; }
+    canvas { background: #1e272e; border-radius: 10px; border: 3px solid #dcdde1; margin: 20px 0; }
+    .btn { padding: 15px 30px; font-size: 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; background: #e74c3c; color: white; transition: 0.2s; }
+    .btn:hover { transform: scale(1.05); }
+    #msg { font-size: 20px; font-weight: bold; margin-top: 15px; min-height: 60px; line-height: 1.5; }
+    #heightDisplay { font-size: 22px; color: #fbc531; font-weight: bold; margin-bottom: 10px; }
+</style>
+
+<script>
+    // 비밀번호 2080 암호화 검사
+    (async function checkAuth() {
+        if (!sessionStorage.getItem("tangentUnlocked")) {
+            const pwd = prompt("가시거리 계산기 비밀번호를 입력하세요 🔒");
+            if (pwd) {
+                const buffer = new TextEncoder().encode(pwd);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+                const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+                
+                if (hashHex === "4e49800fbc3cefb76b1b887fa36a8dbd6dd283667258c613e1754fa3d266fefb") {
+                    sessionStorage.setItem("tangentUnlocked", "true");
+                    location.reload();
+                    return;
+                }
+            }
+            alert("비밀번호가 틀렸습니다! ❌");
+            location.href = "index.html";
+        }
+    })();
+</script>
 </head>
 <body>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+            <a href="index.html" style="color: #2f3640; text-decoration: none; background: #fbc531; padding: 10px 20px; border-radius: 8px; font-weight: bold;">⬅ 메뉴로</a>
+        </div>
 
-    <a href="index.html" class="back-btn">⬅ 메인 메뉴로 돌아가기</a>
-    
-    <div class="game-panel">
-        <h1>🔭 레이저 접선 맞추기</h1>
-        <p id="heightDisplay" style="font-size: 1.1rem; color: #00d2d3;">현재 관측 고도: 준비 중...</p>
+        <h1>🔭 동탄 가시거리 계산기 🔭</h1>
+        <div id="heightDisplay">현재 관측 고도: 준비 중.....</div>
         
         <canvas id="gameCanvas" width="600" height="400"></canvas>
-        <br>
-        <button id="actionBtn" onclick="toggleGame()">정지! 🛑</button>
-        <div id="msg">목표: 레이저가 지구와 90도(접선)가 될 때 정지하세요!</div>
+        
+        <div>
+            <button id="actionBtn" class="btn" onclick="toggleGame()">정지! 🛑</button>
+        </div>
+        
+        <div id="msg">목표: 레이저가 지구와 딱 스치는 접선(90도)이 될 때 정지하세요!</div>
     </div>
 
-    <script>
-async function checkAuth() {
-    // 기존에 사용하시던 tangentUnlocked 키 이름으로 원상 복구
-    if (!sessionStorage.getItem("tangentUnlocked")) {
-        const pwd = prompt("가시거리 계산기 비밀번호를 입력하세요 🔒");
-        if (pwd) {
-            const buffer = new TextEncoder().encode(pwd);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
-            const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-            
-            if (hashHex === "4e49800fbc3cefb76b1b887fa36a8dbd6dd283667258c613e1754fa3d266fefb") {
-                sessionStorage.setItem("tangentUnlocked", "true");
-                location.reload(); // 정답을 맞히면 화면을 한 번 새로고침해서 게임을 정상적으로 띄움
-                return;
-            }
-        }
-        alert("비밀번호가 틀렸습니다! ❌");
-        location.href = "index.html";
+<script>
+window.onload = function() {
+    if (!sessionStorage.getItem("tangentUnlocked")) return;
+
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    let isPlaying = false;
+    let currentAngle = 10;
+    let angleSpeed = 1.3;
+    let animId;
+    let realHeight, canvasHeight, personY, dist_OP, targetAngle;
+    const earthX = 300, earthY = 450, earthR = 200;
+
+    function getVisibleCity(km) {
+        if (km < 40) return "수원, 오산, 서울(강남), 용인";
+        if (km < 80) return "인천, 천안, 원주, [북한] 개성";
+        if (km < 120) return "대전, 세종, 청주, [북한] 해주";
+        if (km < 170) return "전주, 안동, [북한] 사리원, 금강산";
+        if (km < 210) return "대구, 포항, [북한] 평양, 원산, 남포";
+        if (km < 240) return "광주, 진주, [북한] 안주, 함흥 입구";
+        return "여수, 목포, [북한] 묘향산 부근";
     }
-}
-checkAuth();
-</script>
 
-        if (sessionStorage.getItem("tangentUnlocked") === "true") {
-            let canvas = document.getElementById("gameCanvas");
-            let ctx = canvas.getContext("2d");
-            
-            let isPlaying = false;
-            let currentAngle = 10;
-            let angleSpeed = 1.3;
-            let animId;
-            let realHeight, canvasHeight, personY, dist_OP, targetAngle;
+    function initGame() {
+        let weightedRandom = Math.pow(Math.random(), 2);
+        realHeight = Math.floor(weightedRandom * 4901) + 100;
+        document.getElementById("heightDisplay").innerHTML = `현재 관측 고도: ${realHeight} m`;
+        document.getElementById("msg").innerHTML = "목표: 레이저가 지구와 딱 스치는 접선(90도)이 될 때 정지하세요!";
+        document.getElementById("msg").style.color = "#4cd137";
+        document.getElementById("actionBtn").innerText = "정지! 🛑";
+        document.getElementById("actionBtn").style.background = "#e74c3c";
+        
+        canvasHeight = 20 + (realHeight / 5000) * 80;
+        personY = earthY - earthR - canvasHeight;
+        dist_OP = earthY - personY;
+        targetAngle = Math.asin(earthR / dist_OP) * (180 / Math.PI);
+        currentAngle = 10;
+        isPlaying = true;
+        cancelAnimationFrame(animId);
+        draw();
+    }
 
-            const earthX = 300, earthY = 450, earthR = 200; 
+    function draw() {
+        ctx.clearRect(0, 0, 600, 400);
+        
+        // 지구
+        ctx.beginPath();
+        ctx.arc(earthX, earthY, earthR, 0, Math.PI * 2);
+        ctx.fillStyle = "#3498db";
+        ctx.fill();
+        
+        // 관측 타워
+        ctx.fillStyle = "#95a5a6";
+        ctx.fillRect(earthX - 5, personY, 10, canvasHeight);
+        ctx.fillStyle = "#ff4757";
+        ctx.beginPath();
+        ctx.arc(earthX, personY, 6, 0, Math.PI*2);
+        ctx.fill();
+        
+        // 레이저
+        let rad = currentAngle * (Math.PI / 180);
+        let endX = earthX + 700 * Math.sin(rad);
+        let endY = personY + 700 * Math.cos(rad);
+        
+        ctx.beginPath();
+        ctx.moveTo(earthX, personY);
+        ctx.lineTo(endX, endY);
+        ctx.strokeStyle = "#ff4757";
+        ctx.lineWidth = 3;
+        if(!isPlaying) ctx.setLineDash([10, 5]);
+        ctx.stroke();
+        ctx.setLineDash([]);
 
-            // 동탄 기준 (남북한 주요 도시 및 명산 포함)
-            function getVisibleCity(km) {
-                if (km < 40) return "수원, 오산, 서울(강남), 용인";
-                if (km < 80) return "인천, 천안, 원주, <b>[북한] 개성</b>";
-                if (km < 120) return "대전, 세종, 청주, <b>[북한] 해주</b>";
-                if (km < 170) return "전주, 안동, <b>[북한] 사리원, 금강산</b>";
-                if (km < 210) return "대구, 포항, <b>[북한] 평양, 원산, 남포</b>";
-                if (km < 240) return "광주, 진주, <b>[북한] 안주, 함흥 입구</b>";
-                return "여수, 목포, <b>[북한] 묘향산 부근</b>";
+        if (isPlaying) {
+            currentAngle += angleSpeed;
+            if (currentAngle > 85 || currentAngle < 5) angleSpeed *= -1;
+            animId = requestAnimationFrame(draw);
+        } else {
+            if (Math.abs(currentAngle - targetAngle) <= 2) {
+                let R = 6371;
+                let h = realHeight / 1000;
+                let dist = Math.sqrt(Math.pow(R + h, 2) - Math.pow(R, 2));
+                let city = getVisibleCity(dist);
+                document.getElementById("msg").innerHTML = `🎉 정확한 접선입니다!<br>가시거리는 약 ${dist.toFixed(1)} km 이며,<br>동탄에서 [${city}] 까지 보입니다!`;
+            } else {
+                document.getElementById("msg").innerHTML = `❌ 실패! 레이저가 지구를 뚫고 가거나 허공을 향했습니다.<br>(팁: 지구 표면을 정확히 스쳐야 합니다)`;
             }
-
-            function initGame() {
-                // Math.pow(Math.random(), 2)를 사용하여 낮은 고도 확률 증가 (100m~5000m)
-                let weightedRandom = Math.pow(Math.random(), 2);
-                realHeight = Math.floor(weightedRandom * 4901) + 100; 
-                
-                document.getElementById("heightDisplay").innerHTML = `현재 관측 고도: <b>${realHeight} m</b>`;
-                document.getElementById("msg").innerHTML = "목표: 레이저가 지구와 딱 스치는 접선(90도)이 될 때 정지하세요!";
-                document.getElementById("msg").style.color = "#4cd137";
-                
-                document.getElementById("actionBtn").innerText = "정지! 🛑";
-                document.getElementById("actionBtn").style.background = "#e74c3c";
-
-                canvasHeight = 20 + (realHeight / 5000) * 80; 
-                personY = earthY - earthR - canvasHeight;
-                
-                dist_OP = earthY - personY; 
-                targetAngle = Math.asin(earthR / dist_OP) * (180 / Math.PI); 
-
-                currentAngle = 10;
-                isPlaying = true;
-                
-                cancelAnimationFrame(animId);
-                draw();
-            }
-
-            function draw() {
-                ctx.clearRect(0, 0, 600, 400);
-
-                // 지구
-                ctx.beginPath();
-                ctx.arc(earthX, earthY, earthR, 0, Math.PI * 2);
-                ctx.fillStyle = "#3498db";
-                ctx.fill();
-
-                // 관측 타워
-                ctx.fillStyle = "#95a5a6";
-                ctx.fillRect(earthX - 5, personY, 10, canvasHeight);
-                ctx.fillStyle = "#ff4757";
-                ctx.beginPath();
-                ctx.arc(earthX, personY, 6, 0, Math.PI*2);
-                ctx.fill();
-
-                // 레이저
-                let rad = currentAngle * (Math.PI / 180);
-                let endX = earthX + 700 * Math.sin(rad);
-                let endY = personY + 700 * Math.cos(rad);
-
-                ctx.beginPath();
-                ctx.moveTo(earthX, personY);
-                ctx.lineTo(endX, endY);
-                ctx.strokeStyle = "#ff4757";
-                ctx.lineWidth = 3;
-                if(!isPlaying) ctx.setLineDash([10, 5]);
-                ctx.stroke();
-                ctx.setLineDash([]);
-
-                if (isPlaying) {
-                    currentAngle += angleSpeed;
-                    if (currentAngle > 85 || currentAngle < 5) angleSpeed *= -1;
-                    animId = requestAnimationFrame(draw);
-                } else {
-                    if (Math.abs(currentAngle - targetAngle) <= 2) {
-                        let R = 6371; 
-                        let h = realHeight / 1000; 
-                        let dist = Math.sqrt(Math.pow(R + h, 2) - Math.pow(R, 2));
-                        let city = getVisibleCity(dist);
-                        
-                        document.getElementById("msg").innerHTML = 
-                            `🎉 <b>정확한 접선입니다!</b><br>` +
-                            `가시거리는 약 <span style="color:#fbc531;">${dist.toFixed(1)} km</span> 이며,<br>` +
-                            `<span style="color:#00d2d3;">동탄에서 <b>[${city}]</b> 까지 보입니다!</span>`;
-                    } else {
-                        document.getElementById("msg").innerHTML = `<span style="color:#ff4757;">❌ 실패! 레이저가 지구를 뚫고 가거나 허공을 향했습니다.<br>(팁: 지구 표면을 정확히 스쳐야 합니다)</span>`;
-                    }
-                }
-            }
-
-            window.toggleGame = function() {
-                if (isPlaying) {
-                    isPlaying = false;
-                    document.getElementById("actionBtn").innerText = "새로운 고도에서 다시 하기 🔄";
-                    document.getElementById("actionBtn").style.background = "#2ecc71";
-                } else {
-                    initGame();
-                }
-            };
-
-            initGame(); 
         }
-    </script>
+    }
+
+    window.toggleGame = function() {
+        if (isPlaying) {
+            isPlaying = false;
+            document.getElementById("actionBtn").innerText = "새로운 고도에서 다시 하기 🔄";
+            document.getElementById("actionBtn").style.background = "#2ecc71";
+        } else {
+            initGame();
+        }
+    };
+
+    initGame();
+};
+</script>
 </body>
 </html>
