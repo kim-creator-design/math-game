@@ -79,14 +79,19 @@ window.onload = function() {
     let realHeight, canvasHeight, personY, dist_OP, targetAngle;
     const earthX = 300, earthY = 450, earthR = 200;
 
+    // 🌟 도시 목록을 훨씬 디테일하게 업데이트했습니다.
     function getVisibleCity(km) {
-        if (km < 40) return "수원, 오산, 용인, 평택";
-        if (km < 80) return "서울 전역, 인천, 천안, 아산";
-        if (km < 120) return "대전(105km), 세종, 청주, [북한] 개성";
-        if (km < 160) return "전주, 안동, [북한] 해주(145km)";
-        if (km < 220) return "대구, 광주, 군산, [북한] 사리원";
-        if (km < 260) return "포항, 진주, [북한] 평양(220km), 원산";
-        return "부산(270km), 목포, [북한] 함흥, 남포";
+        if (km < 30) return "수원, 오산, 용인, 안성, 평택";
+        if (km < 50) return "서울 강남, 성남, 과천, 안산, 천안";
+        if (km < 70) return "서울 강북, 인천, 김포, 여주, 당진, 아산";
+        if (km < 100) return "춘천, 원주, 충주, 서산, [북한] 개성";
+        if (km < 130) return "대전(105km), 세종, 청주, 강릉, 속초";
+        if (km < 160) return "전주, 안동, 상주, 태백, [북한] 해주(145km)";
+        if (km < 200) return "대구, 군산, 남원, 포항, [북한] 사리원";
+        if (km < 250) return "광주, 진주, 울산, [북한] 평양(220km), 원산";
+        if (km < 300) return "부산(270km), 창원, 목포, 여수, [북한] 함흥";
+        if (km < 350) return "제주도(한라산), 완도, [북한] 신의주, 혜산";
+        return "제주도 전역, 마라도, [북한] 청진, 나선";
     }
 
     function drawMap(dist) {
@@ -96,6 +101,7 @@ window.onload = function() {
 
         mCtx.clearRect(0, 0, 250, 360);
 
+        // 한반도 지도 그리기
         mCtx.fillStyle = "#576574"; 
         mCtx.strokeStyle = "#8395a7";
         mCtx.lineWidth = 1;
@@ -117,12 +123,14 @@ window.onload = function() {
         mCtx.fill();
         mCtx.stroke();
 
+        // 제주도, 울릉도
         mCtx.beginPath(); mCtx.arc(90, 350, 7, 0, Math.PI*2); mCtx.fill(); mCtx.stroke();
         mCtx.beginPath(); mCtx.arc(215, 200, 3, 0, Math.PI*2); mCtx.fill(); mCtx.stroke();
 
         const dtX = 112, dtY = 215; 
         const radiusPx = dist / 2.6; 
 
+        // 가시거리 원 그리기
         mCtx.beginPath();
         mCtx.arc(dtX, dtY, radiusPx, 0, Math.PI*2);
         mCtx.fillStyle = "rgba(251, 197, 49, 0.4)"; 
@@ -131,14 +139,19 @@ window.onload = function() {
         mCtx.lineWidth = 2;
         mCtx.stroke();
 
+        // 🌟 지도 위 주요 도시 위치 업데이트 (인천, 강릉, 원산, 제주 등 추가)
         const cities = [
             { name: "동탄", x: dtX, y: dtY, color: "#ff4757" },
             { name: "서울", x: 110, y: 195, color: "white" },
+            { name: "인천", x: 92, y: 195, color: "white" },
+            { name: "강릉", x: 155, y: 180, color: "white" },
             { name: "대전", x: 125, y: 245, color: "white" },
-            { name: "해주", x: 75, y: 175, color: "white" },
-            { name: "평양", x: 95, y: 145, color: "white" },
+            { name: "광주", x: 110, y: 290, color: "white" },
             { name: "부산", x: 175, y: 300, color: "white" },
-            { name: "광주", x: 110, y: 290, color: "white" }
+            { name: "제주", x: 90, y: 350, color: "white" },
+            { name: "해주", x: 75, y: 175, color: "white" },
+            { name: "원산", x: 140, y: 140, color: "white" },
+            { name: "평양", x: 95, y: 145, color: "white" }
         ];
 
         mCtx.font = "11px 'Malgun Gothic', sans-serif";
@@ -154,9 +167,16 @@ window.onload = function() {
     }
 
     function initGame() {
-        // 🌟 100m ~ 5000m 사이에서 100m 간격(100, 200, ... 5000)으로만 생성
-        let weightedRandom = Math.pow(Math.random(), 2);
-        realHeight = (Math.floor(weightedRandom * 50) + 1) * 100;
+        // 70% 확률: 100m ~ 1000m (50m 간격) / 30% 확률: 1050m ~ 5000m (50m 간격)
+        let rand = Math.random();
+        
+        if (rand < 0.70) {
+            let step = Math.floor(Math.random() * 19); 
+            realHeight = 100 + (step * 50);
+        } else {
+            let step = Math.floor(Math.random() * 80); 
+            realHeight = 1050 + (step * 50);
+        }
         
         document.getElementById("heightDisplay").innerHTML = `현재 관측 고도: ${realHeight} m`;
         document.getElementById("msg").innerHTML = "목표: 레이저가 지구와 딱 스치는 접선(90도)이 될 때 정지하세요!";
@@ -215,7 +235,7 @@ window.onload = function() {
                 let dist = Math.sqrt(Math.pow(R + h, 2) - Math.pow(R, 2));
                 let city = getVisibleCity(dist);
                 
-                document.getElementById("msg").innerHTML = `🎉 정확한 접선입니다!<br>가시거리는 약 ${dist.toFixed(1)} km 이며,<br>동탄에서 [${city}] 까지 보입니다!`;
+                document.getElementById("msg").innerHTML = `🎉 정확한 접선입니다!<br>가시거리는 약 ${dist.toFixed(1)} km 이며,<br>동탄에서 [${city}] 등 여러 지역이 보입니다!`;
                 
                 drawMap(dist);
             } else {
