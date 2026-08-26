@@ -6,9 +6,16 @@
 <title>동탄 가시거리 계산기</title>
 <style>
     body { font-family: 'Malgun Gothic', sans-serif; background-color: #2f3640; color: white; text-align: center; margin: 0; padding: 20px; }
-    .container { max-width: 700px; margin: 0 auto; background: #353b48; padding: 30px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
+    /* 지도 캔버스가 옆에 들어갈 수 있도록 가로폭을 950px로 넓혔습니다 */
+    .container { max-width: 950px; margin: 0 auto; background: #353b48; padding: 30px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
     h1 { color: #fbc531; }
-    canvas { background: #1e272e; border-radius: 10px; border: 3px solid #dcdde1; margin: 20px 0; }
+    
+    .game-area { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin: 20px 0; }
+    canvas { background: #1e272e; border-radius: 10px; border: 3px solid #dcdde1; }
+    
+    /* 지도 컨테이너 스타일 */
+    #mapContainer { display: none; flex-direction: column; align-items: center; background: #2f3640; padding: 15px; border-radius: 10px; border: 3px dashed #fbc531; }
+    
     .btn { padding: 15px 30px; font-size: 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; background: #e74c3c; color: white; transition: 0.2s; }
     .btn:hover { transform: scale(1.05); }
     #msg { font-size: 20px; font-weight: bold; margin-top: 15px; min-height: 60px; line-height: 1.5; }
@@ -27,7 +34,7 @@
                 
                 if (hashHex === "4e49800fbc3cefb76b1b887fa36a8dbd6dd283667258c613e1754fa3d266fefb") {
                     sessionStorage.setItem("tangentUnlocked", "true");
-                    location.reload();
+                    location.reload(); 
                     return;
                 }
             }
@@ -46,7 +53,15 @@
         <h1>🔭 동탄 가시거리 계산기 🔭</h1>
         <div id="heightDisplay">현재 관측 고도: 준비 중.....</div>
         
-        <canvas id="gameCanvas" width="600" height="400"></canvas>
+        <!-- 게임 화면과 지도가 나란히 배치되는 영역 -->
+        <div class="game-area">
+            <canvas id="gameCanvas" width="600" height="400"></canvas>
+            
+            <div id="mapContainer">
+                <h3 style="margin: 0 0 10px 0; color: #fbc531;">📡 시야 도달 범위</h3>
+                <canvas id="mapCanvas" width="250" height="360"></canvas>
+            </div>
+        </div>
         
         <div>
             <button id="actionBtn" class="btn" onclick="toggleGame()">정지! 🛑</button>
@@ -78,6 +93,75 @@ window.onload = function() {
         return "여수, 목포, [북한] 묘향산 부근";
     }
 
+    // 🌟 한반도 지도를 그리고 시야 반경을 칠하는 함수
+    function drawMap(dist) {
+        const mCanvas = document.getElementById("mapCanvas");
+        const mCtx = mCanvas.getContext("2d");
+        document.getElementById("mapContainer").style.display = "flex"; // 지도 숨김 해제
+
+        mCtx.clearRect(0, 0, 250, 360);
+
+        // 한반도 실루엣 그리기
+        mCtx.fillStyle = "#576574"; 
+        mCtx.strokeStyle = "#8395a7";
+        mCtx.lineWidth = 1;
+        mCtx.beginPath();
+        mCtx.moveTo(60, 90);  // 신의주 부근
+        mCtx.lineTo(180, 30); // 백두산 부근
+        mCtx.lineTo(220, 50); // 두만강 부근
+        mCtx.lineTo(170, 150); // 동해안 윗쪽
+        mCtx.lineTo(160, 190); // 강릉
+        mCtx.lineTo(185, 270); // 포항
+        mCtx.lineTo(185, 305); // 부산
+        mCtx.lineTo(140, 315); // 남해안
+        mCtx.lineTo(100, 320); // 목포
+        mCtx.lineTo(100, 270); // 서해안 아래
+        mCtx.lineTo(90, 205);  // 인천
+        mCtx.lineTo(70, 190);  // 옹진반도
+        mCtx.lineTo(80, 140);  // 남포 부근
+        mCtx.closePath();
+        mCtx.fill();
+        mCtx.stroke();
+
+        // 제주도, 울릉도
+        mCtx.beginPath(); mCtx.arc(90, 350, 7, 0, Math.PI*2); mCtx.fill(); mCtx.stroke();
+        mCtx.beginPath(); mCtx.arc(215, 200, 3, 0, Math.PI*2); mCtx.fill(); mCtx.stroke();
+
+        // 비율 설정: 1픽셀당 약 2.6km
+        const dtX = 112, dtY = 215; // 동탄 캔버스 좌표
+        const radiusPx = dist / 2.6; // 실제 거리를 화면 크기로 변환
+
+        // 시야 반경 (노란색 투명 원)
+        mCtx.beginPath();
+        mCtx.arc(dtX, dtY, radiusPx, 0, Math.PI*2);
+        mCtx.fillStyle = "rgba(251, 197, 49, 0.4)"; // 투명한 노란색
+        mCtx.fill();
+        mCtx.strokeStyle = "#fbc531";
+        mCtx.lineWidth = 2;
+        mCtx.stroke();
+
+        // 도시 표시 (동탄, 서울, 평양, 부산 등)
+        const cities = [
+            { name: "동탄", x: dtX, y: dtY, color: "#ff4757" },
+            { name: "서울", x: 110, y: 195, color: "white" },
+            { name: "평양", x: 95, y: 145, color: "white" },
+            { name: "부산", x: 175, y: 300, color: "white" },
+            { name: "광주", x: 110, y: 290, color: "white" },
+            { name: "제주", x: 90, y: 350, color: "white" }
+        ];
+
+        mCtx.font = "11px 'Malgun Gothic', sans-serif";
+        cities.forEach(c => {
+            mCtx.beginPath();
+            mCtx.arc(c.x, c.y, (c.name==="동탄"?4:2), 0, Math.PI*2);
+            mCtx.fillStyle = c.color;
+            mCtx.fill();
+            
+            mCtx.fillStyle = c.color;
+            mCtx.fillText(c.name, c.x + 6, c.y + 4);
+        });
+    }
+
     function initGame() {
         let weightedRandom = Math.pow(Math.random(), 2);
         realHeight = Math.floor(weightedRandom * 4901) + 100;
@@ -87,6 +171,8 @@ window.onload = function() {
         document.getElementById("actionBtn").innerText = "정지! 🛑";
         document.getElementById("actionBtn").style.background = "#e74c3c";
         
+        document.getElementById("mapContainer").style.display = "none"; // 게임 시작 시 지도 다시 숨김
+
         canvasHeight = 20 + (realHeight / 5000) * 80;
         personY = earthY - earthR - canvasHeight;
         dist_OP = earthY - personY;
@@ -138,7 +224,12 @@ window.onload = function() {
                 let h = realHeight / 1000;
                 let dist = Math.sqrt(Math.pow(R + h, 2) - Math.pow(R, 2));
                 let city = getVisibleCity(dist);
+                
                 document.getElementById("msg").innerHTML = `🎉 정확한 접선입니다!<br>가시거리는 약 ${dist.toFixed(1)} km 이며,<br>동탄에서 [${city}] 까지 보입니다!`;
+                
+                // 🌟 정답을 맞혔을 때 지도 시각화 함수 호출!
+                drawMap(dist);
+
             } else {
                 document.getElementById("msg").innerHTML = `❌ 실패! 레이저가 지구를 뚫고 가거나 허공을 향했습니다.<br>(팁: 지구 표면을 정확히 스쳐야 합니다)`;
             }
