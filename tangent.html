@@ -6,14 +6,12 @@
 <title>동탄 가시거리 계산기</title>
 <style>
     body { font-family: 'Malgun Gothic', sans-serif; background-color: #2f3640; color: white; text-align: center; margin: 0; padding: 20px; }
-    /* 지도 캔버스가 옆에 들어갈 수 있도록 가로폭을 950px로 넓혔습니다 */
     .container { max-width: 950px; margin: 0 auto; background: #353b48; padding: 30px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
     h1 { color: #fbc531; }
     
     .game-area { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin: 20px 0; }
     canvas { background: #1e272e; border-radius: 10px; border: 3px solid #dcdde1; }
     
-    /* 지도 컨테이너 스타일 */
     #mapContainer { display: none; flex-direction: column; align-items: center; background: #2f3640; padding: 15px; border-radius: 10px; border: 3px dashed #fbc531; }
     
     .btn { padding: 15px 30px; font-size: 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; background: #e74c3c; color: white; transition: 0.2s; }
@@ -23,7 +21,6 @@
 </style>
 
 <script>
-    // 비밀번호 2080 암호화 검사
     (async function checkAuth() {
         if (!sessionStorage.getItem("tangentUnlocked")) {
             const pwd = prompt("가시거리 계산기 비밀번호를 입력하세요 🔒");
@@ -53,7 +50,6 @@
         <h1>🔭 동탄 가시거리 계산기 🔭</h1>
         <div id="heightDisplay">현재 관측 고도: 준비 중.....</div>
         
-        <!-- 게임 화면과 지도가 나란히 배치되는 영역 -->
         <div class="game-area">
             <canvas id="gameCanvas" width="600" height="400"></canvas>
             
@@ -83,71 +79,67 @@ window.onload = function() {
     let realHeight, canvasHeight, personY, dist_OP, targetAngle;
     const earthX = 300, earthY = 450, earthR = 200;
 
+    // 🌟 동탄 기준 실제 직선거리에 맞게 도시 구간을 재조정했습니다.
     function getVisibleCity(km) {
-        if (km < 40) return "수원, 오산, 서울(강남), 용인";
-        if (km < 80) return "인천, 천안, 원주, [북한] 개성";
-        if (km < 120) return "대전, 세종, 청주, [북한] 해주";
-        if (km < 170) return "전주, 안동, [북한] 사리원, 금강산";
-        if (km < 210) return "대구, 포항, [북한] 평양, 원산, 남포";
-        if (km < 240) return "광주, 진주, [북한] 안주, 함흥 입구";
-        return "여수, 목포, [북한] 묘향산 부근";
+        if (km < 40) return "수원, 오산, 용인, 평택";
+        if (km < 80) return "서울 전역, 인천, 천안, 아산";
+        if (km < 120) return "대전(105km), 세종, 청주, [북한] 개성";
+        if (km < 160) return "전주, 안동, [북한] 해주(145km)";
+        if (km < 220) return "대구, 광주, 군산, [북한] 사리원";
+        if (km < 260) return "포항, 진주, [북한] 평양(220km), 원산";
+        return "부산(270km), 목포, [북한] 함흥, 남포";
     }
 
-    // 🌟 한반도 지도를 그리고 시야 반경을 칠하는 함수
     function drawMap(dist) {
         const mCanvas = document.getElementById("mapCanvas");
         const mCtx = mCanvas.getContext("2d");
-        document.getElementById("mapContainer").style.display = "flex"; // 지도 숨김 해제
+        document.getElementById("mapContainer").style.display = "flex"; 
 
         mCtx.clearRect(0, 0, 250, 360);
 
-        // 한반도 실루엣 그리기
         mCtx.fillStyle = "#576574"; 
         mCtx.strokeStyle = "#8395a7";
         mCtx.lineWidth = 1;
         mCtx.beginPath();
-        mCtx.moveTo(60, 90);  // 신의주 부근
-        mCtx.lineTo(180, 30); // 백두산 부근
-        mCtx.lineTo(220, 50); // 두만강 부근
-        mCtx.lineTo(170, 150); // 동해안 윗쪽
-        mCtx.lineTo(160, 190); // 강릉
-        mCtx.lineTo(185, 270); // 포항
-        mCtx.lineTo(185, 305); // 부산
-        mCtx.lineTo(140, 315); // 남해안
-        mCtx.lineTo(100, 320); // 목포
-        mCtx.lineTo(100, 270); // 서해안 아래
-        mCtx.lineTo(90, 205);  // 인천
-        mCtx.lineTo(70, 190);  // 옹진반도
-        mCtx.lineTo(80, 140);  // 남포 부근
+        mCtx.moveTo(60, 90); 
+        mCtx.lineTo(180, 30); 
+        mCtx.lineTo(220, 50); 
+        mCtx.lineTo(170, 150); 
+        mCtx.lineTo(160, 190); 
+        mCtx.lineTo(185, 270); 
+        mCtx.lineTo(185, 305); 
+        mCtx.lineTo(140, 315); 
+        mCtx.lineTo(100, 320); 
+        mCtx.lineTo(100, 270); 
+        mCtx.lineTo(90, 205);  
+        mCtx.lineTo(70, 190);  
+        mCtx.lineTo(80, 140);  
         mCtx.closePath();
         mCtx.fill();
         mCtx.stroke();
 
-        // 제주도, 울릉도
         mCtx.beginPath(); mCtx.arc(90, 350, 7, 0, Math.PI*2); mCtx.fill(); mCtx.stroke();
         mCtx.beginPath(); mCtx.arc(215, 200, 3, 0, Math.PI*2); mCtx.fill(); mCtx.stroke();
 
-        // 비율 설정: 1픽셀당 약 2.6km
-        const dtX = 112, dtY = 215; // 동탄 캔버스 좌표
-        const radiusPx = dist / 2.6; // 실제 거리를 화면 크기로 변환
+        const dtX = 112, dtY = 215; 
+        const radiusPx = dist / 2.6; 
 
-        // 시야 반경 (노란색 투명 원)
         mCtx.beginPath();
         mCtx.arc(dtX, dtY, radiusPx, 0, Math.PI*2);
-        mCtx.fillStyle = "rgba(251, 197, 49, 0.4)"; // 투명한 노란색
+        mCtx.fillStyle = "rgba(251, 197, 49, 0.4)"; 
         mCtx.fill();
         mCtx.strokeStyle = "#fbc531";
         mCtx.lineWidth = 2;
         mCtx.stroke();
 
-        // 도시 표시 (동탄, 서울, 평양, 부산 등)
         const cities = [
             { name: "동탄", x: dtX, y: dtY, color: "#ff4757" },
             { name: "서울", x: 110, y: 195, color: "white" },
+            { name: "대전", x: 125, y: 245, color: "white" }, // 대전 추가
+            { name: "해주", x: 75, y: 175, color: "white" },  // 해주 추가
             { name: "평양", x: 95, y: 145, color: "white" },
             { name: "부산", x: 175, y: 300, color: "white" },
-            { name: "광주", x: 110, y: 290, color: "white" },
-            { name: "제주", x: 90, y: 350, color: "white" }
+            { name: "광주", x: 110, y: 290, color: "white" }
         ];
 
         mCtx.font = "11px 'Malgun Gothic', sans-serif";
@@ -171,7 +163,7 @@ window.onload = function() {
         document.getElementById("actionBtn").innerText = "정지! 🛑";
         document.getElementById("actionBtn").style.background = "#e74c3c";
         
-        document.getElementById("mapContainer").style.display = "none"; // 게임 시작 시 지도 다시 숨김
+        document.getElementById("mapContainer").style.display = "none"; 
 
         canvasHeight = 20 + (realHeight / 5000) * 80;
         personY = earthY - earthR - canvasHeight;
@@ -186,13 +178,11 @@ window.onload = function() {
     function draw() {
         ctx.clearRect(0, 0, 600, 400);
         
-        // 지구
         ctx.beginPath();
         ctx.arc(earthX, earthY, earthR, 0, Math.PI * 2);
         ctx.fillStyle = "#3498db";
         ctx.fill();
         
-        // 관측 타워
         ctx.fillStyle = "#95a5a6";
         ctx.fillRect(earthX - 5, personY, 10, canvasHeight);
         ctx.fillStyle = "#ff4757";
@@ -200,7 +190,6 @@ window.onload = function() {
         ctx.arc(earthX, personY, 6, 0, Math.PI*2);
         ctx.fill();
         
-        // 레이저
         let rad = currentAngle * (Math.PI / 180);
         let endX = earthX + 700 * Math.sin(rad);
         let endY = personY + 700 * Math.cos(rad);
@@ -227,9 +216,7 @@ window.onload = function() {
                 
                 document.getElementById("msg").innerHTML = `🎉 정확한 접선입니다!<br>가시거리는 약 ${dist.toFixed(1)} km 이며,<br>동탄에서 [${city}] 까지 보입니다!`;
                 
-                // 🌟 정답을 맞혔을 때 지도 시각화 함수 호출!
                 drawMap(dist);
-
             } else {
                 document.getElementById("msg").innerHTML = `❌ 실패! 레이저가 지구를 뚫고 가거나 허공을 향했습니다.<br>(팁: 지구 표면을 정확히 스쳐야 합니다)`;
             }
