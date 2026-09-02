@@ -318,6 +318,8 @@ window.onload = function() {
         ctx.fillStyle = "#fff";
         ctx.fillRect(goalLeft - 5, goalY - 10, 10, 20);
         ctx.fillRect(goalRight - 5, goalY - 10, 10, 20);
+        
+        // 주의: 이 반투명한 흰색 때문에 캐릭터도 흐려졌던 것입니다!
         ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
         ctx.fillRect(goalLeft, goalY - 10, 200, 10); 
 
@@ -343,7 +345,9 @@ window.onload = function() {
             ctx.fillRect(player.x - 35, player.y + 35, 70 * (power / 100), 12);
         }
 
-        // 선명도를 위해 블러 그림자를 없애고 텍스트 기본 렌더링 사용
+        // 버그 해결: 이모지를 그리기 전에 투명도와 색상값을 100% 진하게 명시적으로 초기화합니다!
+        ctx.globalAlpha = 1.0;
+        ctx.fillStyle = "#000000"; 
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
