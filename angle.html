@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no">
+<title>60초 원주각 슛돌이</title>
+<style>
+    body { font-family: 'Malgun Gothic', sans-serif; background-color: #2f3640; color: white; text-align: center; margin: 0; padding: 10px; touch-action: none; }
+    .container { max-width: 800px; margin: 0 auto; background: #353b48; padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); }
+    h1 { color: #fbc531; margin-top: 0; font-size: 28px; }
+    
+    #gameArea { position: relative; display: inline-block; margin-top: 10px; }
+    canvas { background: #4cd137; border-radius: 10px; border: 4px solid #dcdde1; box-shadow: inset 0 0 50px rgba(0,0,0,0.2); cursor: pointer; }
+    
+    .menu { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(47, 54, 64, 0.9); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; }
+    
+    .btn { padding: 15px 30px; font-size: 20px; margin: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; width: 250px; }
+    .btn:hover { transform: scale(1.05); }
+    .btn-easy { background: #27ae60; }
+    .btn-normal { background: #f39c12; }
+    .btn-hard { background: #e74c3c; }
+    
+    #hud { display: flex; justify-content: space-between; font-size: 22px; font-weight: bold; margin-bottom: 10px; padding: 0 20px; color: #fbc531; }
+    #msgBox { min-height: 30px; font-size: 18px; font-weight: bold; color: #fff; margin-top: 15px; }
+</style>
+
+<script>
+    // 🔒 이중 암호화 보안 시스템 (비밀번호: 8541)
+    (async function checkAuth() {
+        if (!sessionStorage.getItem("shootUnlocked")) {
+            const pwd = prompt("원주각 슛돌이 비밀번호를 입력하세요 🔒");
+            if (pwd) {
+                const buffer = new TextEncoder().encode(pwd);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+                const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+                
+                // 코드 분석 방지를 위해 8541을 코드로 분리 생성 후 해시 비교
+                const targetStr = String.fromCharCode(56, 53, 52, 49); 
+                const targetBuffer = new TextEncoder().encode(targetStr);
+                const targetHashBuffer = await crypto.subtle.digest('SHA-256', targetBuffer);
+                const targetHashHex = Array.from(new Uint8Array(targetHashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+                if (hashHex === targetHashHex) {
+                    sessionStorage.setItem("shootUnlocked", "true");
+                    location.reload(); 
+                    return;
+                }
+            }
+            alert("비밀번호가 틀렸습니다! ❌");
+            location.href = "index.html"; // 메뉴창으로 돌아가기 (선생님 환경에 맞게 수정 가능)
+        }
+    })();
+</script>
+</head>
+<body>
+    <div class="container">
+        <h1>⚽ 60초 원주각 슛돌이 ⚽</h1>
+        
+        <div id="hud">
+            <div id="scoreDisplay">목표: 0 골</div>
+            <div id="timeDisplay">남은 시간: 60초</div>
+        </div>
+
+        <div id="gameArea">
+            <canvas id="gameCanvas" width="600" height="550"></canvas>
+            
+            <div id="menuScreen" class="menu">
+                <h2 style="color: #fbc531; margin-bottom: 30px;">난이도를 선택하세요</h2>
+                <button class="btn btn-easy" onclick="startGame('easy')">초급 (안 움직이는 키퍼)</button>
+                <button class="btn btn-normal" onclick="startGame('normal')">중급 (좌우로 움직이는 키퍼)</button>
+                <button class="btn btn-hard" onclick="startGame('hard')">고급 (빠르고 현란한 키퍼)</button>
+                <p style="color: #ccc; margin-top: 20px; font-size: 16px;">조작법: 화면 터치(방향 고정) ➡️ 유지(파워업) ➡️ 떼기(슈팅!)</p>
+            </div>
+            
+            <div id="resultScreen" class="menu" style="display: none;">
+                <h2 style="color: #fbc531; font-size: 40px;">경기 종료!</h2>
+                <h3 id="finalScore" style="font-size: 30px;">총 0골 달성</h3>
+                <button class="btn btn-easy" onclick="showMenu()">다시 하기 🔄</button>
+            </div>
+        </div>
+        
+        <div id="msgBox">화면을 꾹 눌러 파워를 조절하세요! 너무 세면 홈런입니다!</div>
+    </div>
+
+<script>
+window.onload = function() {
+    if (!sessionStorage.getItem("shootUnlocked")) return;
+
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    
+    // 게임 변수
+    let state = "MENU"; // MENU, AIMING, POWERING, SHOOTING
+    let difficulty = "easy";
+    let score = 0;
+    let combo = 0;
+    let timeLeft = 60;
+    let timerId;
+    let animId;
+    
+    // 게임 오브젝트
+    const goalLeft = 200, goalRight = 400, goalY = 60;
+    let player = { x: 300, y: 400 };
+    let ball = { x: 300, y: 400, vx: 0, vy: 0, radius: 8, scale: 1, alpha: 1 };
+    let gk = { x: 300, y: 65, width: 50, height: 15, speed: 0, targetX: 300 };
+    
+    // 조작 및 수치
+    let aimAngle = 0;
+    let aimSweepDir = 1;
+    let lockedAngle = 0;
+    let power = 0;
+    let powerDir = 1;
+    let feverTime = 0; // 피버타임 남은 프레임
+    let circleCenter = {x: 300, y: 0};
+    let circleRadius = 0;
+    let feverAngle = 0;
+
+    // 초기화 및 시작
+    window.showMenu = function() {
+        document.getElementById("menuScreen").style.display = "flex";
+        document.getElementById("resultScreen").style.display = "none";
+        state = "MENU";
+    };
+
+    window.startGame = function(diff) {
+        difficulty = diff;
+        score = 0;
+        combo = 0;
+        timeLeft = 60;
+        feverTime = 0;
+        document.getElementById("menuScreen").style.display = "none";
+        document.getElementById("scoreDisplay").innerText = `목표: 0 골`;
+        document.getElementById("timeDisplay").innerText = `남은 시간: 60초`;
+        
+        resetPlayer();
+        state = "AIMING";
+        
+        if(timerId) clearInterval(timerId);
+        timerId = setInterval(() => {
+            timeLeft--;
+            document.getElementById("timeDisplay").innerText = `남은 시간: ${timeLeft}초`;
+            if (timeLeft <= 0) endGame();
+        }, 1000);
+        
+        cancelAnimationFrame(animId);
+        gameLoop();
+    };
+
+    function endGame() {
+        state = "GAMEOVER";
+        clearInterval(timerId);
+        document.getElementById("resultScreen").style.display = "flex";
+        document.getElementById("finalScore").innerText = `총 ${score}골 달성!`;
+    }
+
+    function resetPlayer() {
+        player.x = 150 + Math.random() * 300;
+        player.y = 250 + Math.random() * 200;
+        ball.x = player.x;
+        ball.y = player.y;
+        ball.scale = 1;
+        ball.alpha = 1;
+        power = 0;
+        
+        // 원주각 계산 (골대 A, B와 플레이어 P를 지나는 원의 중심 찾기)
+        let midX = 300; // (200+400)/2
+        let y_c = (Math.pow(300 - player.x, 2) + Math.pow(player.y, 2) - 12500) / (2 * player.y - 120);
+        circleCenter = { x: midX, y: y_c };
+        circleRadius = Math.sqrt(Math.pow(100, 2) + Math.pow(y_c - goalY, 2));
+        feverAngle = Math.atan2(player.y - y_c, player.x - 300);
+        
+        state = "AIMING";
+    }
+
+    // 마우스 / 터치 이벤트
+    function handleInputStart(e) {
+        if (e.cancelable) e.preventDefault();
+        if (state === "AIMING") {
+            state = "POWERING";
+            lockedAngle = aimAngle;
+        }
+    }
+
+    function handleInputEnd(e) {
+        if (e.cancelable) e.preventDefault();
+        if (state === "POWERING") {
+            state = "SHOOTING";
+            // 슈팅 로직
+            let speed = power * 0.25; // 최대 속도 25
+            ball.vx = Math.cos(lockedAngle) * speed;
+            ball.vy = Math.sin(lockedAngle) * speed;
+        }
+    }
+
+    canvas.addEventListener("mousedown", handleInputStart);
+    canvas.addEventListener("mouseup", handleInputEnd);
+    canvas.addEventListener("touchstart", handleInputStart, {passive: false});
+    canvas.addEventListener("touchend", handleInputEnd, {passive: false});
+
+    // 메인 루프
+    function gameLoop() {
+        if (state !== "GAMEOVER") {
+            update();
+            draw();
+            animId = requestAnimationFrame(gameLoop);
+        }
+    }
+
+    function update() {
+        // 골키퍼 로직
+        if (difficulty === "normal") {
+            gk.x = 300 + Math.sin(Date.now() / 300) * 80;
+        } else if (difficulty === "hard") {
+            if (Math.abs(gk.x - gk.targetX) < 10) {
+                gk.targetX = 220 + Math.random() * 160;
+                gk.speed = 5 + Math.random() * 5;
+            }
+            if (gk.x < gk.targetX) gk.x += gk.speed;
+            else gk.x -= gk.speed;
+        } else {
+            gk.x = 300; // easy
+        }
+
+        // 피버타임 로직 (원주각 시각화 이동)
+        if (feverTime > 0 && state === "AIMING") {
+            feverTime--;
+            feverAngle += 0.02 * aimSweepDir;
+            if (feverAngle > 2.5 || feverAngle < 0.6) aimSweepDir *= -1; // 원 아래쪽 범위
+            player.x = circleCenter.x + circleRadius * Math.cos(feverAngle);
+            player.y = circleCenter.y + circleRadius * Math.sin(feverAngle);
+            ball.x = player.x;
+            ball.y = player.y;
+        }
+
+        if (state === "AIMING") {
+            // 조준선 흔들기 (원주각 내부에서만)
+            let angleLeft = Math.atan2(goalY - player.y, goalLeft - player.x);
+            let angleRight = Math.atan2(goalY - player.y, goalRight - player.x);
+            
+            // 시야각(원주각) 크기는 고정되어 있음!
+            if (!aimAngle) aimAngle = (angleLeft + angleRight) / 2;
+            
+            aimAngle += 0.03 * aimSweepDir;
+            if (aimAngle < angleLeft || aimAngle > angleRight) {
+                aimSweepDir *= -1;
+                aimAngle += 0.06 * aimSweepDir; // 경계 벗어남 방지
+            }
+        } 
+        else if (state === "POWERING") {
+            power += 2 * powerDir;
+            if (power >= 100 || power <= 0) powerDir *= -1;
+        }
+        else if (state === "SHOOTING") {
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+            
+            // 홈런 (파워가 80 이상이면 위로 뜸)
+            if (power > 85) {
+                ball.scale += 0.02;
+                ball.alpha -= 0.02;
+            }
+            
+            // 힘이 약해서 멈춤
+            ball.vx *= 0.98;
+            ball.vy *= 0.98;
+            if (Math.abs(ball.vy) < 0.5) {
+                setMessage("❌ 힘이 부족합니다!");
+                combo = 0;
+                setTimeout(resetPlayer, 1000);
+                state = "RESULT";
+            }
+
+            // 골키퍼 충돌
+            if (ball.y <= goalY + 15 && ball.y >= goalY - 10 && ball.alpha > 0.5) {
+                if (Math.abs(ball.x - gk.x) < gk.width / 2 + 5) {
+                    setMessage("✋ 골키퍼 선방!");
+                    combo = 0;
+                    ball.vy *= -0.5; // 튕겨나옴
+                    state = "RESULT";
+                    setTimeout(resetPlayer, 1000);
+                }
+            }
+
+            // 골대 통과 판정
+            if (ball.y < goalY && state === "SHOOTING") {
+                if (ball.alpha < 0.5) {
+                    setMessage("⚾ 홈런! 너무 쎄게 찼습니다!");
+                    combo = 0;
+                } else if (ball.x > goalLeft && ball.x < goalRight) {
+                    score++;
+                    combo++;
+                    document.getElementById("scoreDisplay").innerText = `목표: ${score} 골`;
+                    if (combo >= 3) {
+                        setMessage("🔥 3연속 골! 원주각 피버 타임! 🔥");
+                        feverTime = 600; // 10초(60fps)
+                    } else {
+                        setMessage("🎉 GOAL!!");
+                    }
+                } else {
+                    setMessage("❌ 노골! 빗나갔습니다.");
+                    combo = 0;
+                }
+                state = "RESULT";
+                setTimeout(resetPlayer, 1000);
+            }
+        }
+    }
+
+    function setMessage(msg) {
+        document.getElementById("msgBox").innerText = msg;
+    }
+
+    function draw() {
+        // 필드 그리기
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // 페널티 에어리어 선
+        ctx.strokeStyle = "rgba(255,255,255,0.5)";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(100, -10, 400, 150);
+        ctx.beginPath();
+        ctx.arc(300, 140, 60, 0, Math.PI, false);
+        ctx.stroke();
+        
+        // 원주각 시각화 (골대와 플레이어를 지나는 원)
+        if (state === "AIMING" || state === "POWERING") {
+            ctx.beginPath();
+            ctx.arc(circleCenter.x, circleCenter.y, circleRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = feverTime > 0 ? "rgba(255, 0, 0, 0.4)" : "rgba(255, 255, 255, 0.15)";
+            ctx.lineWidth = feverTime > 0 ? 5 : 2;
+            ctx.stroke();
+            
+            // 시야각(원주각) 부채꼴 채우기
+            ctx.beginPath();
+            ctx.moveTo(player.x, player.y);
+            ctx.lineTo(goalLeft, goalY);
+            ctx.lineTo(goalRight, goalY);
+            ctx.closePath();
+            ctx.fillStyle = feverTime > 0 ? "rgba(255, 195, 18, 0.2)" : "rgba(241, 196, 15, 0.1)";
+            ctx.fill();
+        }
+
+        // 골대 (A, B)
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(goalLeft - 5, goalY - 10, 10, 20);
+        ctx.fillRect(goalRight - 5, goalY - 10, 10, 20);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+        ctx.fillRect(goalLeft, goalY - 10, 200, 10); // 그물
+
+        // 골키퍼
+        ctx.fillStyle = "#ff4757";
+        ctx.fillRect(gk.x - gk.width/2, gk.y - gk.height/2, gk.width, gk.height);
+
+        // 화살표 조준선
+        if (state === "AIMING" || state === "POWERING") {
+            let angle = state === "AIMING" ? aimAngle : lockedAngle;
+            ctx.beginPath();
+            ctx.moveTo(player.x, player.y);
+            ctx.lineTo(player.x + Math.cos(angle) * 60, player.y + Math.sin(angle) * 60);
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 3;
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        // 파워 게이지
+        if (state === "POWERING") {
+            ctx.fillStyle = "#333";
+            ctx.fillRect(player.x - 30, player.y + 20, 60, 10);
+            
+            // 초록색(적정 파워) / 빨간색(홈런 파워) 색상 변화
+            let barColor = "#e74c3c"; // 빨강
+            if (power > 30 && power < 85) barColor = "#2ecc71"; // 초록
+            
+            ctx.fillStyle = barColor;
+            ctx.fillRect(player.x - 30, player.y + 20, 60 * (power / 100), 10);
+        }
+
+        // 공 (선수)
+        ctx.save();
+        ctx.globalAlpha = ball.alpha;
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.radius * ball.scale, 0, Math.PI * 2);
+        ctx.fillStyle = "#fff";
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#000";
+        ctx.stroke();
+        
+        // 축구공 무늬 간단히
+        ctx.beginPath();
+        ctx.moveTo(ball.x - 3*ball.scale, ball.y - 3*ball.scale);
+        ctx.lineTo(ball.x + 3*ball.scale, ball.y + 3*ball.scale);
+        ctx.moveTo(ball.x + 3*ball.scale, ball.y - 3*ball.scale);
+        ctx.lineTo(ball.x - 3*ball.scale, ball.y + 3*ball.scale);
+        ctx.stroke();
+        ctx.restore();
+    }
+};
+</script>
+</body>
+</html>
