@@ -47,7 +47,7 @@
                 }
             }
             alert("비밀번호가 틀렸습니다! ❌");
-            location.href = "circle.html"; // 메뉴로 돌아가기
+            location.href = "circle.html"; 
         }
     })();
 </script>
@@ -57,7 +57,7 @@
         <h1>⚽ 60초 원주각 슛돌이 ⚽</h1>
         
         <div id="hud">
-            <div id="scoreDisplay">목표: 0 골</div>
+            <div id="scoreDisplay">누적: 0 골</div>
             <div id="timeDisplay">남은 시간: 60초</div>
         </div>
 
@@ -65,11 +65,12 @@
             <canvas id="gameCanvas" width="600" height="550"></canvas>
             
             <div id="menuScreen" class="menu">
-                <h2 style="color: #fbc531; margin-bottom: 30px;">난이도를 선택하세요</h2>
+                <h2 style="color: #fbc531; margin-bottom: 20px;">난이도를 선택하세요</h2>
                 <button class="btn btn-easy" onclick="startGame('easy')">초급 (안 움직이는 키퍼)</button>
                 <button class="btn btn-normal" onclick="startGame('normal')">중급 (좌우로 움직이는 키퍼)</button>
                 <button class="btn btn-hard" onclick="startGame('hard')">고급 (빠르고 현란한 키퍼)</button>
-                <p style="color: #ccc; margin-top: 20px; font-size: 16px;">조작법: 화면 터치(방향 고정) ➡️ 유지(파워업) ➡️ 떼기(슈팅!)</p>
+                <p style="color: #ccc; margin-top: 20px; font-size: 16px;">조작법: 화면 터치(정지 및 파워충전) ➡️ 떼기(슈팅!)</p>
+                <p style="color: #f1c40f; font-weight: bold; font-size: 14px;">팁: 원주각을 따라 움직여도 각도는 변하지 않아요!</p>
             </div>
             
             <div id="resultScreen" class="menu" style="display: none;">
@@ -90,31 +91,29 @@ window.onload = function() {
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     
-    // 게임 변수
     let state = "MENU"; 
     let difficulty = "easy";
     let score = 0;
-    let combo = 0;
     let timeLeft = 60;
     let timerId;
     let animId;
     
-    // 게임 오브젝트
     const goalLeft = 200, goalRight = 400, goalY = 60;
     let player = { x: 300, y: 400 };
     let ball = { x: 300, y: 400, vx: 0, vy: 0, scale: 1, alpha: 1 };
-    let gk = { x: 300, y: 65, width: 40, speed: 0, targetX: 300 }; // width 40 for emoji
+    let gk = { x: 300, y: 65, width: 45, speed: 0, targetX: 300 }; 
     
-    // 조작 및 수치
     let aimAngle = 0;
-    let aimSweepDir = 1;
-    let lockedAngle = 0;
     let power = 0;
     let powerDir = 1;
-    let feverTime = 0; 
+
+    // 원주각 이동 시스템 변수
     let circleCenter = {x: 300, y: 0};
     let circleRadius = 0;
-    let feverAngle = 0;
+    let playerTheta = Math.PI / 2;
+    let playerDir = 1;
+    let aimT = 0.5; // 조준선이 양쪽 골대 사이를 오가는 비율 (0~1)
+    let aimDir = 1;
 
     window.showMenu = function() {
         document.getElementById("menuScreen").style.display = "flex";
@@ -125,11 +124,9 @@ window.onload = function() {
     window.startGame = function(diff) {
         difficulty = diff;
         score = 0;
-        combo = 0;
         timeLeft = 60;
-        feverTime = 0;
         document.getElementById("menuScreen").style.display = "none";
-        document.getElementById("scoreDisplay").innerText = `목표: 0 골`;
+        document.getElementById("scoreDisplay").innerText = `누적: 0 골`;
         document.getElementById("timeDisplay").innerText = `남은 시간: 60초`;
         
         resetPlayer();
@@ -155,25 +152,23 @@ window.onload = function() {
     }
 
     function resetPlayer() {
-        player.x = 150 + Math.random() * 300;
-        player.y = 250 + Math.random() * 200;
-        ball.x = player.x;
-        ball.y = player.y;
         ball.scale = 1;
         ball.alpha = 1;
-        ball.vx = 0; // 버그 수정: 속도 완벽 초기화
-        ball.vy = 0; // 버그 수정: 속도 완벽 초기화
-        power = 0;   // 버그 수정: 파워 완벽 초기화
+        ball.vx = 0; 
+        ball.vy = 0; 
+        power = 0;   
         powerDir = 1;
-        aimAngle = 0; // 버그 수정: 각도 초기화 (안전하게 재계산)
-        aimSweepDir = 1;
         
-        // 원주각 계산
-        let midX = 300; 
-        let y_c = (Math.pow(300 - player.x, 2) + Math.pow(player.y, 2) - 12500) / (2 * player.y - 120);
-        circleCenter = { x: midX, y: y_c };
+        // 거리가 랜덤한 원 생성 (중심 y좌표를 120~280 사이로 설정)
+        let y_c = 120 + Math.random() * 160;
+        circleCenter = { x: 300, y: y_c };
         circleRadius = Math.sqrt(Math.pow(100, 2) + Math.pow(y_c - goalY, 2));
-        feverAngle = Math.atan2(player.y - y_c, player.x - 300);
+        
+        playerTheta = Math.PI / 2; // 원의 맨 아래에서 시작
+        playerDir = (Math.random() > 0.5) ? 1 : -1;
+        
+        aimT = 0.5; // 가운데 정조준 상태에서 시작
+        aimDir = 1;
         
         state = "AIMING";
     }
@@ -181,8 +176,7 @@ window.onload = function() {
     function handleInputStart(e) {
         if (e.cancelable) e.preventDefault();
         if (state === "AIMING") {
-            state = "POWERING";
-            lockedAngle = aimAngle;
+            state = "POWERING"; // 누르는 순간 캐릭터 정지 & 파워 충전
         }
     }
 
@@ -191,8 +185,8 @@ window.onload = function() {
         if (state === "POWERING") {
             state = "SHOOTING";
             let speed = power * 0.25; 
-            ball.vx = Math.cos(lockedAngle) * speed;
-            ball.vy = Math.sin(lockedAngle) * speed;
+            ball.vx = Math.cos(aimAngle) * speed;
+            ball.vy = Math.sin(aimAngle) * speed;
         }
     }
 
@@ -216,7 +210,7 @@ window.onload = function() {
         } else if (difficulty === "hard") {
             if (Math.abs(gk.x - gk.targetX) < 10) {
                 gk.targetX = 220 + Math.random() * 160;
-                gk.speed = 4 + Math.random() * 4;
+                gk.speed = 4 + Math.random() * 5;
             }
             if (gk.x < gk.targetX) gk.x += gk.speed;
             else gk.x -= gk.speed;
@@ -224,35 +218,30 @@ window.onload = function() {
             gk.x = 300; 
         }
 
-        if (feverTime > 0 && state === "AIMING") {
-            feverTime--;
-            feverAngle += 0.02 * aimSweepDir;
-            if (feverAngle > 2.5 || feverAngle < 0.6) aimSweepDir *= -1; 
-            player.x = circleCenter.x + circleRadius * Math.cos(feverAngle);
-            player.y = circleCenter.y + circleRadius * Math.sin(feverAngle);
+        if (state === "AIMING") {
+            // 원주각(원 둘레)을 따라 키커 이동
+            playerTheta += 0.015 * playerDir;
+            if (playerTheta > Math.PI * 0.8) { playerTheta = Math.PI * 0.8; playerDir = -1; }
+            else if (playerTheta < Math.PI * 0.2) { playerTheta = Math.PI * 0.2; playerDir = 1; }
+            
+            player.x = circleCenter.x + circleRadius * Math.cos(playerTheta);
+            player.y = circleCenter.y + circleRadius * Math.sin(playerTheta);
             ball.x = player.x;
             ball.y = player.y;
-        }
 
-        if (state === "AIMING") {
-            let angleLeft = Math.atan2(goalY - player.y, goalLeft - player.x);
-            let angleRight = Math.atan2(goalY - player.y, goalRight - player.x);
+            // 골대를 향한 조준선 이동 계산 (원주각의 성질 유지)
+            let aL = Math.atan2(goalY - player.y, goalLeft - player.x);
+            let aR = Math.atan2(goalY - player.y, goalRight - player.x);
             
-            if (!aimAngle) aimAngle = (angleLeft + angleRight) / 2;
+            aimT += 0.025 * aimDir;
+            if (aimT >= 1) { aimT = 1; aimDir = -1; }
+            else if (aimT <= 0) { aimT = 0; aimDir = 1; }
             
-            aimAngle += 0.015 * aimSweepDir; // 변경점: 속도를 0.03에서 0.015로 절반 감소!
-            
-            // 변경점: 버그 수정 (범위를 벗어나면 안전하게 한계점에 고정하여 무한 진동 방지)
-            if (aimAngle < angleLeft) {
-                aimAngle = angleLeft;
-                aimSweepDir = 1;
-            } else if (aimAngle > angleRight) {
-                aimAngle = angleRight;
-                aimSweepDir = -1;
-            }
+            aimAngle = aL + (aR - aL) * aimT;
         } 
         else if (state === "POWERING") {
-            power += 2 * powerDir;
+            // 캐릭터 멈춤, 파워만 올라감
+            power += 2.5 * powerDir;
             if (power >= 100 || power <= 0) powerDir *= -1;
         }
         else if (state === "SHOOTING") {
@@ -261,24 +250,22 @@ window.onload = function() {
             
             if (power > 85) {
                 ball.scale += 0.02;
-                ball.alpha -= 0.02;
+                ball.alpha -= 0.02; // 홈런일 때만 투명해짐
             }
             
             ball.vx *= 0.98;
             ball.vy *= 0.98;
             
-            if (Math.abs(ball.vy) < 0.5) {
+            if (Math.abs(ball.vy) < 0.5 && ball.y > goalY) {
                 setMessage("❌ 힘이 부족합니다!");
-                combo = 0;
                 state = "RESULT";
                 setTimeout(resetPlayer, 1000);
             }
 
-            // 골키퍼 충돌 (이모지 크기에 맞춤)
+            // 골키퍼 충돌
             if (ball.y <= goalY + 15 && ball.y >= goalY - 10 && ball.alpha > 0.5) {
-                if (Math.abs(ball.x - gk.x) < 25) { 
+                if (Math.abs(ball.x - gk.x) < 30) { 
                     setMessage("✋ 골키퍼 선방!");
-                    combo = 0;
                     ball.vy *= -0.5; 
                     state = "RESULT";
                     setTimeout(resetPlayer, 1000);
@@ -289,20 +276,12 @@ window.onload = function() {
             if (ball.y < goalY && state === "SHOOTING") {
                 if (ball.alpha < 0.5) {
                     setMessage("⚾ 홈런! 너무 쎄게 찼습니다!");
-                    combo = 0;
                 } else if (ball.x > goalLeft && ball.x < goalRight) {
                     score++;
-                    combo++;
-                    document.getElementById("scoreDisplay").innerText = `목표: ${score} 골`;
-                    if (combo >= 3) {
-                        setMessage("🔥 3연속 골! 원주각 피버 타임! 🔥");
-                        feverTime = 600; 
-                    } else {
-                        setMessage("🎉 GOAL!!");
-                    }
+                    document.getElementById("scoreDisplay").innerText = `누적: ${score} 골`;
+                    setMessage("🎉 GOAL!!");
                 } else {
                     setMessage("❌ 노골! 빗나갔습니다.");
-                    combo = 0;
                 }
                 state = "RESULT";
                 setTimeout(resetPlayer, 1000);
@@ -325,53 +304,49 @@ window.onload = function() {
         ctx.arc(300, 140, 60, 0, Math.PI, false);
         ctx.stroke();
         
-        // 원주각 시각화
+        // 원주각 시각화 (노란색 부채꼴)
         if (state === "AIMING" || state === "POWERING") {
+            // 원 둘레 궤적 은은하게 표시
             ctx.beginPath();
             ctx.arc(circleCenter.x, circleCenter.y, circleRadius, 0, Math.PI * 2);
-            ctx.strokeStyle = feverTime > 0 ? "rgba(255, 0, 0, 0.4)" : "rgba(255, 255, 255, 0.15)";
-            ctx.lineWidth = feverTime > 0 ? 5 : 2;
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+            ctx.lineWidth = 2;
             ctx.stroke();
             
+            // 일정한 크기를 유지하는 원주각(부채꼴) 표시
             ctx.beginPath();
             ctx.moveTo(player.x, player.y);
             ctx.lineTo(goalLeft, goalY);
             ctx.lineTo(goalRight, goalY);
             ctx.closePath();
-            ctx.fillStyle = feverTime > 0 ? "rgba(255, 195, 18, 0.2)" : "rgba(241, 196, 15, 0.1)";
+            ctx.fillStyle = "rgba(241, 196, 15, 0.3)";
             ctx.fill();
+            
+            // 부채꼴 선명한 테두리
+            ctx.beginPath();
+            ctx.moveTo(player.x, player.y);
+            ctx.lineTo(goalLeft, goalY);
+            ctx.moveTo(player.x, player.y);
+            ctx.lineTo(goalRight, goalY);
+            ctx.strokeStyle = "rgba(241, 196, 15, 0.8)";
+            ctx.lineWidth = 2;
+            ctx.stroke();
         }
 
-        // 골대 (그물)
+        // 골대
         ctx.fillStyle = "#fff";
         ctx.fillRect(goalLeft - 5, goalY - 10, 10, 20);
         ctx.fillRect(goalRight - 5, goalY - 10, 10, 20);
-        ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
         ctx.fillRect(goalLeft, goalY - 10, 200, 10); 
-
-        // 텍스트 기반 이모지 그리기 세팅
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-
-        // 변경점: 이모지 골키퍼 🧤
-        ctx.font = "35px Arial";
-        ctx.fillText("🧤", gk.x, gk.y);
-
-        // 변경점: 이모지 키커 🏃 (에이밍, 파워 조절 중에만 공 뒤에 표시)
-        if (state === "AIMING" || state === "POWERING") {
-            ctx.font = "40px Arial";
-            ctx.fillText("🏃", player.x - 20, player.y - 15);
-        }
 
         // 화살표 조준선
         if (state === "AIMING" || state === "POWERING") {
-            let angle = state === "AIMING" ? aimAngle : lockedAngle;
             ctx.beginPath();
             ctx.moveTo(player.x, player.y);
-            // 변경점: 길이를 60에서 120으로 2배 늘림!
-            ctx.lineTo(player.x + Math.cos(angle) * 120, player.y + Math.sin(angle) * 120);
+            ctx.lineTo(player.x + Math.cos(aimAngle) * 120, player.y + Math.sin(aimAngle) * 120);
             ctx.strokeStyle = "#fff";
-            ctx.lineWidth = 4; // 선도 살짝 더 두껍게
+            ctx.lineWidth = 4;
             ctx.setLineDash([8, 5]);
             ctx.stroke();
             ctx.setLineDash([]);
@@ -380,21 +355,39 @@ window.onload = function() {
         // 파워 게이지
         if (state === "POWERING") {
             ctx.fillStyle = "#333";
-            ctx.fillRect(player.x - 30, player.y + 25, 60, 10);
+            ctx.fillRect(player.x - 35, player.y + 35, 70, 12);
             
             let barColor = "#e74c3c"; 
             if (power > 30 && power < 85) barColor = "#2ecc71"; 
             
             ctx.fillStyle = barColor;
-            ctx.fillRect(player.x - 30, player.y + 25, 60 * (power / 100), 10);
+            ctx.fillRect(player.x - 35, player.y + 35, 70 * (power / 100), 12);
         }
 
-        // 변경점: 이모지 축구공 ⚽
+        // 가시성 극대화를 위한 이모지 그림자 세팅
         ctx.save();
+        ctx.shadowColor = "rgba(0, 0, 0, 0.9)"; // 매우 진한 검은 그림자
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetX = 3;
+        ctx.shadowOffsetY = 3;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        // 이모지 골키퍼 🧤
+        ctx.font = "50px Arial";
+        ctx.fillText("🧤", gk.x, gk.y);
+
+        // 이모지 키커 🏃
+        if (state === "AIMING" || state === "POWERING") {
+            ctx.font = "55px Arial";
+            ctx.fillText("🏃", player.x - 25, player.y - 15);
+        }
+
+        // 이모지 축구공 ⚽
         ctx.globalAlpha = ball.alpha;
-        ctx.font = (30 * ball.scale) + "px Arial";
+        ctx.font = (40 * ball.scale) + "px Arial";
         ctx.fillText("⚽", ball.x, ball.y);
-        ctx.restore();
+        ctx.restore(); // 그림자 효과 종료
     }
 };
 </script>
