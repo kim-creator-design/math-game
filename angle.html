@@ -91,6 +91,10 @@ window.onload = function() {
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     
+    // 골키퍼 이미지 로딩
+    const gkImage = new Image();
+    gkImage.src = "화면 캡처 2026-09-02 141843.jpg";
+    
     let state = "MENU"; 
     let difficulty = "easy";
     let score = 0;
@@ -203,9 +207,14 @@ window.onload = function() {
         if (difficulty === "normal") {
             gk.x = 300 + Math.sin(Date.now() / 300) * 80;
         } else if (difficulty === "hard") {
+            // 고급 난이도: 양쪽 끝(사각지대)을 집중적으로 마크하며 횡단
             if (Math.abs(gk.x - gk.targetX) < 10) {
-                gk.targetX = 220 + Math.random() * 160;
-                gk.speed = 4 + Math.random() * 5;
+                if (gk.targetX <= 300) {
+                    gk.targetX = 360 + Math.random() * 40; // 오른쪽 끝부분 (360~400)
+                } else {
+                    gk.targetX = 200 + Math.random() * 40; // 왼쪽 끝부분 (200~240)
+                }
+                gk.speed = 5 + Math.random() * 4; // 이동 속도 조정
             }
             if (gk.x < gk.targetX) gk.x += gk.speed;
             else gk.x -= gk.speed;
@@ -249,9 +258,8 @@ window.onload = function() {
                 setTimeout(resetPlayer, 1000);
             }
 
-            // 골키퍼 충돌
             if (ball.y <= goalY + 15 && ball.y >= goalY - 10) {
-                if (Math.abs(ball.x - gk.x) < 30) { 
+                if (Math.abs(ball.x - gk.x) < 35) { 
                     setMessage("✋ 골키퍼 선방!");
                     ball.vy *= -0.5; 
                     state = "RESULT";
@@ -259,9 +267,8 @@ window.onload = function() {
                 }
             }
 
-            // 골대 통과 판정
             if (ball.y <= goalY && state === "SHOOTING") {
-                if (power > 85) { // 스케일 변화 없이 내부 파워 수치로만 판정
+                if (power > 85) { 
                     setMessage("⚾ 홈런! 너무 쎄게 찼습니다!");
                 } else if (ball.x > goalLeft && ball.x < goalRight) {
                     score++;
@@ -319,7 +326,6 @@ window.onload = function() {
         ctx.fillRect(goalLeft - 5, goalY - 10, 10, 20);
         ctx.fillRect(goalRight - 5, goalY - 10, 10, 20);
         
-        // 주의: 이 반투명한 흰색 때문에 캐릭터도 흐려졌던 것입니다!
         ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
         ctx.fillRect(goalLeft, goalY - 10, 200, 10); 
 
@@ -345,23 +351,23 @@ window.onload = function() {
             ctx.fillRect(player.x - 35, player.y + 35, 70 * (power / 100), 12);
         }
 
-        // 버그 해결: 이모지를 그리기 전에 투명도와 색상값을 100% 진하게 명시적으로 초기화합니다!
         ctx.globalAlpha = 1.0;
         ctx.fillStyle = "#000000"; 
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
-        // 골키퍼 (서 있는 사람 모양)
-        ctx.font = "50px Arial";
-        ctx.fillText("🧍‍♂️", gk.x, gk.y);
+        if (gkImage.complete) {
+            ctx.drawImage(gkImage, gk.x - 30, gk.y - 35, 60, 70);
+        } else {
+            ctx.font = "50px Arial";
+            ctx.fillText("🧍‍♂️", gk.x, gk.y);
+        }
 
-        // 키커 
         if (state === "AIMING" || state === "POWERING") {
             ctx.font = "55px Arial";
             ctx.fillText("🏃", player.x - 25, player.y - 15);
         }
 
-        // 축구공 (크기 및 투명도 고정)
         ctx.font = "40px Arial";
         ctx.fillText("⚽", ball.x, ball.y);
     }
