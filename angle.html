@@ -91,8 +91,15 @@ window.onload = function() {
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     
-    // 골키퍼 이미지 로딩
+    // 안전한 골키퍼 이미지 로딩
+    let isGkImageLoaded = false;
     const gkImage = new Image();
+    gkImage.onload = function() {
+        isGkImageLoaded = true; // 성공적으로 불러왔을 때만 true
+    };
+    gkImage.onerror = function() {
+        isGkImageLoaded = false; // 실패하면 에러를 뱉지 않고 그냥 기본 이모지를 쓰도록 설정
+    };
     gkImage.src = "화면 캡처 2026-09-02 141843.jpg";
     
     let state = "MENU"; 
@@ -207,14 +214,13 @@ window.onload = function() {
         if (difficulty === "normal") {
             gk.x = 300 + Math.sin(Date.now() / 300) * 80;
         } else if (difficulty === "hard") {
-            // 고급 난이도: 양쪽 끝(사각지대)을 집중적으로 마크하며 횡단
             if (Math.abs(gk.x - gk.targetX) < 10) {
                 if (gk.targetX <= 300) {
-                    gk.targetX = 360 + Math.random() * 40; // 오른쪽 끝부분 (360~400)
+                    gk.targetX = 360 + Math.random() * 40; 
                 } else {
-                    gk.targetX = 200 + Math.random() * 40; // 왼쪽 끝부분 (200~240)
+                    gk.targetX = 200 + Math.random() * 40; 
                 }
-                gk.speed = 5 + Math.random() * 4; // 이동 속도 조정
+                gk.speed = 5 + Math.random() * 4; 
             }
             if (gk.x < gk.targetX) gk.x += gk.speed;
             else gk.x -= gk.speed;
@@ -356,7 +362,8 @@ window.onload = function() {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
-        if (gkImage.complete) {
+        // 에러 방지: 성공적으로 이미지를 불러왔을 때만 그려주고, 아니면 기본 이모지로 대체
+        if (isGkImageLoaded) {
             ctx.drawImage(gkImage, gk.x - 30, gk.y - 35, 60, 70);
         } else {
             ctx.font = "50px Arial";
