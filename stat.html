@@ -13,7 +13,7 @@
             alert("보안 해제 완료! 포격전 준비! 🚀");
         } else {
             alert("비밀번호가 틀렸습니다! ❌");
-            location.href = "index.html"; // 틀리면 로비로 돌려보냄
+            location.href = "index.html";
         }
     }
 </script>
@@ -22,22 +22,23 @@
     .container { max-width: 800px; margin: 0 auto; background: #34495e; padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); position: relative; }
     h1 { color: #f1c40f; margin-top: 0; font-size: 26px; }
     
-    /* 공통 캔버스 및 화면 */
     #gameArea { position: relative; width: 600px; height: 500px; margin: 0 auto; background: #ecf0f1; border-radius: 10px; overflow: hidden; border: 4px solid #bdc3c7; }
     canvas { position: absolute; top: 0; left: 0; }
     
-    /* 스테이지 1 UI */
-    #stage1UI { position: absolute; bottom: -60px; left: 50%; transform: translateX(-50%); display: none; width: 100%; }
-    #answerInput { font-size: 24px; padding: 10px; width: 200px; border-radius: 8px; border: none; text-align: center; font-weight: bold; }
+    /* 스테이지 1 컨트롤 UI */
+    #stage1UI { position: absolute; bottom: -70px; left: 50%; transform: translateX(-50%); display: none; width: 100%; justify-content: center; gap: 10px; }
+    #answerInput { font-size: 24px; padding: 10px; width: 180px; border-radius: 8px; border: none; text-align: center; font-weight: bold; }
+    #fireActionBtn { font-size: 22px; padding: 10px 25px; border-radius: 8px; border: none; background: #e74c3c; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px #c0392b; }
+    #fireActionBtn:active { transform: translateY(4px); box-shadow: 0 0 #c0392b; }
+
     .hud { position: absolute; top: 10px; font-weight: bold; font-size: 20px; color: #2c3e50; z-index: 10; }
     #timerDisplay { left: 20px; }
     #stageInfo { right: 20px; }
     .legend { position: absolute; top: 40px; right: 20px; font-size: 14px; text-align: left; color: #333; background: rgba(255,255,255,0.8); padding: 5px; border-radius: 5px; }
 
-    /* 스테이지 2 UI (보스전) */
+    /* 스테이지 2 UI */
     #stage2UI { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #2c3e50; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 20; color: white; }
     .magazine-container { display: flex; gap: 10px; margin: 20px 0; }
-    .magazine-box { display: flex; flex-direction: column; align-items: center; }
     .magazine-input { font-size: 20px; width: 60px; height: 60px; text-align: center; border-radius: 8px; border: 2px solid #bdc3c7; background: #34495e; color: #f1c40f; font-weight: bold; }
     
     #statsDisplay { margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; width: 80%; }
@@ -49,9 +50,7 @@
     
     .screen-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 50; }
     .btn { padding: 15px 30px; font-size: 20px; margin: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; background: #27ae60; }
-    
-    /* 뒤로가기 버튼 */
-    .back-btn { display: inline-block; margin-top: 30px; padding: 10px 20px; background: #7f8fa6; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; }
+    .back-btn { display: inline-block; margin-top: 40px; padding: 10px 20px; background: #7f8fa6; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -61,31 +60,27 @@
         <div id="gameArea">
             <canvas id="gameCanvas" width="600" height="500"></canvas>
             
-            <!-- 스테이지 1 정보 -->
             <div id="timerDisplay" class="hud" style="display:none;">남은 시간: 60초</div>
-            <div id="stageInfo" class="hud" style="display:none;">Stage 1: 색깔 몬스터 요격</div>
+            <div id="stageInfo" class="hud" style="display:none;">Stage 1: 몬스터 요격</div>
             <div id="legendBox" class="legend" style="display:none;">
                 <span style="color:#c0392b; font-weight:bold;">■ 빨강: 평균</span><br>
                 <span style="color:#2980b9; font-weight:bold;">■ 파랑: 중앙값</span><br>
                 <span style="color:#f39c12; font-weight:bold;">■ 노랑: 최빈값</span>
             </div>
 
-            <!-- 시작/결과 화면 -->
             <div id="menuScreen" class="screen-overlay">
                 <h2 style="color: #f1c40f;">최후의 포격전</h2>
-                <p>수학 지식으로 성벽을 지켜내세요!<br>한 마리라도 닿으면 즉시 파괴됩니다.</p>
+                <p>수학 지식으로 대포를 발사해 성벽을 지키세요!<br>한 마리라도 성벽에 닿으면 즉시 파괴됩니다.</p>
                 <button class="btn" onclick="startStage1()">게임 시작</button>
             </div>
 
-            <!-- 스테이지 2 (보스전) 룰렛 입력 화면 -->
+            <!-- 스테이지 2 (보스전) -->
             <div id="stage2UI">
                 <h2 style="color:#e74c3c; margin:0;">거대 보스 등장! (Lv 1)</h2>
                 <h3 id="bossHpText">보스 HP: 50 / 남은 턴: 4</h3>
-                <p>100의 데미지를 6개의 탄창에 자유롭게 분배하세요!</p>
+                <p>100의 데미지를 6개의 탄창에 분배하세요!</p>
                 
-                <div class="magazine-container" id="magazines">
-                    <!-- JS로 인풋 박스 생성 -->
-                </div>
+                <div class="magazine-container" id="magazines"></div>
 
                 <div id="statsDisplay">
                     총 분배량: <span id="totalDmg" style="color:#e74c3c;">0</span> / 100<br>
@@ -97,20 +92,16 @@
             </div>
         </div>
         
-        <!-- 스테이지 1 입력창 (캔버스 아래) -->
+        <!-- 대포 발사 컨트롤 UI -->
         <div id="stage1UI">
-            <input type="number" id="answerInput" placeholder="정답 입력 후 Enter" autocomplete="off">
+            <input type="number" id="answerInput" placeholder="정답 입력" autocomplete="off">
+            <button id="fireActionBtn" onclick="fireCannon()">발사!</button>
         </div>
         
         <a href="index.html" class="back-btn">⬅ 로비로 돌아가기</a>
     </div>
 
 <script>
-    // 게임 시작 시 비밀번호 인증 확인
-    window.onload = function() {
-        if (!sessionStorage.getItem("statUnlocked")) return;
-    };
-
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     
@@ -118,16 +109,19 @@
     let state = "MENU"; 
     let stage1Timer = 60;
     let spawnTimer = 0;
+    
     let monsters = [];
+    let projectiles = []; // 대포알 배열
+    let explosions = [];  // 폭발 이펙트 배열
+    
     let intervalId;
     let animId;
-    let dataCount = 5; 
-
-    // 보스전 변수
+    
+    // 초기 설정: 자료 개수 3개
+    let dataCount = 3; 
     let bossHp = 50;
     let bossTurns = 4;
     
-    // 수학 데이터 생성기 (정수값 및 유일한 최빈값 보장)
     function generateData(type, count) {
         let arr = [];
         let targetAnswer = 0;
@@ -167,10 +161,9 @@
         return { data: arr, answer: targetAnswer };
     }
 
-    // 스테이지 1 시작
     window.startStage1 = function() {
         document.getElementById("menuScreen").style.display = "none";
-        document.getElementById("stage1UI").style.display = "block";
+        document.getElementById("stage1UI").style.display = "flex";
         document.getElementById("timerDisplay").style.display = "block";
         document.getElementById("stageInfo").style.display = "block";
         document.getElementById("legendBox").style.display = "block";
@@ -179,6 +172,8 @@
         state = "STAGE1";
         stage1Timer = 60;
         monsters = [];
+        projectiles = [];
+        explosions = [];
         spawnTimer = 0;
         
         clearInterval(intervalId);
@@ -207,33 +202,56 @@
         const q = generateData(selected.type, count);
         
         monsters.push({
+            id: Math.random().toString(36).substr(2, 9),
             x: 50 + Math.random() * (canvas.width - 100),
             y: -50,
             color: selected.color,
             dataStr: q.data.join(', '),
             answer: q.answer,
-            speed: 0.5 + Math.random() * 0.5
+            // 초기 속도 절반으로 감소 (0.25 ~ 0.5)
+            speed: (0.5 + Math.random() * 0.5) / 2,
+            targeted: false
         });
     }
 
+    // 엔터키 입력 시 발사
     document.getElementById("answerInput").addEventListener("keypress", function(e) {
         if (e.key === "Enter" && state === "STAGE1") {
-            const val = parseInt(this.value);
-            this.value = '';
-            
-            let targetIdx = -1;
-            let maxY = -999;
-            for(let i=0; i<monsters.length; i++) {
-                if(monsters[i].answer === val && monsters[i].y > maxY) {
-                    maxY = monsters[i].y;
-                    targetIdx = i;
-                }
-            }
-            if(targetIdx !== -1) {
-                monsters.splice(targetIdx, 1);
-            }
+            fireCannon();
         }
     });
+
+    // 대포 발사 로직
+    window.fireCannon = function() {
+        const inputEl = document.getElementById("answerInput");
+        const val = parseInt(inputEl.value);
+        inputEl.value = '';
+        inputEl.focus();
+        
+        if (isNaN(val)) return;
+
+        let target = null;
+        let maxY = -999;
+        
+        // 정답이 일치하고, 아직 다른 대포알의 타겟이 되지 않은 몬스터 중 가장 아래에 있는 놈 탐색
+        for(let i=0; i<monsters.length; i++) {
+            if(monsters[i].answer === val && !monsters[i].targeted && monsters[i].y > maxY) {
+                maxY = monsters[i].y;
+                target = monsters[i];
+            }
+        }
+        
+        if(target) {
+            target.targeted = true;
+            // 대포 위치(300, 430)에서 대포알 생성
+            projectiles.push({
+                x: canvas.width / 2,
+                y: 430,
+                targetId: target.id,
+                speed: 12
+            });
+        }
+    }
 
     function gameLoop() {
         if (state === "STAGE1") {
@@ -245,11 +263,13 @@
 
     function updateStage1() {
         spawnTimer++;
-        if (spawnTimer > 120) { 
+        // 몬스터 등장 주기 2배로 늦춤 (기존 120 -> 240)
+        if (spawnTimer > 240) { 
             spawnMonster();
             spawnTimer = 0;
         }
 
+        // 몬스터 이동
         for (let i = 0; i < monsters.length; i++) {
             monsters[i].y += monsters[i].speed;
             if (monsters[i].y > 430) { 
@@ -257,18 +277,70 @@
                 return;
             }
         }
+
+        // 대포알 이동 및 충돌 판정
+        for (let i = projectiles.length - 1; i >= 0; i--) {
+            let p = projectiles[i];
+            let target = monsters.find(m => m.id === p.targetId);
+            
+            if (!target) {
+                projectiles.splice(i, 1);
+                continue;
+            }
+
+            let dx = target.x - p.x;
+            let dy = target.y - p.y;
+            let dist = Math.hypot(dx, dy);
+
+            // 명중
+            if (dist < p.speed + 15) {
+                explosions.push({ x: target.x, y: target.y, radius: 5, maxRadius: 40, alpha: 1 });
+                monsters = monsters.filter(m => m.id !== p.targetId);
+                projectiles.splice(i, 1);
+            } else {
+                p.x += (dx / dist) * p.speed;
+                p.y += (dy / dist) * p.speed;
+            }
+        }
+
+        // 폭발 이펙트 업데이트
+        for (let i = explosions.length - 1; i >= 0; i--) {
+            let e = explosions[i];
+            e.radius += 2;
+            e.alpha -= 0.05;
+            if (e.alpha <= 0) explosions.splice(i, 1);
+        }
     }
 
     function drawStage1() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
+        // 1. 성벽 그리기 (벽돌 패턴)
         ctx.fillStyle = "#7f8c8d";
         ctx.fillRect(0, 450, canvas.width, 50);
+        
+        ctx.strokeStyle = "#2c3e50";
+        ctx.lineWidth = 2;
+        for(let x = 0; x < canvas.width; x += 60) {
+            for(let y = 450; y < 500; y += 15) {
+                let offsetX = (y % 30 === 0) ? 30 : 0;
+                ctx.strokeRect(x - offsetX, y, 60, 15);
+            }
+        }
         ctx.fillStyle = "#ecf0f1";
-        ctx.font = "20px Arial";
+        ctx.font = "bold 18px Arial";
         ctx.textAlign = "center";
-        ctx.fillText("방어 성벽", canvas.width/2, 480);
+        ctx.fillText("방어 성벽", canvas.width/2, 490);
 
+        // 2. 대포 그리기 (중앙 하단)
+        ctx.fillStyle = "#34495e";
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, 450, 25, Math.PI, 0); // 대포 베이스
+        ctx.fill();
+        ctx.fillStyle = "#2c3e50";
+        ctx.fillRect(canvas.width / 2 - 10, 410, 20, 40); // 대포 포신
+
+        // 3. 몬스터 그리기
         ctx.textAlign = "center";
         for (let m of monsters) {
             ctx.fillStyle = m.color;
@@ -278,13 +350,33 @@
             ctx.strokeStyle = "#2c3e50";
             ctx.stroke();
 
+            // 몬스터 눈
             ctx.fillStyle = "#fff";
             ctx.fillRect(m.x - 10, m.y - 10, 6, 6);
             ctx.fillRect(m.x + 4, m.y - 10, 6, 6);
             
+            // 문제 텍스트
             ctx.fillStyle = "#2c3e50";
             ctx.font = "bold 16px Arial";
             ctx.fillText(m.dataStr, m.x, m.y - 35);
+        }
+
+        // 4. 날아가는 대포알 그리기
+        ctx.fillStyle = "#e67e22";
+        for (let p of projectiles) {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "#d35400";
+            ctx.stroke();
+        }
+
+        // 5. 폭발 이펙트 그리기
+        for (let e of explosions) {
+            ctx.beginPath();
+            ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(231, 76, 60, ${e.alpha})`;
+            ctx.fill();
         }
     }
 
@@ -295,7 +387,7 @@
         document.getElementById("menuScreen").style.display = "flex";
         document.getElementById("menuScreen").innerHTML = `
             <h2 style="color: #e74c3c;">성벽 파괴!</h2>
-            <p>몬스터의 침략을 막지 못했습니다.</p>
+            <p>몬스터가 성벽에 닿았습니다.</p>
             <button class="btn" onclick="location.reload()">다시 도전</button>
         `;
     }
@@ -315,6 +407,7 @@
         updateBossUI();
     }
 
+    // --- 스테이지 2 (이전 코드와 동일 유지) ---
     const magContainer = document.getElementById("magazines");
     let magInputs = [];
 
