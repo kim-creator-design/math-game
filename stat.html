@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>통계 몬스터 디펜스</title>
+<script>
+    // 🔒 비밀번호 검증 시스템
+    if (!sessionStorage.getItem("statUnlocked")) {
+        const pwd = prompt("통계 몬스터 디펜스 비밀번호를 입력하세요 🔒");
+        if (pwd === "7590_@") {
+            sessionStorage.setItem("statUnlocked", "true");
+            alert("보안 해제 완료! 포격전 준비! 🚀");
+        } else {
+            alert("비밀번호가 틀렸습니다! ❌");
+            location.href = "index.html"; // 틀리면 로비로 돌려보냄
+        }
+    }
+</script>
+<style>
+    body { font-family: 'Malgun Gothic', sans-serif; background-color: #2c3e50; color: white; text-align: center; margin: 0; padding: 20px; }
+    .container { max-width: 800px; margin: 0 auto; background: #34495e; padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); position: relative; }
+    h1 { color: #f1c40f; margin-top: 0; font-size: 26px; }
+    
+    /* 공통 캔버스 및 화면 */
+    #gameArea { position: relative; width: 600px; height: 500px; margin: 0 auto; background: #ecf0f1; border-radius: 10px; overflow: hidden; border: 4px solid #bdc3c7; }
+    canvas { position: absolute; top: 0; left: 0; }
+    
+    /* 스테이지 1 UI */
+    #stage1UI { position: absolute; bottom: -60px; left: 50%; transform: translateX(-50%); display: none; width: 100%; }
+    #answerInput { font-size: 24px; padding: 10px; width: 200px; border-radius: 8px; border: none; text-align: center; font-weight: bold; }
+    .hud { position: absolute; top: 10px; font-weight: bold; font-size: 20px; color: #2c3e50; z-index: 10; }
+    #timerDisplay { left: 20px; }
+    #stageInfo { right: 20px; }
+    .legend { position: absolute; top: 40px; right: 20px; font-size: 14px; text-align: left; color: #333; background: rgba(255,255,255,0.8); padding: 5px; border-radius: 5px; }
+
+    /* 스테이지 2 UI (보스전) */
+    #stage2UI { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #2c3e50; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 20; color: white; }
+    .magazine-container { display: flex; gap: 10px; margin: 20px 0; }
+    .magazine-box { display: flex; flex-direction: column; align-items: center; }
+    .magazine-input { font-size: 20px; width: 60px; height: 60px; text-align: center; border-radius: 8px; border: 2px solid #bdc3c7; background: #34495e; color: #f1c40f; font-weight: bold; }
+    
+    #statsDisplay { margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; width: 80%; }
+    #stdDevBarContainer { width: 100%; height: 20px; background: #bdc3c7; border-radius: 10px; margin-top: 10px; overflow: hidden; }
+    #stdDevBar { height: 100%; width: 0%; background: #2ecc71; transition: 0.3s; }
+    
+    #fireBtn { font-size: 24px; padding: 15px 40px; background: #e74c3c; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; opacity: 0.5; pointer-events: none; }
+    #fireBtn.active { opacity: 1; pointer-events: auto; background: #c0392b; }
+    
+    .screen-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 50; }
+    .btn { padding: 15px 30px; font-size: 20px; margin: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; background: #27ae60; }
+    
+    /* 뒤로가기 버튼 */
+    .back-btn { display: inline-block; margin-top: 30px; padding: 10px 20px; background: #7f8fa6; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; }
+</style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚔️ 통계 몬스터 디펜스 ⚔️</h1>
+        
+        <div id="gameArea">
+            <canvas id="gameCanvas" width="600" height="500"></canvas>
+            
+            <!-- 스테이지 1 정보 -->
+            <div id="timerDisplay" class="hud" style="display:none;">남은 시간: 60초</div>
+            <div id="stageInfo" class="hud" style="display:none;">Stage 1: 색깔 몬스터 요격</div>
+            <div id="legendBox" class="legend" style="display:none;">
+                <span style="color:#c0392b; font-weight:bold;">■ 빨강: 평균</span><br>
+                <span style="color:#2980b9; font-weight:bold;">■ 파랑: 중앙값</span><br>
+                <span style="color:#f39c12; font-weight:bold;">■ 노랑: 최빈값</span>
+            </div>
+
+            <!-- 시작/결과 화면 -->
+            <div id="menuScreen" class="screen-overlay">
+                <h2 style="color: #f1c40f;">최후의 포격전</h2>
+                <p>수학 지식으로 성벽을 지켜내세요!<br>한 마리라도 닿으면 즉시 파괴됩니다.</p>
+                <button class="btn" onclick="startStage1()">게임 시작</button>
+            </div>
+
+            <!-- 스테이지 2 (보스전) 룰렛 입력 화면 -->
+            <div id="stage2UI">
+                <h2 style="color:#e74c3c; margin:0;">거대 보스 등장! (Lv 1)</h2>
+                <h3 id="bossHpText">보스 HP: 50 / 남은 턴: 4</h3>
+                <p>100의 데미지를 6개의 탄창에 자유롭게 분배하세요!</p>
+                
+                <div class="magazine-container" id="magazines">
+                    <!-- JS로 인풋 박스 생성 -->
+                </div>
+
+                <div id="statsDisplay">
+                    총 분배량: <span id="totalDmg" style="color:#e74c3c;">0</span> / 100<br>
+                    산포도(표준편차): <span id="stdDevText">0.0</span> <strong id="riskText" style="color:#2ecc71;">(안정적)</strong>
+                    <div id="stdDevBarContainer"><div id="stdDevBar"></div></div>
+                </div>
+
+                <button id="fireBtn" onclick="fireRoulette()">발사! (Fire)</button>
+            </div>
+        </div>
+        
+        <!-- 스테이지 1 입력창 (캔버스 아래) -->
+        <div id="stage1UI">
+            <input type="number" id="answerInput" placeholder="정답 입력 후 Enter" autocomplete="off">
+        </div>
+        
+        <a href="index.html" class="back-btn">⬅ 로비로 돌아가기</a>
+    </div>
+
+<script>
+    // 게임 시작 시 비밀번호 인증 확인
+    window.onload = function() {
+        if (!sessionStorage.getItem("statUnlocked")) return;
+    };
+
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    
+    // 게임 상태 변수
+    let state = "MENU"; 
+    let stage1Timer = 60;
+    let spawnTimer = 0;
+    let monsters = [];
+    let intervalId;
+    let animId;
+    let dataCount = 5; 
+
+    // 보스전 변수
+    let bossHp = 50;
+    let bossTurns = 4;
+    
+    // 수학 데이터 생성기 (정수값 및 유일한 최빈값 보장)
+    function generateData(type, count) {
+        let arr = [];
+        let targetAnswer = 0;
+        
+        if (type === 'mean') {
+            let sum = 0;
+            for (let i = 0; i < count - 1; i++) {
+                let n = Math.floor(Math.random() * 9) + 1;
+                arr.push(n);
+                sum += n;
+            }
+            let remainder = sum % count;
+            let needed = (count - remainder) % count;
+            if (needed === 0) needed = count;
+            arr.push(needed);
+            targetAnswer = (sum + needed) / count;
+        } 
+        else if (type === 'median') { 
+            for (let i = 0; i < count; i++) {
+                arr.push(Math.floor(Math.random() * 19) + 1);
+            }
+            let sorted = [...arr].sort((a,b)=>a-b);
+            targetAnswer = sorted[Math.floor(count/2)];
+        } 
+        else if (type === 'mode') { 
+            let modeVal = Math.floor(Math.random() * 9) + 1;
+            arr.push(modeVal, modeVal); 
+            while (arr.length < count) {
+                let n = Math.floor(Math.random() * 15) + 1;
+                if (n !== modeVal && !arr.includes(n)) {
+                    arr.push(n);
+                }
+            }
+            arr.sort(() => Math.random() - 0.5); 
+            targetAnswer = modeVal;
+        }
+        return { data: arr, answer: targetAnswer };
+    }
+
+    // 스테이지 1 시작
+    window.startStage1 = function() {
+        document.getElementById("menuScreen").style.display = "none";
+        document.getElementById("stage1UI").style.display = "block";
+        document.getElementById("timerDisplay").style.display = "block";
+        document.getElementById("stageInfo").style.display = "block";
+        document.getElementById("legendBox").style.display = "block";
+        document.getElementById("answerInput").focus();
+        
+        state = "STAGE1";
+        stage1Timer = 60;
+        monsters = [];
+        spawnTimer = 0;
+        
+        clearInterval(intervalId);
+        intervalId = setInterval(() => {
+            if(state === "STAGE1") {
+                stage1Timer--;
+                document.getElementById("timerDisplay").innerText = `남은 시간: ${stage1Timer}초`;
+                if(stage1Timer <= 0) {
+                    transitionToStage2();
+                }
+            }
+        }, 1000);
+        
+        requestAnimationFrame(gameLoop);
+    };
+
+    function spawnMonster() {
+        const types = [
+            { type: 'mean', color: '#e74c3c', label: '평균' },
+            { type: 'median', color: '#3498db', label: '중앙' },
+            { type: 'mode', color: '#f1c40f', label: '최빈' }
+        ];
+        const selected = types[Math.floor(Math.random() * types.length)];
+        const count = selected.type === 'median' ? (dataCount % 2 === 0 ? dataCount + 1 : dataCount) : dataCount;
+        
+        const q = generateData(selected.type, count);
+        
+        monsters.push({
+            x: 50 + Math.random() * (canvas.width - 100),
+            y: -50,
+            color: selected.color,
+            dataStr: q.data.join(', '),
+            answer: q.answer,
+            speed: 0.5 + Math.random() * 0.5
+        });
+    }
+
+    document.getElementById("answerInput").addEventListener("keypress", function(e) {
+        if (e.key === "Enter" && state === "STAGE1") {
+            const val = parseInt(this.value);
+            this.value = '';
+            
+            let targetIdx = -1;
+            let maxY = -999;
+            for(let i=0; i<monsters.length; i++) {
+                if(monsters[i].answer === val && monsters[i].y > maxY) {
+                    maxY = monsters[i].y;
+                    targetIdx = i;
+                }
+            }
+            if(targetIdx !== -1) {
+                monsters.splice(targetIdx, 1);
+            }
+        }
+    });
+
+    function gameLoop() {
+        if (state === "STAGE1") {
+            updateStage1();
+            drawStage1();
+            animId = requestAnimationFrame(gameLoop);
+        }
+    }
+
+    function updateStage1() {
+        spawnTimer++;
+        if (spawnTimer > 120) { 
+            spawnMonster();
+            spawnTimer = 0;
+        }
+
+        for (let i = 0; i < monsters.length; i++) {
+            monsters[i].y += monsters[i].speed;
+            if (monsters[i].y > 430) { 
+                gameOver();
+                return;
+            }
+        }
+    }
+
+    function drawStage1() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = "#7f8c8d";
+        ctx.fillRect(0, 450, canvas.width, 50);
+        ctx.fillStyle = "#ecf0f1";
+        ctx.font = "20px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("방어 성벽", canvas.width/2, 480);
+
+        ctx.textAlign = "center";
+        for (let m of monsters) {
+            ctx.fillStyle = m.color;
+            ctx.beginPath();
+            ctx.arc(m.x, m.y, 25, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "#2c3e50";
+            ctx.stroke();
+
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(m.x - 10, m.y - 10, 6, 6);
+            ctx.fillRect(m.x + 4, m.y - 10, 6, 6);
+            
+            ctx.fillStyle = "#2c3e50";
+            ctx.font = "bold 16px Arial";
+            ctx.fillText(m.dataStr, m.x, m.y - 35);
+        }
+    }
+
+    function gameOver() {
+        state = "GAMEOVER";
+        clearInterval(intervalId);
+        document.getElementById("stage1UI").style.display = "none";
+        document.getElementById("menuScreen").style.display = "flex";
+        document.getElementById("menuScreen").innerHTML = `
+            <h2 style="color: #e74c3c;">성벽 파괴!</h2>
+            <p>몬스터의 침략을 막지 못했습니다.</p>
+            <button class="btn" onclick="location.reload()">다시 도전</button>
+        `;
+    }
+
+    function transitionToStage2() {
+        state = "STAGE2_INPUT";
+        clearInterval(intervalId);
+        cancelAnimationFrame(animId);
+        
+        document.getElementById("timerDisplay").style.display = "none";
+        document.getElementById("stageInfo").style.display = "none";
+        document.getElementById("legendBox").style.display = "none";
+        document.getElementById("stage1UI").style.display = "none";
+        
+        document.getElementById("stage2UI").style.display = "flex";
+        initMagazines();
+        updateBossUI();
+    }
+
+    const magContainer = document.getElementById("magazines");
+    let magInputs = [];
+
+    function initMagazines() {
+        magContainer.innerHTML = '';
+        magInputs = [];
+        for (let i = 0; i < 6; i++) {
+            let input = document.createElement("input");
+            input.type = "number";
+            input.className = "magazine-input";
+            input.value = (i === 5) ? 15 : 17; 
+            input.min = 0;
+            input.max = 100;
+            input.addEventListener("input", calculateStats);
+            magContainer.appendChild(input);
+            magInputs.push(input);
+        }
+        calculateStats();
+    }
+
+    function calculateStats() {
+        let sum = 0;
+        let values = [];
+        magInputs.forEach(inp => {
+            let val = parseInt(inp.value) || 0;
+            sum += val;
+            values.push(val);
+        });
+        
+        const totalSpan = document.getElementById("totalDmg");
+        const fireBtn = document.getElementById("fireBtn");
+        totalSpan.innerText = sum;
+        
+        if (sum === 100) {
+            totalSpan.style.color = "#2ecc71";
+            fireBtn.classList.add("active");
+        } else {
+            totalSpan.style.color = "#e74c3c";
+            fireBtn.classList.remove("active");
+        }
+
+        let mean = sum / 6;
+        let variance = values.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / 6;
+        let stdDev = Math.sqrt(variance);
+        
+        document.getElementById("stdDevText").innerText = stdDev.toFixed(1);
+        
+        let riskPercent = Math.min((stdDev / 37.3) * 100, 100);
+        let bar = document.getElementById("stdDevBar");
+        let riskText = document.getElementById("riskText");
+        
+        bar.style.width = riskPercent + "%";
+        
+        if (riskPercent < 15) {
+            bar.style.background = "#2ecc71";
+            riskText.innerText = "(매우 안정적)";
+            riskText.style.color = "#2ecc71";
+        } else if (riskPercent < 60) {
+            bar.style.background = "#f1c40f";
+            riskText.innerText = "(도박성 증가)";
+            riskText.style.color = "#f1c40f";
+        } else {
+            bar.style.background = "#e74c3c";
+            riskText.innerText = "(하이 리스크!)";
+            riskText.style.color = "#e74c3c";
+        }
+    }
+
+    window.fireRoulette = function() {
+        let sum = 0;
+        let values = [];
+        magInputs.forEach(inp => {
+            let val = parseInt(inp.value) || 0;
+            sum += val;
+            values.push(val);
+        });
+        if (sum !== 100) return;
+
+        let firedIndex = Math.floor(Math.random() * 6);
+        let damage = values[firedIndex];
+
+        document.getElementById("stage2UI").innerHTML = `
+            <h2 style="font-size: 40px; color: #f1c40f;">룰렛 발사!</h2>
+            <h1 style="font-size: 80px; margin: 20px;">💥 ${damage} 데미지! 💥</h1>
+        `;
+
+        setTimeout(() => {
+            bossHp -= damage;
+            bossTurns--;
+            
+            if (bossHp <= 0) {
+                document.getElementById("stage2UI").innerHTML = `
+                    <h1 style="color: #2ecc71; font-size: 50px;">보스 격파 성공! 🎉</h1>
+                    <p style="font-size: 20px;">수학의 힘으로 성벽을 지켜냈습니다!</p>
+                    <button class="btn" onclick="location.href='index.html'">로비로 돌아가기</button>
+                `;
+            } else if (bossTurns <= 0) {
+                document.getElementById("stage2UI").innerHTML = `
+                    <h1 style="color: #e74c3c; font-size: 50px;">성벽 파괴... 😭</h1>
+                    <p style="font-size: 20px;">보스가 성벽에 도달했습니다.</p>
+                    <button class="btn" onclick="location.reload()">재도전</button>
+                `;
+            } else {
+                document.getElementById("stage2UI").innerHTML = `
+                    <h2 style="color:#e74c3c; margin:0;">거대 보스 다가오는 중!</h2>
+                    <h3 id="bossHpText"></h3>
+                    <p>100의 데미지를 6개의 탄창에 다시 분배하세요!</p>
+                    <div class="magazine-container" id="magazines"></div>
+                    <div id="statsDisplay">
+                        총 분배량: <span id="totalDmg" style="color:#e74c3c;">0</span> / 100<br>
+                        산포도(표준편차): <span id="stdDevText">0.0</span> <strong id="riskText"></strong>
+                        <div id="stdDevBarContainer"><div id="stdDevBar"></div></div>
+                    </div>
+                    <button id="fireBtn" onclick="fireRoulette()">발사! (Fire)</button>
+                `;
+                initMagazines();
+                updateBossUI();
+            }
+        }, 2000);
+    };
+
+    function updateBossUI() {
+        document.getElementById("bossHpText").innerText = `보스 HP: ${bossHp} / 남은 턴: ${bossTurns}`;
+    }
+</script>
+</body>
+</html>
