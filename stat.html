@@ -34,7 +34,8 @@
     
     .battle-arena { position: relative; width: 90%; height: 140px; background: #34495e; border: 3px solid #7f8fa6; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
     .player-sprite { position: absolute; left: 20px; bottom: 10px; font-size: 50px; z-index: 2; transform: scaleX(-1); }
-    .boss-sprite { position: absolute; right: 20px; bottom: 10px; font-size: 60px; z-index: 2; transition: right 0.5s ease; }
+    /* 보스 사망 모션(transform) 애니메이션 부드럽게 적용 */
+    .boss-sprite { position: absolute; right: 20px; bottom: 10px; font-size: 60px; z-index: 2; transition: right 0.5s ease, transform 0.5s ease; }
     .bullet-sprite { position: absolute; left: 60px; bottom: 35px; font-size: 24px; z-index: 1; display: none; }
     
     .hp-container { position: absolute; top: 10px; right: 20px; width: 150px; background: #c0392b; height: 15px; border-radius: 5px; border: 2px solid #ecf0f1; }
@@ -70,7 +71,7 @@
                 <div class="mode-card" onclick="enterGame('monster')">
                     <h2>🧟 진격의 괴물</h2>
                     <p>대푯값 맞추기 방어전</p>
-                    <p style="font-size: 12px; color: #7f8c8d;">90초 동안 성벽을 지켜내세요!</p>
+                    <p style="font-size: 12px; color: #7f8c8d;">100초 동안 성벽을 지켜내세요!</p>
                 </div>
                 <div class="mode-card roulette" onclick="enterGame('roulette')">
                     <h2>🔫 러시안 룰렛</h2>
@@ -83,7 +84,7 @@
         <div id="gameArea">
             <canvas id="gameCanvas" width="600" height="500"></canvas>
             
-            <div id="timerDisplay" class="hud" style="display:none;">남은 시간: 90초</div>
+            <div id="timerDisplay" class="hud" style="display:none;">남은 시간: 100초</div>
             <div id="stageInfo" class="hud" style="display:none;">진격의 괴물</div>
             <div id="legendBox" class="legend" style="display:none;">
                 <strong>👹 평균</strong><br>
@@ -109,7 +110,7 @@
                     <div id="bulletSprite" class="bullet-sprite">💨</div>
                     <div id="bossSprite" class="boss-sprite">🐉</div>
                     <div class="hp-container">
-                        <div class="hp-text" id="bossHpTextUi">HP: 50</div>
+                        <div class="hp-text" id="bossHpTextUi">HP: 40</div>
                         <div id="bossHpBar" class="hp-bar"></div>
                     </div>
                 </div>
@@ -172,7 +173,7 @@
     const ctx = canvas.getContext("2d");
     
     let state = "MENU"; 
-    let stage1Timer = 90, spawnTimer = 0; // 90초로 변경
+    let stage1Timer = 100, spawnTimer = 0; // 100초로 변경
     let monsters = [], projectiles = [], explosions = [];
     let intervalId, animId;
     let currentDifficulty = {};
@@ -213,8 +214,8 @@
         document.getElementById("legendBox").style.display = "block";
         document.getElementById("answerInput").focus();
         
-        state = "STAGE1"; stage1Timer = 90; spawnTimer = 0; // 90초 설정
-        document.getElementById("timerDisplay").innerText = `남은 시간: 90초`;
+        state = "STAGE1"; stage1Timer = 100; spawnTimer = 0; // 100초 설정
+        document.getElementById("timerDisplay").innerText = `남은 시간: 100초`;
         monsters = []; projectiles = []; explosions = [];
         
         clearInterval(intervalId);
@@ -344,25 +345,45 @@
         state = "GAMEWIN"; clearInterval(intervalId); cancelAnimationFrame(animId);
         document.getElementById("stage1UI").style.display = "none";
         document.getElementById("resultScreen").style.display = "flex";
-        document.getElementById("resultScreen").innerHTML = `<h2 style="color: #2ecc71; font-size: 40px;">방어 성공! 🎉</h2><p>90초 동안 성벽을 지켜냈습니다!</p><button class="btn" onclick="location.reload()">돌아가기</button>`;
+        document.getElementById("resultScreen").innerHTML = `<h2 style="color: #2ecc71; font-size: 40px;">방어 성공! 🎉</h2><p>100초 동안 성벽을 지켜냈습니다!</p><button class="btn" onclick="location.reload()">돌아가기</button>`;
     }
 
     // ==========================================
     // 2. 러시안 룰렛 (총알 배분 보스전)
     // ==========================================
-    const MAX_BOSS_HP = 50;
-    let bossHp = MAX_BOSS_HP;
+    const BOSS_HP_LEVELS = [40, 60, 80, 100, 120];
+    let currentBossStage = 0;
+    let maxBossHp = 40;
+    let bossHp = 40;
     let bossTurns = 4;
     let bossPos = 20; 
     let isFiring = false;
+    
     const magContainer = document.getElementById("magazines");
     let magInputs = [];
 
     function startRouletteGame() {
-        bossHp = MAX_BOSS_HP; bossTurns = 4; bossPos = 20; isFiring = false;
+        currentBossStage = 0;
         document.getElementById("stage2UI").style.display = "flex";
-        document.getElementById("bossSprite").style.right = bossPos + "px";
-        initMagazines(); updateBossUI();
+        startRouletteStage();
+    }
+
+    window.startRouletteStage = function() {
+        maxBossHp = BOSS_HP_LEVELS[currentBossStage];
+        bossHp = maxBossHp;
+        bossTurns = 4;
+        bossPos = 20;
+        isFiring = false;
+
+        const bossEl = document.getElementById("bossSprite");
+        bossEl.innerText = "🐉"; // 보스 원래 모습으로 원상복구
+        bossEl.style.transform = "none"; // 회전 원상복구
+        bossEl.style.right = bossPos + "px";
+        
+        document.getElementById("resultScreen").style.display = "none";
+
+        initMagazines(); 
+        updateBossUI();
     }
 
     function initMagazines() {
@@ -444,13 +465,32 @@
             if(bossHp < 0) bossHp = 0;
             updateBossUI();
 
+            // 1. 체력이 0 이하일 때의 보스 사망 모션(눈이 x자 되며 뒤로 쓰러짐)
+            if (bossHp <= 0) {
+                const bossEl = document.getElementById("bossSprite");
+                bossEl.innerText = "😵";
+                bossEl.style.transform = "rotate(-90deg)";
+            }
+
+            // 2. 결과 판정 타이머
             setTimeout(() => {
                 if (bossHp <= 0) {
-                    showResultOverlay(`<h1 style="color: #2ecc71; font-size: 50px;">보스 격파! 🎉</h1><p>수학의 힘으로 보스를 쓰러뜨렸습니다!</p>`);
+                    if (currentBossStage === BOSS_HP_LEVELS.length - 1) {
+                        // 모든 보스 클리어
+                        showResultOverlay(`<h1 style="color: #2ecc71; font-size: 50px;">최종 스테이지 클리어! 🎉</h1><p>모든 보스를 쓰러뜨리고 러시안 룰렛을 마스터했습니다!</p><button class="btn" onclick="location.reload()">모드 선택으로 돌아가기</button>`);
+                    } else {
+                        // 다음 보스로 넘어가는 창
+                        currentBossStage++;
+                        showResultOverlay(`<h1 style="color: #3498db; font-size: 40px;">보스 격파!</h1><p>더 강력한 보스(체력: ${BOSS_HP_LEVELS[currentBossStage]})가 등장합니다!</p><button class="btn" onclick="startRouletteStage()">다음 스테이지</button>`);
+                    }
                 } else if (bossTurns <= 0) {
+                    // 체력을 다 못깎고 턴 종료 시 패배 모션
                     document.getElementById("bossSprite").style.right = (arenaWidth - 100) + "px";
-                    setTimeout(() => { showResultOverlay(`<h1 style="color: #e74c3c; font-size: 50px;">패배... 😭</h1><p>보스에게 먹히고 말았습니다.</p>`); }, 500);
+                    setTimeout(() => { 
+                        showResultOverlay(`<h1 style="color: #e74c3c; font-size: 50px;">패배... 😭</h1><p>보스에게 먹히고 말았습니다.</p><button class="btn" onclick="location.reload()">모드 선택으로 돌아가기</button>`); 
+                    }, 500);
                 } else {
+                    // 턴 진행 중 (보스 다가옴)
                     let step = (arenaWidth - 100) / 4;
                     bossPos += step;
                     document.getElementById("bossSprite").style.right = bossPos + "px";
@@ -458,13 +498,13 @@
                     initMagazines();
                     isFiring = false;
                 }
-            }, 1000);
+            }, 1000); 
         }, 320); 
     };
 
     function updateBossUI() { 
         document.getElementById("bossHpTextUi").innerText = `HP: ${bossHp}`;
-        let percent = (bossHp / MAX_BOSS_HP) * 100;
+        let percent = (bossHp / maxBossHp) * 100;
         document.getElementById("bossHpBar").style.width = percent + "%";
         document.getElementById("turnText").innerText = bossTurns;
     }
@@ -472,7 +512,7 @@
     function showResultOverlay(htmlContent) {
         const overlay = document.getElementById("resultScreen");
         overlay.style.display = "flex";
-        overlay.innerHTML = htmlContent + `<button class="btn" onclick="location.reload()">모드 선택으로 돌아가기</button>`;
+        overlay.innerHTML = htmlContent;
     }
 </script>
 </body>
