@@ -278,7 +278,8 @@
         if (spawnTimer > 180) { spawnMonster(); spawnTimer = 0; }
         for (let i = 0; i < monsters.length; i++) {
             monsters[i].y += monsters[i].speed;
-            if (monsters[i].y > 460) { gameOver(); return; }
+            // 게임오버 판정을 대포(460)에서 성벽(500)으로 변경
+            if (monsters[i].y > 500) { gameOver(); return; }
         }
         for (let i = projectiles.length - 1; i >= 0; i--) {
             let p = projectiles[i];
