@@ -6,7 +6,6 @@
 <title>대푯값과 통계 마스터</title>
 <style>
     body { font-family: 'Malgun Gothic', sans-serif; background-color: #2c3e50; color: white; text-align: center; margin: 0; padding: 20px; }
-    /* 컨테이너 너비와 높이를 넉넉하게 확장 */
     .container { max-width: 850px; margin: 0 auto; background: #34495e; padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); position: relative; min-height: 650px; }
     h1 { color: #f1c40f; margin-top: 0; font-size: 26px; }
     
@@ -17,7 +16,6 @@
     .mode-card h2 { color: #e74c3c; margin-top: 0; }
     .mode-card.roulette h2 { color: #8e44ad; }
     
-    /* 게임 화면 세로 길이 550px로 확대 */
     #gameArea { position: relative; width: 600px; height: 550px; margin: 0 auto; background: #ecf0f1; border-radius: 10px; overflow: hidden; border: 4px solid #bdc3c7; display: none; }
     canvas { position: absolute; top: 0; left: 0; }
     
@@ -30,7 +28,6 @@
     #timerDisplay { left: 20px; }
     #stageInfo { right: 20px; }
     
-    /* 게임 밖으로 빠진 대푯값 표지판 스타일 */
     .legend { position: absolute; top: 150px; right: 25px; font-size: 15px; text-align: left; color: #ecf0f1; background: #2c3e50; padding: 15px; border-radius: 10px; border: 3px solid #7f8fa6; box-shadow: 0 6px 12px rgba(0,0,0,0.4); z-index: 100; line-height: 1.8; }
 
     /* 러시안 룰렛 UI */
@@ -41,7 +38,6 @@
     .boss-sprite { position: absolute; right: 20px; bottom: 10px; font-size: 60px; z-index: 2; transition: right 0.5s ease, transform 0.5s ease, font-size 0.5s ease; }
     .bullet-sprite { position: absolute; left: 60px; bottom: 35px; font-size: 24px; z-index: 1; display: none; }
     
-    /* 체력바 위치 수정 (위로 잘리지 않게 아래로 이동) */
     .hp-container { position: absolute; top: 35px; right: 20px; width: 150px; background: #c0392b; height: 15px; border-radius: 5px; border: 2px solid #ecf0f1; }
     .hp-bar { width: 100%; height: 100%; background: #2ecc71; transition: width 0.3s; }
     .hp-text { position: absolute; top: -22px; right: 0; font-size: 14px; font-weight: bold; }
@@ -68,7 +64,6 @@
     <div class="container">
         <h1>📊 대푯값과 통계 마스터</h1>
         
-        <!-- 게임 화면 밖으로 분리된 대푯값 매치 표지판 -->
         <div id="legendBox" class="legend" style="display:none;">
             <strong>👹 평균 요격!</strong><br>
             <strong>👽 중앙값 요격!</strong><br>
@@ -92,7 +87,6 @@
         </div>
 
         <div id="gameArea">
-            <!-- 캔버스 높이 550으로 확장 -->
             <canvas id="gameCanvas" width="600" height="550"></canvas>
             
             <div id="timerDisplay" class="hud" style="display:none;">남은 시간: 100초</div>
@@ -101,10 +95,11 @@
             <div id="menuScreen" class="screen-overlay">
                 <h2 style="color: #f1c40f;">진격의 괴물</h2>
                 <p>수학 지식으로 대포를 발사해 성벽을 지키세요!</p>
-                <div style="display:flex; gap: 10px; margin-top:20px;">
-                    <button class="btn btn-diff" onclick="startMonsterGame('easy')">쉬움 (자료 3개, 느림)</button>
-                    <button class="btn btn-diff" style="background:#e67e22" onclick="startMonsterGame('normal')">보통 (자료 5개, 느림)</button>
-                    <button class="btn btn-diff" style="background:#e74c3c" onclick="startMonsterGame('hard')">어려움 (자료 5개, 빠름)</button>
+                <div style="display:flex; gap: 10px; margin-top:20px; flex-wrap: wrap; justify-content: center; padding: 0 20px;">
+                    <button class="btn btn-diff" onclick="startMonsterGame('easy')">쉬움 (3개, 느림)</button>
+                    <button class="btn btn-diff" style="background:#e67e22" onclick="startMonsterGame('normal')">보통 (5개, 느림)</button>
+                    <button class="btn btn-diff" style="background:#e74c3c" onclick="startMonsterGame('hard')">어려움 (5개, 빠름)</button>
+                    <button class="btn btn-diff" style="background:#8e44ad" onclick="startMonsterGame('extreme')">극악 (7개, 매우 빠름)</button>
                 </div>
             </div>
             
@@ -212,12 +207,13 @@
         if (diff === 'easy') currentDifficulty = { count: 3, speedMulti: 0.5 };
         else if (diff === 'normal') currentDifficulty = { count: 5, speedMulti: 0.5 };
         else if (diff === 'hard') currentDifficulty = { count: 5, speedMulti: 1.0 };
+        else if (diff === 'extreme') currentDifficulty = { count: 7, speedMulti: 1.2 };
 
         document.getElementById("menuScreen").style.display = "none";
         document.getElementById("stage1UI").style.display = "flex";
         document.getElementById("timerDisplay").style.display = "block";
         document.getElementById("stageInfo").style.display = "block";
-        document.getElementById("legendBox").style.display = "block"; // 외부로 뺀 표지판 활성화
+        document.getElementById("legendBox").style.display = "block";
         document.getElementById("answerInput").focus();
         
         state = "STAGE1"; stage1Timer = 100; spawnTimer = 0; 
@@ -269,7 +265,7 @@
         }
         if(target) {
             target.targeted = true;
-            projectiles.push({ x: canvas.width / 2, y: 480, targetId: target.id, speed: 15 }); // 발사 위치 하향 조정
+            projectiles.push({ x: canvas.width / 2, y: 480, targetId: target.id, speed: 15 });
         }
     }
 
@@ -282,7 +278,7 @@
         if (spawnTimer > 180) { spawnMonster(); spawnTimer = 0; }
         for (let i = 0; i < monsters.length; i++) {
             monsters[i].y += monsters[i].speed;
-            if (monsters[i].y > 460) { gameOver(); return; } // 게임 오버 라인 하향 조정
+            if (monsters[i].y > 460) { gameOver(); return; }
         }
         for (let i = projectiles.length - 1; i >= 0; i--) {
             let p = projectiles[i];
@@ -308,7 +304,6 @@
     function drawStage1() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // 방어벽 위치 하향 조정 (Y: 500)
         ctx.fillStyle = "#7f8c8d"; ctx.fillRect(0, 500, canvas.width, 50);
         ctx.strokeStyle = "#2c3e50"; ctx.lineWidth = 2;
         for(let x = 0; x < canvas.width; x += 60) {
@@ -319,7 +314,6 @@
         }
         ctx.fillStyle = "#ecf0f1"; ctx.font = "bold 18px Arial"; ctx.textAlign = "center"; ctx.fillText("방어 성벽", canvas.width/2, 540);
         
-        // 플레이어 대포 위치 하향 조정
         ctx.fillStyle = "#34495e"; ctx.beginPath(); ctx.arc(canvas.width / 2, 500, 25, Math.PI, 0); ctx.fill();
         ctx.fillStyle = "#2c3e50"; ctx.fillRect(canvas.width / 2 - 10, 460, 20, 40);
 
@@ -345,7 +339,7 @@
     function gameOver() {
         state = "GAMEOVER"; clearInterval(intervalId); cancelAnimationFrame(animId);
         document.getElementById("stage1UI").style.display = "none";
-        document.getElementById("legendBox").style.display = "none"; // 게임 오버 시 표지판 숨김
+        document.getElementById("legendBox").style.display = "none";
         document.getElementById("resultScreen").style.display = "flex";
         document.getElementById("resultScreen").innerHTML = `<h2 style="color: #e74c3c; font-size: 40px;">성벽 파괴!</h2><p>몬스터가 성벽에 도달했습니다.</p><button class="btn" onclick="location.reload()">돌아가기</button>`;
     }
@@ -353,7 +347,7 @@
     function gameWin() {
         state = "GAMEWIN"; clearInterval(intervalId); cancelAnimationFrame(animId);
         document.getElementById("stage1UI").style.display = "none";
-        document.getElementById("legendBox").style.display = "none"; // 승리 시 표지판 숨김
+        document.getElementById("legendBox").style.display = "none";
         document.getElementById("resultScreen").style.display = "flex";
         document.getElementById("resultScreen").innerHTML = `<h2 style="color: #2ecc71; font-size: 40px;">방어 성공! 🎉</h2><p>100초 동안 성벽을 지켜냈습니다!</p><button class="btn" onclick="location.reload()">돌아가기</button>`;
     }
