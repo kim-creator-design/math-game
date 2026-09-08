@@ -71,12 +71,12 @@
         <div id="subLobby">
             <h2>도전할 모드를 선택하세요!</h2>
             <div class="mode-cards">
-                <div class="mode-card" onclick="enterGame('monster')">
+                <div class="mode-card" id="btnEnterMonster">
                     <h2>🧟 진격의 괴물</h2>
                     <p>대푯값 맞추기 방어전</p>
                     <p style="font-size: 12px; color: #7f8c8d;">100초 동안 성벽을 지켜내세요!</p>
                 </div>
-                <div class="mode-card roulette" onclick="enterGame('roulette')">
+                <div class="mode-card roulette" id="btnEnterRoulette">
                     <h2>🔫 러시안 룰렛</h2>
                     <p>총알 배분 보스전</p>
                     <p style="font-size: 12px; color: #7f8c8d;">산포도를 활용해 보스를 쓰러뜨리세요!</p>
@@ -94,10 +94,10 @@
                 <h2 style="color: #f1c40f;">진격의 괴물</h2>
                 <p>수학 지식으로 대포를 발사해 성벽을 지키세요!</p>
                 <div style="display:flex; gap: 10px; margin-top:20px; flex-wrap: wrap; justify-content: center; padding: 0 20px;">
-                    <button class="btn btn-diff" onclick="startMonsterGame('easy')">쉬움 (3개, 느림)</button>
-                    <button class="btn btn-diff" style="background:#e67e22" onclick="startMonsterGame('normal')">보통 (5개, 느림)</button>
-                    <button class="btn btn-diff" style="background:#e74c3c" onclick="startMonsterGame('hard')">어려움 (5개, 빠름)</button>
-                    <button class="btn btn-diff" style="background:#8e44ad" onclick="startMonsterGame('extreme')">극악 (7개, 매우 빠름)</button>
+                    <button class="btn btn-diff" id="btnDiffEasy">쉬움 (3개, 느림)</button>
+                    <button class="btn btn-diff" style="background:#e67e22" id="btnDiffNormal">보통 (5개, 느림)</button>
+                    <button class="btn btn-diff" style="background:#e74c3c" id="btnDiffHard">어려움 (5개, 빠름)</button>
+                    <button class="btn btn-diff" style="background:#8e44ad" id="btnDiffExtreme">극악 (7개, 매우 빠름)</button>
                 </div>
             </div>
             
@@ -125,72 +125,101 @@
                     <div id="stdDevBarContainer"><div id="stdDevBar"></div></div>
                 </div>
 
-                <button id="fireBtn" onclick="fireRoulette()">발사! (Fire)</button>
+                <button id="fireBtn">발사! (Fire)</button>
             </div>
         </div>
         
         <div id="stage1UI">
             <input type="number" id="answerInput" placeholder="정답 입력" autocomplete="off">
-            <button id="fireActionBtn" onclick="fireCannon()">발사!</button>
+            <button id="fireActionBtn">발사!</button>
         </div>
         
-        <button class="back-btn" onclick="goBack()">⬅ 뒤로 가기</button>
+        <button class="back-btn" id="btnGoBack">⬅ 뒤로 가기</button>
     </div>
 
 <script>
-    // 일방향 해시 수학 검증 함수 (비밀번호 원본이 코드에 남지 않음)
+// 외부(콘솔)에서 절대 접근할 수 없도록 클로저(IIFE) 패턴으로 완전히 숨깁니다.
+(function() {
+    // 철통 보안용 내부 변수 (새로고침을 하지 않으므로 닫기 전까지 유지됨)
+    let isMonsterUnlocked = false;
+    let isRouletteUnlocked = false;
+
+    // 수학적 일방향 해시 검증
     function verifyAuth(pwd, type) {
         if (!pwd) return false;
         let s1 = 0, s2 = 0, s3 = 0;
         for (let i = 0; i < pwd.length; i++) {
             let c = pwd.charCodeAt(i);
-            s1 += c;
-            s2 += c * (i + 1);
-            s3 += c * c;
+            s1 += c; s2 += c * (i + 1); s3 += c * c;
         }
         if (type === 'monster') return pwd.length === 16 && s1 === 1519 && s2 === 11429 && s3 === 156121;
         if (type === 'roulette') return pwd.length === 15 && s1 === 1355 && s2 === 9384 && s3 === 135765;
         return false;
     }
 
-    function goBack() {
-        if (document.getElementById("subLobby").style.display === "none") location.reload();
-        else location.href = "index.html"; 
+    // 로비로 부드럽게 돌아가는 함수 (새로고침 방지)
+    function resetToLobby() {
+        document.getElementById("gameArea").style.display = "none";
+        document.getElementById("menuScreen").style.display = "none";
+        document.getElementById("resultScreen").style.display = "none";
+        document.getElementById("stage1UI").style.display = "none";
+        document.getElementById("stage2UI").style.display = "none";
+        document.getElementById("legendBox").style.display = "none";
+        document.getElementById("timerDisplay").style.display = "none";
+        document.getElementById("stageInfo").style.display = "none";
+        document.getElementById("subLobby").style.display = "flex";
+        
+        clearInterval(intervalId);
+        cancelAnimationFrame(animId);
+        state = "MENU";
     }
 
-    function enterGame(mode) {
-        if (mode === 'monster') {
-            if (!sessionStorage.getItem("monsterUnlocked")) {
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("btnEnterMonster").addEventListener("click", () => {
+            if (!isMonsterUnlocked) {
                 const pwd = prompt("진격의 괴물 비밀번호를 입력하세요 🔒");
-                if (verifyAuth(pwd, 'monster')) { sessionStorage.setItem("monsterUnlocked", "true"); } 
+                if (verifyAuth(pwd, 'monster')) isMonsterUnlocked = true;
                 else { alert("비밀번호가 틀렸습니다! ❌"); return; }
             }
             document.getElementById("subLobby").style.display = "none";
             document.getElementById("gameArea").style.display = "block";
             document.getElementById("menuScreen").style.display = "flex";
-        } else if (mode === 'roulette') {
-            if (!sessionStorage.getItem("rouletteUnlocked")) {
+        });
+
+        document.getElementById("btnEnterRoulette").addEventListener("click", () => {
+            if (!isRouletteUnlocked) {
                 const pwd = prompt("러시안 룰렛 비밀번호를 입력하세요 🔒");
-                if (verifyAuth(pwd, 'roulette')) { sessionStorage.setItem("rouletteUnlocked", "true"); } 
+                if (verifyAuth(pwd, 'roulette')) isRouletteUnlocked = true;
                 else { alert("비밀번호가 틀렸습니다! ❌"); return; }
             }
             document.getElementById("subLobby").style.display = "none";
             document.getElementById("gameArea").style.display = "block";
             startRouletteGame();
-        }
-    }
+        });
 
-    // ==========================================
-    // 1. 진격의 괴물 (대푯값 방어전)
-    // ==========================================
+        document.getElementById("btnDiffEasy").addEventListener("click", () => { if(isMonsterUnlocked) startMonsterGame('easy'); });
+        document.getElementById("btnDiffNormal").addEventListener("click", () => { if(isMonsterUnlocked) startMonsterGame('normal'); });
+        document.getElementById("btnDiffHard").addEventListener("click", () => { if(isMonsterUnlocked) startMonsterGame('hard'); });
+        document.getElementById("btnDiffExtreme").addEventListener("click", () => { if(isMonsterUnlocked) startMonsterGame('extreme'); });
+
+        document.getElementById("fireActionBtn").addEventListener("click", () => { if(isMonsterUnlocked) fireCannon(); });
+        document.getElementById("answerInput").addEventListener("keypress", (e) => { 
+            if (e.key === "Enter" && state === "STAGE1" && isMonsterUnlocked) fireCannon(); 
+        });
+        document.getElementById("fireBtn").addEventListener("click", () => { if(isRouletteUnlocked) fireRoulette(); });
+
+        document.getElementById("btnGoBack").addEventListener("click", () => {
+            if (document.getElementById("subLobby").style.display === "none") resetToLobby();
+            else location.href = "index.html"; 
+        });
+    });
+
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     
-    let state = "MENU"; 
-    let stage1Timer = 100, spawnTimer = 0; 
+    let state = "MENU", stage1Timer = 100, spawnTimer = 0; 
     let monsters = [], projectiles = [], explosions = [];
-    let intervalId, animId;
-    let currentDifficulty = {};
+    let intervalId, animId, currentDifficulty = {};
     
     function generateData(type, count) {
         let arr = []; let targetAnswer = 0;
@@ -200,12 +229,10 @@
             let remainder = sum % count; let needed = (count - remainder) % count;
             if (needed === 0) needed = count;
             arr.push(needed); targetAnswer = (sum + needed) / count;
-        } 
-        else if (type === 'median') { 
+        } else if (type === 'median') { 
             for (let i = 0; i < count; i++) arr.push(Math.floor(Math.random() * 19) + 1);
             let sorted = [...arr].sort((a,b)=>a-b); targetAnswer = sorted[Math.floor(count/2)];
-        } 
-        else if (type === 'mode') { 
+        } else if (type === 'mode') { 
             let modeVal = Math.floor(Math.random() * 9) + 1; arr.push(modeVal, modeVal); 
             while (arr.length < count) {
                 let n = Math.floor(Math.random() * 15) + 1;
@@ -216,11 +243,11 @@
         return { data: arr, answer: targetAnswer };
     }
 
-    window.startMonsterGame = function(diff) {
-        if (diff === 'easy') currentDifficulty = { count: 3, speedMulti: 0.5 };
-        else if (diff === 'normal') currentDifficulty = { count: 5, speedMulti: 0.5 };
-        else if (diff === 'hard') currentDifficulty = { count: 5, speedMulti: 1.0 };
-        else if (diff === 'extreme') currentDifficulty = { count: 7, speedMulti: 1.1 };
+    function startMonsterGame(diff) {
+        if(diff === 'easy') currentDifficulty = { count: 3, speedMulti: 0.5 };
+        else if(diff === 'normal') currentDifficulty = { count: 5, speedMulti: 0.5 };
+        else if(diff === 'hard') currentDifficulty = { count: 5, speedMulti: 1.0 };
+        else if(diff === 'extreme') currentDifficulty = { count: 7, speedMulti: 1.1 };
 
         document.getElementById("menuScreen").style.display = "none";
         document.getElementById("stage1UI").style.display = "flex";
@@ -241,14 +268,10 @@
             }
         }, 1000);
         requestAnimationFrame(gameLoop);
-    };
+    }
 
     function spawnMonster() {
-        const types = [
-            { type: 'mean', emoji: '👹' }, 
-            { type: 'median', emoji: '👽' }, 
-            { type: 'mode', emoji: '👾' }
-        ];
+        const types = [{ type: 'mean', emoji: '👹' }, { type: 'median', emoji: '👽' }, { type: 'mode', emoji: '👾' }];
         const selected = types[Math.floor(Math.random() * types.length)];
         let count = currentDifficulty.count;
         if (selected.type === 'median' && count % 2 === 0) count += 1;
@@ -260,14 +283,11 @@
             id: Math.random().toString(36).substr(2, 9),
             x: 50 + Math.random() * (canvas.width - 100), y: -50,
             emoji: selected.emoji, dataStr: q.data.join(', '), answer: q.answer,
-            speed: baseSpeed * currentDifficulty.speedMulti,
-            targeted: false
+            speed: baseSpeed * currentDifficulty.speedMulti, targeted: false
         });
     }
 
-    document.getElementById("answerInput").addEventListener("keypress", function(e) { if (e.key === "Enter" && state === "STAGE1") fireCannon(); });
-
-    window.fireCannon = function() {
+    function fireCannon() {
         const inputEl = document.getElementById("answerInput");
         const val = parseInt(inputEl.value); inputEl.value = ''; inputEl.focus();
         if (isNaN(val)) return;
@@ -316,7 +336,6 @@
 
     function drawStage1() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
         ctx.fillStyle = "#7f8c8d"; ctx.fillRect(0, 500, canvas.width, 50);
         ctx.strokeStyle = "#2c3e50"; ctx.lineWidth = 2;
         for(let x = 0; x < canvas.width; x += 60) {
@@ -326,16 +345,13 @@
             }
         }
         ctx.fillStyle = "#ecf0f1"; ctx.font = "bold 18px Arial"; ctx.textAlign = "center"; ctx.fillText("방어 성벽", canvas.width/2, 540);
-        
         ctx.fillStyle = "#34495e"; ctx.beginPath(); ctx.arc(canvas.width / 2, 500, 25, Math.PI, 0); ctx.fill();
         ctx.fillStyle = "#2c3e50"; ctx.fillRect(canvas.width / 2 - 10, 460, 20, 40);
 
         ctx.textAlign = "center";
         for (let m of monsters) {
-            ctx.font = "40px Arial";
-            ctx.fillText(m.emoji, m.x, m.y + 15);
-            ctx.fillStyle = "#2c3e50"; ctx.font = "bold 16px Arial"; 
-            ctx.fillText(m.dataStr, m.x, m.y - 20);
+            ctx.font = "40px Arial"; ctx.fillText(m.emoji, m.x, m.y + 15);
+            ctx.fillStyle = "#2c3e50"; ctx.font = "bold 16px Arial"; ctx.fillText(m.dataStr, m.x, m.y - 20);
         }
 
         ctx.fillStyle = "#e67e22";
@@ -353,99 +369,56 @@
         state = "GAMEOVER"; clearInterval(intervalId); cancelAnimationFrame(animId);
         document.getElementById("stage1UI").style.display = "none";
         document.getElementById("legendBox").style.display = "none";
-        document.getElementById("resultScreen").style.display = "flex";
-        document.getElementById("resultScreen").innerHTML = `<h2 style="color: #e74c3c; font-size: 40px;">성벽 파괴!</h2><p>몬스터가 성벽에 도달했습니다.</p><button class="btn" onclick="location.reload()">돌아가기</button>`;
+        showResultOverlay(`<h2 style="color: #e74c3c; font-size: 40px;">성벽 파괴!</h2><p>몬스터가 성벽에 도달했습니다.</p><button class="btn" id="btnResultReturn1">돌아가기</button>`);
+        document.getElementById("btnResultReturn1").addEventListener("click", resetToLobby);
     }
 
     function gameWin() {
         state = "GAMEWIN"; clearInterval(intervalId); cancelAnimationFrame(animId);
         document.getElementById("stage1UI").style.display = "none";
         document.getElementById("legendBox").style.display = "none";
-        document.getElementById("resultScreen").style.display = "flex";
-        document.getElementById("resultScreen").innerHTML = `<h2 style="color: #2ecc71; font-size: 40px;">방어 성공! 🎉</h2><p>100초 동안 성벽을 지켜냈습니다!</p><button class="btn" onclick="location.reload()">돌아가기</button>`;
+        showResultOverlay(`<h2 style="color: #2ecc71; font-size: 40px;">방어 성공! 🎉</h2><p>100초 동안 성벽을 지켜냈습니다!</p><button class="btn" id="btnResultReturn2">돌아가기</button>`);
+        document.getElementById("btnResultReturn2").addEventListener("click", resetToLobby);
     }
 
-    // ==========================================
-    // 2. 러시안 룰렛 (총알 배분 보스전)
-    // ==========================================
     const BOSS_HP_LEVELS = [60, 80, 100];
     const BOSS_EMOJIS = ["🐍", "🦖", "🐉"]; 
-    let currentBossStage = 0;
-    let maxBossHp = 60;
-    let bossHp = 60;
-    let bossTurns = 4;
-    let bossPos = 20; 
-    let isFiring = false;
-    let isBonusStage = false;
-    
+    let currentBossStage = 0, maxBossHp = 60, bossHp = 60, bossTurns = 4, bossPos = 20, isFiring = false, isBonusStage = false;
     const magContainer = document.getElementById("magazines");
     let magInputs = [];
 
     function startRouletteGame() {
-        currentBossStage = 0;
-        isBonusStage = false;
+        currentBossStage = 0; isBonusStage = false;
         document.getElementById("stage2UI").style.display = "flex";
         startRouletteStage();
     }
 
-    window.startRouletteStage = function() {
-        maxBossHp = BOSS_HP_LEVELS[currentBossStage];
-        bossHp = maxBossHp;
-        bossTurns = 4;
-        bossPos = 20;
-        isFiring = false;
-
+    function startRouletteStage() {
+        maxBossHp = BOSS_HP_LEVELS[currentBossStage]; bossHp = maxBossHp; bossTurns = 4; bossPos = 20; isFiring = false;
         const bossEl = document.getElementById("bossSprite");
-        bossEl.innerText = BOSS_EMOJIS[currentBossStage]; 
-        bossEl.style.transform = "none";
-        bossEl.style.right = bossPos + "px";
-        bossEl.style.fontSize = "60px";
-        
+        bossEl.innerText = BOSS_EMOJIS[currentBossStage]; bossEl.style.transform = "none"; bossEl.style.right = bossPos + "px"; bossEl.style.fontSize = "60px";
         document.getElementById("resultScreen").style.display = "none";
-
-        initMagazines(); 
-        updateBossUI();
+        initMagazines(); updateBossUI();
     }
     
-    window.startBonusStage = function() {
-        isBonusStage = true;
-        maxBossHp = 120;
-        bossHp = maxBossHp;
-        bossTurns = 4;
-        bossPos = 20;
-        isFiring = false;
-
+    function startBonusStage() {
+        isBonusStage = true; maxBossHp = 120; bossHp = maxBossHp; bossTurns = 4; bossPos = 20; isFiring = false;
         const bossEl = document.getElementById("bossSprite");
-        bossEl.innerText = "💀"; 
-        bossEl.style.transform = "none";
-        bossEl.style.right = bossPos + "px";
-        bossEl.style.fontSize = "70px"; 
-        
+        bossEl.innerText = "💀"; bossEl.style.transform = "none"; bossEl.style.right = bossPos + "px"; bossEl.style.fontSize = "70px"; 
         document.getElementById("resultScreen").style.display = "none";
-        initMagazines(); 
-        updateBossUI();
+        initMagazines(); updateBossUI();
     }
 
     function initMagazines() {
         magContainer.innerHTML = ''; magInputs = [];
         for (let i = 0; i < 6; i++) {
             let input = document.createElement("input");
-            input.type = "number"; 
-            input.className = "magazine-input";
-            input.value = (i === 5) ? 15 : 17; 
-            input.min = 0; input.max = 100;
-            
-            input.addEventListener("keydown", function(e) {
-                if (e.key === '-' || e.key === 'e' || e.key === '.' || e.key === '+') {
-                    e.preventDefault();
-                }
-            });
-            
+            input.type = "number"; input.className = "magazine-input";
+            input.value = (i === 5) ? 15 : 17; input.min = 0; input.max = 100;
+            input.addEventListener("keydown", function(e) { if (['-', 'e', '.', '+'].includes(e.key)) e.preventDefault(); });
             input.addEventListener("input", function() {
                 let val = parseInt(this.value);
-                if (isNaN(val)) this.value = "";
-                else if (val < 0) this.value = 0;
-                else if (val > 100) this.value = 100;
+                if (isNaN(val)) this.value = ""; else if (val < 0) this.value = 0; else if (val > 100) this.value = 100;
                 calculateStats();
             });
             magContainer.appendChild(input); magInputs.push(input);
@@ -456,10 +429,8 @@
     function calculateStats() {
         let sum = 0; let values = [];
         magInputs.forEach(inp => { let val = parseInt(inp.value) || 0; sum += val; values.push(val); });
-        const totalSpan = document.getElementById("totalDmg");
-        const fireBtn = document.getElementById("fireBtn");
+        const totalSpan = document.getElementById("totalDmg"); const fireBtn = document.getElementById("fireBtn");
         totalSpan.innerText = sum;
-        
         if (sum === 100) { totalSpan.style.color = "#2ecc71"; fireBtn.classList.add("active"); } 
         else { totalSpan.style.color = "#e74c3c"; fireBtn.classList.remove("active"); }
 
@@ -468,34 +439,23 @@
         let stdDev = Math.sqrt(variance);
         
         document.getElementById("stdDevText").innerText = stdDev.toFixed(1);
-        
         let riskPercent = Math.min((stdDev / 37.3) * 100, 100);
-        let bar = document.getElementById("stdDevBar");
-        let riskText = document.getElementById("riskText");
+        let bar = document.getElementById("stdDevBar"); let riskText = document.getElementById("riskText");
         bar.style.width = riskPercent + "%";
         
-        if (riskPercent < 8) { 
-            bar.style.background = "#2ecc71"; riskText.innerText = "(매우 안정적)"; riskText.style.color = "#2ecc71"; 
-        } 
-        else if (riskPercent < 30) { 
-            bar.style.background = "#f1c40f"; riskText.innerText = "(도박성 증가)"; riskText.style.color = "#f1c40f"; 
-        } 
-        else { 
-            bar.style.background = "#e74c3c"; riskText.innerText = "(하이 리스크!)"; riskText.style.color = "#e74c3c"; 
-        }
+        if (riskPercent < 8) { bar.style.background = "#2ecc71"; riskText.innerText = "(매우 안정적)"; riskText.style.color = "#2ecc71"; } 
+        else if (riskPercent < 30) { bar.style.background = "#f1c40f"; riskText.innerText = "(도박성 증가)"; riskText.style.color = "#f1c40f"; } 
+        else { bar.style.background = "#e74c3c"; riskText.innerText = "(하이 리스크!)"; riskText.style.color = "#e74c3c"; }
     }
 
-    window.fireRoulette = function() {
+    function fireRoulette() {
         if (isFiring) return;
         let sum = 0; let values = [];
         magInputs.forEach(inp => { let val = parseInt(inp.value) || 0; sum += val; values.push(val); });
         if (sum !== 100) return;
 
-        isFiring = true;
-        document.getElementById("fireBtn").classList.remove("active");
-
-        let firedIndex = Math.floor(Math.random() * 6);
-        let damage = values[firedIndex];
+        isFiring = true; document.getElementById("fireBtn").classList.remove("active");
+        let firedIndex = Math.floor(Math.random() * 6); let damage = values[firedIndex];
 
         magInputs.forEach(inp => inp.classList.remove('selected'));
         magInputs[firedIndex].classList.add('selected');
@@ -504,17 +464,12 @@
         const arenaWidth = document.querySelector(".battle-arena").offsetWidth;
         const targetX = arenaWidth - bossPos - 70; 
         
-        bullet.style.display = "block";
-        bullet.style.left = "70px";
-        bullet.style.transition = "left 0.3s linear";
-        
+        bullet.style.display = "block"; bullet.style.left = "70px"; bullet.style.transition = "left 0.3s linear";
         setTimeout(() => { bullet.style.left = targetX + "px"; }, 20);
 
         setTimeout(() => {
             bullet.style.display = "none";
-            
-            const dmgText = document.createElement("div");
-            dmgText.innerText = `-${damage}`;
+            const dmgText = document.createElement("div"); dmgText.innerText = `-${damage}`;
             dmgText.style.position = "absolute"; dmgText.style.right = (bossPos + 20) + "px"; dmgText.style.top = "30px";
             dmgText.style.color = "#f1c40f"; dmgText.style.fontSize = "30px"; dmgText.style.fontWeight = "bold";
             dmgText.style.transition = "top 1s, opacity 1s"; dmgText.style.zIndex = "10";
@@ -522,50 +477,49 @@
             setTimeout(() => { dmgText.style.top = "-10px"; dmgText.style.opacity = "0"; }, 50);
             setTimeout(() => { dmgText.remove(); }, 1050);
 
-            bossHp -= damage; bossTurns--;
-            if(bossHp < 0) bossHp = 0;
+            bossHp -= damage; bossTurns--; if(bossHp < 0) bossHp = 0;
             updateBossUI();
 
             if (bossHp <= 0) {
-                const bossEl = document.getElementById("bossSprite");
-                bossEl.innerText = "😵";
-                bossEl.style.transform = "rotate(-90deg)";
+                const bossEl = document.getElementById("bossSprite"); bossEl.innerText = "😵"; bossEl.style.transform = "rotate(-90deg)";
             }
 
             setTimeout(() => {
                 if (bossHp <= 0) {
                     if (isBonusStage) {
-                        showResultOverlay(`<h1 style="color: #2ecc71; font-size: 50px;">히든 보스 격파!! 🎉</h1><p>당신은 진정한 확률의 지배자입니다!</p><button class="btn" onclick="location.reload()">모드 선택으로 돌아가기</button>`);
+                        showResultOverlay(`<h1 style="color: #2ecc71; font-size: 50px;">히든 보스 격파!! 🎉</h1><p>당신은 진정한 확률의 지배자입니다!</p><button class="btn" id="btnResultReturn3">모드 선택으로 돌아가기</button>`);
+                        document.getElementById("btnResultReturn3").addEventListener("click", resetToLobby);
                     } else if (currentBossStage === BOSS_HP_LEVELS.length - 1) {
                         showResultOverlay(`
                             <h1 style="color: #2ecc71; font-size: 45px;">최종 스테이지 클리어! 🎉</h1>
                             <p>기본 몬스터를 모두 쓰러뜨렸습니다.</p>
-                            <p style="color:#f1c40f; font-weight:bold; margin-top:20px;">보너스게임을 도전하시겠습니까? 당신의 운을 테스트해보세요!</p>
+                            <p style="color:#f1c40f; font-weight:bold; margin-top:20px;">보너스게임을 도전하시겠습니까?</p>
                             <div style="margin-top:20px;">
-                                <button class="btn" style="background:#e74c3c" onclick="startBonusStage()">도전하기 💀</button>
-                                <button class="btn" onclick="location.reload()">종료하기</button>
+                                <button class="btn" style="background:#e74c3c" id="btnRunBonus">도전하기 💀</button>
+                                <button class="btn" id="btnResultReturn4">종료하기</button>
                             </div>
                         `);
+                        document.getElementById("btnRunBonus").addEventListener("click", startBonusStage);
+                        document.getElementById("btnResultReturn4").addEventListener("click", resetToLobby);
                     } else {
                         currentBossStage++;
-                        showResultOverlay(`<h1 style="color: #3498db; font-size: 40px;">보스 격파!</h1><p>더 강력한 몬스터(체력: ${BOSS_HP_LEVELS[currentBossStage]})가 등장합니다!</p><button class="btn" onclick="startRouletteStage()">다음 스테이지</button>`);
+                        showResultOverlay(`<h1 style="color: #3498db; font-size: 40px;">보스 격파!</h1><p>더 강력한 몬스터가 등장합니다!</p><button class="btn" id="btnNextStage">다음 스테이지</button>`);
+                        document.getElementById("btnNextStage").addEventListener("click", startRouletteStage);
                     }
                 } else if (bossTurns <= 0) {
                     document.getElementById("bossSprite").style.right = (arenaWidth - 100) + "px";
                     setTimeout(() => { 
-                        showResultOverlay(`<h1 style="color: #e74c3c; font-size: 50px;">패배... 😭</h1><p>보스에게 먹히고 말았습니다.</p><button class="btn" onclick="location.reload()">모드 선택으로 돌아가기</button>`); 
+                        showResultOverlay(`<h1 style="color: #e74c3c; font-size: 50px;">패배... 😭</h1><p>보스에게 먹히고 말았습니다.</p><button class="btn" id="btnResultReturn5">모드 선택으로 돌아가기</button>`); 
+                        document.getElementById("btnResultReturn5").addEventListener("click", resetToLobby);
                     }, 500);
                 } else {
-                    let step = (arenaWidth - 100) / 4;
-                    bossPos += step;
+                    let step = (arenaWidth - 100) / 4; bossPos += step;
                     document.getElementById("bossSprite").style.right = bossPos + "px";
-                    
-                    initMagazines();
-                    isFiring = false;
+                    initMagazines(); isFiring = false;
                 }
             }, 1000); 
         }, 320); 
-    };
+    }
 
     function updateBossUI() { 
         document.getElementById("bossHpTextUi").innerText = `HP: ${bossHp}`;
@@ -576,9 +530,9 @@
 
     function showResultOverlay(htmlContent) {
         const overlay = document.getElementById("resultScreen");
-        overlay.style.display = "flex";
-        overlay.innerHTML = htmlContent;
+        overlay.style.display = "flex"; overlay.innerHTML = htmlContent;
     }
+})();
 </script>
 </body>
 </html>
