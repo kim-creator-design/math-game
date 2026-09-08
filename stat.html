@@ -30,7 +30,6 @@
     
     .legend { position: absolute; top: 150px; right: 25px; font-size: 15px; text-align: left; color: #ecf0f1; background: #2c3e50; padding: 15px; border-radius: 10px; border: 3px solid #7f8fa6; box-shadow: 0 6px 12px rgba(0,0,0,0.4); z-index: 100; line-height: 1.8; }
 
-    /* 러시안 룰렛 UI */
     #stage2UI { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #2c3e50; display: none; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 20px; z-index: 20; color: white; box-sizing: border-box; }
     
     .battle-arena { position: relative; width: 90%; height: 150px; background: #34495e; border: 3px solid #7f8fa6; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
@@ -44,7 +43,6 @@
 
     .magazine-container { display: flex; gap: 10px; margin: 10px 0; }
     .magazine-input { font-size: 20px; width: 55px; height: 55px; text-align: center; border-radius: 8px; border: 2px solid #bdc3c7; background: #34495e; color: #f1c40f; font-weight: bold; transition: 0.3s; }
-    
     .magazine-input.selected { background: #e74c3c; color: white; border: 3px solid #f1c40f; transform: scale(1.15); box-shadow: 0 0 15px #e74c3c; }
     
     #statsDisplay { margin-bottom: 15px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; width: 80%; font-size: 14px; }
@@ -140,6 +138,21 @@
     </div>
 
 <script>
+    // 일방향 해시 수학 검증 함수 (비밀번호 원본이 코드에 남지 않음)
+    function verifyAuth(pwd, type) {
+        if (!pwd) return false;
+        let s1 = 0, s2 = 0, s3 = 0;
+        for (let i = 0; i < pwd.length; i++) {
+            let c = pwd.charCodeAt(i);
+            s1 += c;
+            s2 += c * (i + 1);
+            s3 += c * c;
+        }
+        if (type === 'monster') return pwd.length === 16 && s1 === 1519 && s2 === 11429 && s3 === 156121;
+        if (type === 'roulette') return pwd.length === 15 && s1 === 1355 && s2 === 9384 && s3 === 135765;
+        return false;
+    }
+
     function goBack() {
         if (document.getElementById("subLobby").style.display === "none") location.reload();
         else location.href = "index.html"; 
@@ -149,7 +162,7 @@
         if (mode === 'monster') {
             if (!sessionStorage.getItem("monsterUnlocked")) {
                 const pwd = prompt("진격의 괴물 비밀번호를 입력하세요 🔒");
-                if (pwd === "solvitsmart07_@!") { sessionStorage.setItem("monsterUnlocked", "true"); } 
+                if (verifyAuth(pwd, 'monster')) { sessionStorage.setItem("monsterUnlocked", "true"); } 
                 else { alert("비밀번호가 틀렸습니다! ❌"); return; }
             }
             document.getElementById("subLobby").style.display = "none";
@@ -158,7 +171,7 @@
         } else if (mode === 'roulette') {
             if (!sessionStorage.getItem("rouletteUnlocked")) {
                 const pwd = prompt("러시안 룰렛 비밀번호를 입력하세요 🔒");
-                if (pwd === "solbitlove11_!&") { sessionStorage.setItem("rouletteUnlocked", "true"); } 
+                if (verifyAuth(pwd, 'roulette')) { sessionStorage.setItem("rouletteUnlocked", "true"); } 
                 else { alert("비밀번호가 틀렸습니다! ❌"); return; }
             }
             document.getElementById("subLobby").style.display = "none";
