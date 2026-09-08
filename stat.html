@@ -149,7 +149,7 @@
         if (mode === 'monster') {
             if (!sessionStorage.getItem("monsterUnlocked")) {
                 const pwd = prompt("진격의 괴물 비밀번호를 입력하세요 🔒");
-                if (pwd === "7590_@") { sessionStorage.setItem("monsterUnlocked", "true"); } 
+                if (pwd === "solvitsmart07_@!") { sessionStorage.setItem("monsterUnlocked", "true"); } 
                 else { alert("비밀번호가 틀렸습니다! ❌"); return; }
             }
             document.getElementById("subLobby").style.display = "none";
@@ -158,7 +158,7 @@
         } else if (mode === 'roulette') {
             if (!sessionStorage.getItem("rouletteUnlocked")) {
                 const pwd = prompt("러시안 룰렛 비밀번호를 입력하세요 🔒");
-                if (pwd === "8342*#") { sessionStorage.setItem("rouletteUnlocked", "true"); } 
+                if (pwd === "solbitlove11_!&") { sessionStorage.setItem("rouletteUnlocked", "true"); } 
                 else { alert("비밀번호가 틀렸습니다! ❌"); return; }
             }
             document.getElementById("subLobby").style.display = "none";
@@ -278,7 +278,6 @@
         if (spawnTimer > 180) { spawnMonster(); spawnTimer = 0; }
         for (let i = 0; i < monsters.length; i++) {
             monsters[i].y += monsters[i].speed;
-            // 게임오버 판정을 대포(460)에서 성벽(500)으로 변경
             if (monsters[i].y > 500) { gameOver(); return; }
         }
         for (let i = projectiles.length - 1; i >= 0; i--) {
