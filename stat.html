@@ -18,19 +18,31 @@
     
     #gameArea { position: relative; width: 600px; height: 605px; margin: 0 auto; background: #ecf0f1; border-radius: 10px; overflow: hidden; border: 4px solid #bdc3c7; display: none; transition: width 0.25s ease, height 0.25s ease; }
     .container.roulette-active { max-width: 1040px; }
+    .container.monster-active { max-width: 960px; }
+    #monsterPlayLayout { display: flex; justify-content: center; align-items: flex-start; gap: 18px; }
+    #monsterSidePanel { display: none; width: 270px; flex-direction: column; gap: 16px; }
+    .container.monster-active #monsterSidePanel { display: flex; }
     #gameArea.roulette-active { width: 820px; height: 610px; }
     canvas { position: absolute; top: 0; left: 0; }
     
-    #stage1UI { position: absolute; bottom: -70px; left: 50%; transform: translateX(-50%); display: none; width: 100%; justify-content: center; gap: 10px; }
-    #answerInput { font-size: 24px; padding: 10px; width: 180px; border-radius: 8px; border: none; text-align: center; font-weight: bold; }
+    #stage1UI { display: none; width: 100%; justify-content: center; gap: 10px; background: #2c3e50; padding: 14px; border-radius: 10px; border: 3px solid #7f8fa6; box-sizing: border-box; }
+    #monsterSidePanel #stage1UI { flex-direction: column; align-items: stretch; }
+    #answerInput { font-size: 24px; padding: 10px; width: 100%; border-radius: 8px; border: none; text-align: center; font-weight: bold; box-sizing: border-box; }
     #fireActionBtn { font-size: 22px; padding: 10px 25px; border-radius: 8px; border: none; background: #e74c3c; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px #c0392b; }
     #fireActionBtn:active { transform: translateY(4px); box-shadow: 0 0 #c0392b; }
 
     .hud { position: absolute; top: 10px; font-weight: bold; font-size: 20px; color: #2c3e50; z-index: 10; }
     #timerDisplay { left: 20px; }
     #stageInfo { right: 20px; }
+    #killDisplay { left: 50%; transform: translateX(-50%); }
+    #dangerWarning { position:absolute; top:52px; left:50%; transform:translateX(-50%); display:none; z-index:12; color:#fff; background:rgba(192,57,43,0.94); border:2px solid #f1c40f; border-radius:8px; padding:7px 14px; font-weight:bold; font-size:16px; box-shadow:0 0 14px rgba(231,76,60,.75); }
+    #gameArea.danger-active { box-shadow: inset 0 0 0 5px rgba(231,76,60,.75), 0 0 18px rgba(231,76,60,.7); }
+    @keyframes timerPulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.18); } }
+    @keyframes timerCritical { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(1.28); opacity:.6; } }
+    #timerDisplay.final-countdown { color:#e74c3c; animation:timerPulse .65s infinite; }
+    #timerDisplay.critical-countdown { color:#ff1e1e; animation:timerCritical .4s infinite; text-shadow:0 0 8px rgba(231,76,60,.6); }
     
-    .legend { position: absolute; top: 150px; right: 25px; font-size: 15px; text-align: left; color: #ecf0f1; background: #2c3e50; padding: 15px; border-radius: 10px; border: 3px solid #7f8fa6; box-shadow: 0 6px 12px rgba(0,0,0,0.4); z-index: 100; line-height: 1.8; }
+    .legend { position: static; font-size: 15px; text-align: left; color: #ecf0f1; background: #2c3e50; padding: 15px; border-radius: 10px; border: 3px solid #7f8fa6; box-shadow: 0 6px 12px rgba(0,0,0,0.4); z-index: 100; line-height: 1.8; box-sizing:border-box; }
 
     #stage2UI { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #2c3e50; display: none; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 20px; z-index: 20; color: white; box-sizing: border-box; }
     
@@ -98,12 +110,6 @@
     <div class="container">
         <h1>📊 대푯값과 통계 마스터</h1>
         
-        <div id="legendBox" class="legend" style="display:none;">
-            <div class="legend-row"><img class="legend-icon" src="monster_mean.png" alt="평균 괴물"><strong>평균 요격!</strong></div>
-            <div class="legend-row"><img class="legend-icon" src="monster_median.png" alt="중앙값 괴물"><strong>중앙값 요격!</strong></div>
-            <div class="legend-row"><img class="legend-icon" src="monster_mode.png" alt="최빈값 괴물"><strong>최빈값 요격!</strong></div>
-        </div>
-
         <div id="subLobby">
             <h2>도전할 모드를 선택하세요!</h2>
             <div class="mode-cards">
@@ -120,11 +126,14 @@
             </div>
         </div>
 
+        <div id="monsterPlayLayout">
         <div id="gameArea">
             <canvas id="gameCanvas" width="600" height="605"></canvas>
             
             <div id="timerDisplay" class="hud" style="display:none;">남은 시간: 100초</div>
+            <div id="killDisplay" class="hud" style="display:none;">처치: 0</div>
             <div id="stageInfo" class="hud" style="display:none;">진격의 괴물</div>
+            <div id="dangerWarning">⚠ 위험! 괴물이 성벽에 접근 중!</div>
 
             <div id="menuScreen" class="screen-overlay">
                 <h2 style="color: #f1c40f; margin-bottom:4px;">🧟 진격의 괴물</h2>
@@ -189,10 +198,19 @@
 
             </div>
         </div>
-        
-        <div id="stage1UI">
-            <input type="number" id="answerInput" placeholder="정답 입력" autocomplete="off">
-            <button id="fireActionBtn">발사!</button>
+        <div id="monsterSidePanel">
+            <div id="legendBox" class="legend" style="display:none;">
+                <div style="font-weight:bold; color:#f1c40f; margin-bottom:6px;">괴물별 입력값</div>
+                <div class="legend-row"><img class="legend-icon" src="monster_mean.png" alt="평균 괴물"><strong>평균 입력</strong></div>
+                <div class="legend-row"><img class="legend-icon" src="monster_median.png" alt="중앙값 괴물"><strong>중앙값 입력</strong></div>
+                <div class="legend-row"><img class="legend-icon" src="monster_mode.png" alt="최빈값 괴물"><strong>최빈값 입력</strong></div>
+            </div>
+            <div id="stage1UI">
+                <div style="font-weight:bold; color:#f1c40f; margin-bottom:2px;">정답 입력</div>
+                <input type="number" id="answerInput" placeholder="정답 입력" autocomplete="off">
+                <button id="fireActionBtn">발사!</button>
+            </div>
+        </div>
         </div>
         
         <button class="back-btn" id="btnGoBack">⬅ 뒤로 가기</button>
@@ -229,8 +247,12 @@
         document.getElementById("legendBox").style.display = "none";
         document.getElementById("timerDisplay").style.display = "none";
         document.getElementById("stageInfo").style.display = "none";
+        document.getElementById("killDisplay").style.display = "none";
+        document.getElementById("dangerWarning").style.display = "none";
+        document.getElementById("timerDisplay").classList.remove("final-countdown", "critical-countdown");
+        document.getElementById("gameArea").classList.remove("danger-active");
         document.getElementById("subLobby").style.display = "flex";
-        document.querySelector(".container").classList.remove("roulette-active");
+        document.querySelector(".container").classList.remove("roulette-active", "monster-active");
         document.getElementById("gameArea").classList.remove("roulette-active");
         
         clearInterval(intervalId);
@@ -246,6 +268,7 @@
                 else { alert("비밀번호가 틀렸습니다! ❌"); return; }
             }
             document.querySelector(".container").classList.remove("roulette-active");
+            document.querySelector(".container").classList.add("monster-active");
             document.getElementById("gameArea").classList.remove("roulette-active");
             document.getElementById("subLobby").style.display = "none";
             document.getElementById("gameArea").style.display = "block";
@@ -258,6 +281,7 @@
                 if (verifyAuth(pwd, 'roulette')) isRouletteUnlocked = true;
                 else { alert("비밀번호가 틀렸습니다! ❌"); return; }
             }
+            document.querySelector(".container").classList.remove("monster-active");
             document.querySelector(".container").classList.add("roulette-active");
             document.getElementById("gameArea").classList.add("roulette-active");
             document.getElementById("subLobby").style.display = "none";
@@ -300,6 +324,8 @@
     let state = "MENU", stage1Timer = 100, spawnTimer = 0; 
     let monsters = [], projectiles = [], explosions = [];
     let intervalId, animId, currentDifficulty = {};
+    let killCount = 0;
+    const dangerThresholdY = 440;
     const monsterImages = {
         mean: new Image(),
         median: new Image(),
@@ -341,17 +367,26 @@
         document.getElementById("stage1UI").style.display = "flex";
         document.getElementById("timerDisplay").style.display = "block";
         document.getElementById("stageInfo").style.display = "block";
+        document.getElementById("killDisplay").style.display = "block";
         document.getElementById("legendBox").style.display = "block";
         document.getElementById("answerInput").focus();
         
-        state = "STAGE1"; stage1Timer = 100; spawnTimer = 0; 
+        state = "STAGE1"; stage1Timer = 100; spawnTimer = 0; killCount = 0;
         document.getElementById("timerDisplay").innerText = `남은 시간: 100초`;
+        document.getElementById("killDisplay").innerText = `처치: 0`;
+        document.getElementById("timerDisplay").classList.remove("final-countdown", "critical-countdown");
+        document.getElementById("dangerWarning").style.display = "none";
+        document.getElementById("gameArea").classList.remove("danger-active");
         monsters = []; projectiles = []; explosions = [];
         
         clearInterval(intervalId);
         intervalId = setInterval(() => {
             if(state === "STAGE1") {
-                stage1Timer--; document.getElementById("timerDisplay").innerText = `남은 시간: ${stage1Timer}초`;
+                stage1Timer--;
+                const timerEl = document.getElementById("timerDisplay");
+                timerEl.innerText = `남은 시간: ${stage1Timer}초`;
+                timerEl.classList.toggle("final-countdown", stage1Timer <= 10 && stage1Timer > 5);
+                timerEl.classList.toggle("critical-countdown", stage1Timer <= 5);
                 if(stage1Timer <= 0) gameWin();
             }
         }, 1000);
@@ -405,6 +440,9 @@
             monsters[i].y += monsters[i].speed;
             if (monsters[i].y > 550) { gameOver(); return; }
         }
+        const dangerActive = monsters.some(m => m.y >= dangerThresholdY);
+        document.getElementById("dangerWarning").style.display = dangerActive ? "block" : "none";
+        document.getElementById("gameArea").classList.toggle("danger-active", dangerActive);
         for (let i = projectiles.length - 1; i >= 0; i--) {
             let p = projectiles[i];
             let target = monsters.find(m => m.id === p.targetId);
@@ -414,6 +452,8 @@
             if (dist < p.speed + 20) {
                 explosions.push({ x: target.x, y: target.y, radius: 5, maxRadius: 50, alpha: 1 });
                 monsters = monsters.filter(m => m.id !== p.targetId);
+                killCount++;
+                document.getElementById("killDisplay").innerText = `처치: ${killCount}`;
                 projectiles.splice(i, 1);
             } else {
                 p.x += (dx / dist) * p.speed; p.y += (dy / dist) * p.speed;
@@ -468,7 +508,9 @@
         state = "GAMEOVER"; clearInterval(intervalId); cancelAnimationFrame(animId);
         document.getElementById("stage1UI").style.display = "none";
         document.getElementById("legendBox").style.display = "none";
-        showResultOverlay(`<h2 style="color: #e74c3c; font-size: 40px;">성벽 파괴!</h2><p>몬스터가 성벽에 도달했습니다.</p><button class="btn" id="btnResultReturn1">돌아가기</button>`);
+        document.getElementById("dangerWarning").style.display = "none";
+        document.getElementById("gameArea").classList.remove("danger-active");
+        showResultOverlay(`<h2 style="color: #e74c3c; font-size: 40px;">성벽 파괴!</h2><p>몬스터가 성벽에 도달했습니다.</p><p style="color:#f1c40f; font-weight:bold;">처치한 괴물: ${killCount}마리</p><button class="btn" id="btnResultReturn1">돌아가기</button>`);
         document.getElementById("btnResultReturn1").addEventListener("click", resetToLobby);
     }
 
@@ -476,7 +518,9 @@
         state = "GAMEWIN"; clearInterval(intervalId); cancelAnimationFrame(animId);
         document.getElementById("stage1UI").style.display = "none";
         document.getElementById("legendBox").style.display = "none";
-        showResultOverlay(`<h2 style="color: #2ecc71; font-size: 40px;">방어 성공! 🎉</h2><p>100초 동안 성벽을 지켜냈습니다!</p><button class="btn" id="btnResultReturn2">돌아가기</button>`);
+        document.getElementById("dangerWarning").style.display = "none";
+        document.getElementById("gameArea").classList.remove("danger-active");
+        showResultOverlay(`<h2 style="color: #2ecc71; font-size: 40px;">방어 성공! 🎉</h2><p>100초 동안 성벽을 지켜냈습니다!</p><p style="color:#f1c40f; font-weight:bold;">처치한 괴물: ${killCount}마리</p><button class="btn" id="btnResultReturn2">돌아가기</button>`);
         document.getElementById("btnResultReturn2").addEventListener("click", resetToLobby);
     }
 
