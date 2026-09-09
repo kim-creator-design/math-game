@@ -561,7 +561,7 @@
             updateBossUI();
 
             if (bossHp <= 0) {
-                const bossEl = document.getElementById("bossSprite"); bossEl.style.transform = "rotate(-90deg)"; bossEl.style.filter = "grayscale(100%)";
+                const bossEl = document.getElementById("bossSprite"); bossEl.style.transform = "rotate(90deg)"; bossEl.style.filter = "grayscale(100%)";
                 updateBossProgress(true);
             }
 
@@ -594,7 +594,7 @@
                         document.getElementById("btnResultReturn5").addEventListener("click", resetToLobby);
                     }, 500);
                 } else {
-                    let step = (arenaWidth - 100) / 4; bossPos += step;
+                    let step = (arenaWidth - 350) / 4; bossPos += step;
                     document.getElementById("bossSprite").style.right = bossPos + "px";
                     initMagazines(); isFiring = false;
                 }
