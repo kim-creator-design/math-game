@@ -16,7 +16,9 @@
     .mode-card h2 { color: #e74c3c; margin-top: 0; }
     .mode-card.roulette h2 { color: #8e44ad; }
     
-    #gameArea { position: relative; width: 600px; height: 550px; margin: 0 auto; background: #ecf0f1; border-radius: 10px; overflow: hidden; border: 4px solid #bdc3c7; display: none; }
+    #gameArea { position: relative; width: 600px; height: 550px; margin: 0 auto; background: #ecf0f1; border-radius: 10px; overflow: hidden; border: 4px solid #bdc3c7; display: none; transition: width 0.25s ease, height 0.25s ease; }
+    .container.roulette-active { max-width: 1040px; }
+    #gameArea.roulette-active { width: 820px; height: 610px; }
     canvas { position: absolute; top: 0; left: 0; }
     
     #stage1UI { position: absolute; bottom: -70px; left: 50%; transform: translateX(-50%); display: none; width: 100%; justify-content: center; gap: 10px; }
@@ -33,15 +35,20 @@
     #stage2UI { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #2c3e50; display: none; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 20px; z-index: 20; color: white; box-sizing: border-box; }
     
     .battle-arena { position: relative; width: 90%; height: 150px; background: #34495e; border: 3px solid #7f8fa6; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
+    #gameArea.roulette-active .battle-arena { width: 92%; height: 245px; margin-bottom: 12px; }
     .player-sprite { position: absolute; left: 20px; bottom: 10px; font-size: 50px; z-index: 2; transform: scaleX(-1); }
     .boss-sprite { position: absolute; right: 20px; bottom: 10px; width: 110px; height: auto; z-index: 2; transition: right 0.5s ease, transform 0.5s ease, filter 0.5s ease, width 0.5s ease; transform-origin: center bottom; object-fit: contain; user-select: none; pointer-events: none; }
+    #gameArea.roulette-active .boss-sprite { width: 175px; max-height: 225px; }
     .bullet-sprite { position: absolute; left: 60px; bottom: 35px; font-size: 24px; z-index: 1; display: none; }
     
     .hp-container { position: absolute; top: 35px; right: 20px; width: 150px; background: #c0392b; height: 15px; border-radius: 5px; border: 2px solid #ecf0f1; }
+    #gameArea.roulette-active .hp-container { top: 28px; right: 28px; width: 190px; }
     .hp-bar { width: 100%; height: 100%; background: #2ecc71; transition: width 0.3s; }
     .hp-text { position: absolute; top: -22px; right: 0; font-size: 14px; font-weight: bold; }
 
     .magazine-container { display: flex; gap: 10px; margin: 10px 0; }
+    .roulette-controls { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 4px 0 10px; width: 92%; }
+    .roulette-controls .magazine-container { margin: 0; flex-wrap: nowrap; }
     .magazine-input { font-size: 20px; width: 55px; height: 55px; text-align: center; border-radius: 8px; border: 2px solid #bdc3c7; background: #34495e; color: #f1c40f; font-weight: bold; transition: 0.3s; }
     .magazine-input.selected { background: #e74c3c; color: white; border: 3px solid #f1c40f; transform: scale(1.15); box-shadow: 0 0 15px #e74c3c; }
     
@@ -50,6 +57,7 @@
     #stdDevBar { height: 100%; width: 0%; background: #2ecc71; transition: 0.3s; }
     
     #fireBtn { font-size: 22px; padding: 10px 40px; background: #e74c3c; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; opacity: 0.5; pointer-events: none; }
+    #gameArea.roulette-active #fireBtn { min-width: 145px; height: 62px; font-size: 24px; padding: 10px 22px; }
     #fireBtn.active { opacity: 1; pointer-events: auto; background: #c0392b; }
     
     .screen-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 50; }
@@ -128,7 +136,10 @@
                 <h2 style="color:#e74c3c; margin:5px 0;">거대 몬스터 요격!</h2>
                 <p style="margin: 5px 0; font-size:14px;">100의 화력을 6개의 탄창에 분배하세요. (남은 턴: <span id="turnText">4</span>)</p>
                 
-                <div class="magazine-container" id="magazines"></div>
+                <div class="roulette-controls">
+                    <div class="magazine-container" id="magazines"></div>
+                    <button id="fireBtn">🔥 발사!</button>
+                </div>
 
                 <div id="statsDisplay">
                     총 분배량: <span id="totalDmg" style="color:#e74c3c;">0</span> / 100<br>
@@ -136,7 +147,6 @@
                     <div id="stdDevBarContainer"><div id="stdDevBar"></div></div>
                 </div>
 
-                <button id="fireBtn">발사! (Fire)</button>
             </div>
         </div>
         
@@ -180,6 +190,8 @@
         document.getElementById("timerDisplay").style.display = "none";
         document.getElementById("stageInfo").style.display = "none";
         document.getElementById("subLobby").style.display = "flex";
+        document.querySelector(".container").classList.remove("roulette-active");
+        document.getElementById("gameArea").classList.remove("roulette-active");
         
         clearInterval(intervalId);
         cancelAnimationFrame(animId);
@@ -193,6 +205,8 @@
                 if (verifyAuth(pwd, 'monster')) isMonsterUnlocked = true;
                 else { alert("비밀번호가 틀렸습니다! ❌"); return; }
             }
+            document.querySelector(".container").classList.remove("roulette-active");
+            document.getElementById("gameArea").classList.remove("roulette-active");
             document.getElementById("subLobby").style.display = "none";
             document.getElementById("gameArea").style.display = "block";
             document.getElementById("menuScreen").style.display = "flex";
@@ -204,6 +218,8 @@
                 if (verifyAuth(pwd, 'roulette')) isRouletteUnlocked = true;
                 else { alert("비밀번호가 틀렸습니다! ❌"); return; }
             }
+            document.querySelector(".container").classList.add("roulette-active");
+            document.getElementById("gameArea").classList.add("roulette-active");
             document.getElementById("subLobby").style.display = "none";
             document.getElementById("gameArea").style.display = "block";
             startRouletteGame();
@@ -421,7 +437,7 @@
     function startRouletteStage() {
         maxBossHp = BOSS_HP_LEVELS[currentBossStage]; bossHp = maxBossHp; bossTurns = 4; bossPos = 20; isFiring = false;
         const bossEl = document.getElementById("bossSprite");
-        bossEl.src = BOSS_IMAGES[currentBossStage]; bossEl.style.transform = "none"; bossEl.style.filter = "none"; bossEl.style.right = bossPos + "px"; bossEl.style.width = "110px";
+        bossEl.src = BOSS_IMAGES[currentBossStage]; bossEl.style.transform = "none"; bossEl.style.filter = "none"; bossEl.style.right = bossPos + "px"; bossEl.style.width = "175px";
         document.getElementById("resultScreen").style.display = "none";
         initMagazines(); updateBossUI();
     }
@@ -429,7 +445,7 @@
     function startBonusStage() {
         isBonusStage = true; maxBossHp = 120; bossHp = maxBossHp; bossTurns = 4; bossPos = 20; isFiring = false;
         const bossEl = document.getElementById("bossSprite");
-        bossEl.src = BONUS_BOSS_IMAGE; bossEl.style.transform = "none"; bossEl.style.filter = "none"; bossEl.style.right = bossPos + "px"; bossEl.style.width = "125px"; 
+        bossEl.src = BONUS_BOSS_IMAGE; bossEl.style.transform = "none"; bossEl.style.filter = "none"; bossEl.style.right = bossPos + "px"; bossEl.style.width = "190px"; 
         document.getElementById("resultScreen").style.display = "none";
         initMagazines(); updateBossUI();
     }
