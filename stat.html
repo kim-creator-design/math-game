@@ -16,7 +16,7 @@
     .mode-card h2 { color: #e74c3c; margin-top: 0; }
     .mode-card.roulette h2 { color: #8e44ad; }
     
-    #gameArea { position: relative; width: 600px; height: 605px; margin: 0 auto; background: #ecf0f1; border-radius: 10px; overflow: hidden; border: 4px solid #bdc3c7; display: none; transition: width 0.25s ease, height 0.25s ease; }
+    #gameArea { position: relative; width: 600px; height: 666px; margin: 0 auto; background: #ecf0f1; border-radius: 10px; overflow: hidden; border: 4px solid #bdc3c7; display: none; transition: width 0.25s ease, height 0.25s ease; }
     .container.roulette-active { max-width: 1040px; }
     .container.monster-active { max-width: 960px; }
     #monsterPlayLayout { display: flex; justify-content: center; align-items: flex-start; gap: 18px; }
@@ -128,7 +128,7 @@
 
         <div id="monsterPlayLayout">
         <div id="gameArea">
-            <canvas id="gameCanvas" width="600" height="605"></canvas>
+            <canvas id="gameCanvas" width="600" height="666"></canvas>
             
             <div id="timerDisplay" class="hud" style="display:none;">남은 시간: 100초</div>
             <div id="killDisplay" class="hud" style="display:none;">처치: 0</div>
@@ -325,7 +325,7 @@
     let monsters = [], projectiles = [], explosions = [];
     let intervalId, animId, currentDifficulty = {};
     let killCount = 0;
-    const dangerThresholdY = 440;
+    const dangerThresholdY = 501;
     const monsterImages = {
         mean: new Image(),
         median: new Image(),
@@ -425,7 +425,7 @@
         }
         if(target) {
             target.targeted = true;
-            projectiles.push({ x: canvas.width / 2, y: 528, targetId: target.id, speed: 15 });
+            projectiles.push({ x: canvas.width / 2, y: 589, targetId: target.id, speed: 15 });
         }
     }
 
@@ -438,7 +438,7 @@
         if (spawnTimer > 180) { spawnMonster(); spawnTimer = 0; }
         for (let i = 0; i < monsters.length; i++) {
             monsters[i].y += monsters[i].speed;
-            if (monsters[i].y > 550) { gameOver(); return; }
+            if (monsters[i].y > 611) { gameOver(); return; }
         }
         const dangerActive = monsters.some(m => m.y >= dangerThresholdY);
         document.getElementById("dangerWarning").style.display = dangerActive ? "block" : "none";
@@ -468,17 +468,17 @@
 
     function drawStage1() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "#7f8c8d"; ctx.fillRect(0, 550, canvas.width, 55);
+        ctx.fillStyle = "#7f8c8d"; ctx.fillRect(0, 611, canvas.width, 55);
         ctx.strokeStyle = "#2c3e50"; ctx.lineWidth = 2;
         for(let x = 0; x < canvas.width; x += 60) {
-            for(let y = 550; y < 605; y += 15) {
+            for(let y = 611; y < 666; y += 15) {
                 let offsetX = (y % 30 === 0) ? 30 : 0;
                 ctx.strokeRect(x - offsetX, y, 60, 15);
             }
         }
-        ctx.fillStyle = "#ecf0f1"; ctx.font = "bold 18px Arial"; ctx.textAlign = "center"; ctx.fillText("방어 성벽", canvas.width/2, 594);
-        ctx.fillStyle = "#34495e"; ctx.beginPath(); ctx.arc(canvas.width / 2, 550, 25, Math.PI, 0); ctx.fill();
-        ctx.fillStyle = "#2c3e50"; ctx.fillRect(canvas.width / 2 - 10, 506, 20, 44);
+        ctx.fillStyle = "#ecf0f1"; ctx.font = "bold 18px Arial"; ctx.textAlign = "center"; ctx.fillText("방어 성벽", canvas.width/2, 655);
+        ctx.fillStyle = "#34495e"; ctx.beginPath(); ctx.arc(canvas.width / 2, 611, 25, Math.PI, 0); ctx.fill();
+        ctx.fillStyle = "#2c3e50"; ctx.fillRect(canvas.width / 2 - 10, 567, 20, 44);
 
         ctx.textAlign = "center";
         for (let m of monsters) {
