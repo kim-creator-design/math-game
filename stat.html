@@ -493,6 +493,8 @@
         document.getElementById("resultScreen").style.display = "none";
         updateBossProgress();
         initMagazines(); updateBossUI();
+        if (bossEl.complete) requestAnimationFrame(prepareBossMovement);
+        else bossEl.onload = () => requestAnimationFrame(prepareBossMovement);
     }
     
     function startBonusStage() {
@@ -502,6 +504,8 @@
         document.getElementById("resultScreen").style.display = "none";
         updateBossProgress();
         initMagazines(); updateBossUI();
+        if (bossEl.complete) requestAnimationFrame(prepareBossMovement);
+        else bossEl.onload = () => requestAnimationFrame(prepareBossMovement);
     }
 
     function initMagazines() {
