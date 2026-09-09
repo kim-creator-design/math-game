@@ -16,7 +16,7 @@
     .mode-card h2 { color: #e74c3c; margin-top: 0; }
     .mode-card.roulette h2 { color: #8e44ad; }
     
-    #gameArea { position: relative; width: 600px; height: 550px; margin: 0 auto; background: #ecf0f1; border-radius: 10px; overflow: hidden; border: 4px solid #bdc3c7; display: none; transition: width 0.25s ease, height 0.25s ease; }
+    #gameArea { position: relative; width: 600px; height: 605px; margin: 0 auto; background: #ecf0f1; border-radius: 10px; overflow: hidden; border: 4px solid #bdc3c7; display: none; transition: width 0.25s ease, height 0.25s ease; }
     .container.roulette-active { max-width: 1040px; }
     #gameArea.roulette-active { width: 820px; height: 610px; }
     canvas { position: absolute; top: 0; left: 0; }
@@ -121,7 +121,7 @@
         </div>
 
         <div id="gameArea">
-            <canvas id="gameCanvas" width="600" height="550"></canvas>
+            <canvas id="gameCanvas" width="600" height="605"></canvas>
             
             <div id="timerDisplay" class="hud" style="display:none;">남은 시간: 100초</div>
             <div id="stageInfo" class="hud" style="display:none;">진격의 괴물</div>
@@ -390,7 +390,7 @@
         }
         if(target) {
             target.targeted = true;
-            projectiles.push({ x: canvas.width / 2, y: 480, targetId: target.id, speed: 15 });
+            projectiles.push({ x: canvas.width / 2, y: 528, targetId: target.id, speed: 15 });
         }
     }
 
@@ -403,7 +403,7 @@
         if (spawnTimer > 180) { spawnMonster(); spawnTimer = 0; }
         for (let i = 0; i < monsters.length; i++) {
             monsters[i].y += monsters[i].speed;
-            if (monsters[i].y > 500) { gameOver(); return; }
+            if (monsters[i].y > 550) { gameOver(); return; }
         }
         for (let i = projectiles.length - 1; i >= 0; i--) {
             let p = projectiles[i];
@@ -428,17 +428,17 @@
 
     function drawStage1() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "#7f8c8d"; ctx.fillRect(0, 500, canvas.width, 50);
+        ctx.fillStyle = "#7f8c8d"; ctx.fillRect(0, 550, canvas.width, 55);
         ctx.strokeStyle = "#2c3e50"; ctx.lineWidth = 2;
         for(let x = 0; x < canvas.width; x += 60) {
-            for(let y = 500; y < 550; y += 15) {
+            for(let y = 550; y < 605; y += 15) {
                 let offsetX = (y % 30 === 0) ? 30 : 0;
                 ctx.strokeRect(x - offsetX, y, 60, 15);
             }
         }
-        ctx.fillStyle = "#ecf0f1"; ctx.font = "bold 18px Arial"; ctx.textAlign = "center"; ctx.fillText("방어 성벽", canvas.width/2, 540);
-        ctx.fillStyle = "#34495e"; ctx.beginPath(); ctx.arc(canvas.width / 2, 500, 25, Math.PI, 0); ctx.fill();
-        ctx.fillStyle = "#2c3e50"; ctx.fillRect(canvas.width / 2 - 10, 460, 20, 40);
+        ctx.fillStyle = "#ecf0f1"; ctx.font = "bold 18px Arial"; ctx.textAlign = "center"; ctx.fillText("방어 성벽", canvas.width/2, 594);
+        ctx.fillStyle = "#34495e"; ctx.beginPath(); ctx.arc(canvas.width / 2, 550, 25, Math.PI, 0); ctx.fill();
+        ctx.fillStyle = "#2c3e50"; ctx.fillRect(canvas.width / 2 - 10, 506, 20, 44);
 
         ctx.textAlign = "center";
         for (let m of monsters) {
