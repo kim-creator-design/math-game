@@ -99,6 +99,9 @@
     #menuScreen { background: linear-gradient(180deg, rgba(250, 244, 232, 0.96) 0%, rgba(244, 232, 212, 0.97) 100%); color: #222; }
     #menuScreen h2 { color: #2f2f2f !important; text-shadow: none; }
     #menuScreen h3 { color: #2f2f2f; }
+    #resultScreen.loss-screen { background: linear-gradient(180deg, rgba(255, 248, 238, 0.98) 0%, rgba(247, 235, 218, 0.98) 100%); color: #222; }
+    #resultScreen.loss-screen p { color: #222 !important; }
+    #resultScreen.loss-screen h1, #resultScreen.loss-screen h2 { text-shadow: none; }
     .btn { padding: 12px 25px; font-size: 18px; margin: 8px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; background: #27ae60; }
     .btn-diff { background: #3498db; }
     .btn-diff.selected { outline: 4px solid #f1c40f; transform: scale(1.04); box-shadow: 0 0 12px rgba(241,196,15,0.6); }
@@ -247,6 +250,7 @@
         document.getElementById("gameArea").style.display = "none";
         document.getElementById("menuScreen").style.display = "none";
         document.getElementById("resultScreen").style.display = "none";
+        document.getElementById("resultScreen").classList.remove("loss-screen");
         document.getElementById("stage1UI").style.display = "none";
         document.getElementById("stage2UI").style.display = "none";
         document.getElementById("legendBox").style.display = "none";
@@ -515,7 +519,7 @@
         document.getElementById("legendBox").style.display = "none";
         document.getElementById("dangerWarning").style.display = "none";
         document.getElementById("gameArea").classList.remove("danger-active");
-        showResultOverlay(`<h2 style="color: #e74c3c; font-size: 40px;">성벽 파괴!</h2><p>몬스터가 성벽에 도달했습니다.</p><p style="color:#f1c40f; font-weight:bold;">처치한 괴물: ${killCount}마리</p><button class="btn" id="btnResultReturn1">돌아가기</button>`);
+        showResultOverlay(`<h2 style="color: #c0392b; font-size: 40px;">성벽 파괴!</h2><p>몬스터가 성벽에 도달했습니다.</p><p style="color:#222; font-weight:bold;">처치한 괴물: ${killCount}마리</p><button class="btn" id="btnResultReturn1">돌아가기</button>`);
         document.getElementById("btnResultReturn1").addEventListener("click", resetToLobby);
     }
 
@@ -732,7 +736,17 @@
 
     function showResultOverlay(htmlContent) {
         const overlay = document.getElementById("resultScreen");
-        overlay.style.display = "flex"; overlay.innerHTML = htmlContent;
+        const isLoss = htmlContent.includes("성벽 파괴") || htmlContent.includes("패배...");
+        overlay.classList.toggle("loss-screen", isLoss);
+
+        // 승리/패배 모두 밝은 결과 화면으로 통일
+        overlay.style.background = "linear-gradient(180deg, #fff8ee 0%, #f4e5cf 100%)";
+        overlay.style.color = "#222";
+        overlay.innerHTML = htmlContent;
+
+        // 결과 설명 문구는 항상 검정 계열로 선명하게 표시
+        overlay.querySelectorAll("p").forEach(el => el.style.color = "#222");
+        overlay.style.display = "flex";
     }
 })();
 </script>
