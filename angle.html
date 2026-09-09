@@ -19,6 +19,10 @@
     .btn-easy { background: #27ae60; }
     .btn-normal { background: #f39c12; }
     .btn-hard { background: #e74c3c; }
+    .btn-play { background: #3498db; margin-top: 16px; }
+    .btn-selected { outline: 4px solid #fbc531; transform: scale(1.04); box-shadow: 0 0 14px rgba(251,197,49,0.65); }
+    .intro-box { width: 82%; max-width: 500px; background: rgba(255,255,255,0.08); border-radius: 12px; padding: 14px 18px; margin-bottom: 8px; line-height: 1.65; }
+    .record-box { color: #fbc531; font-weight: bold; margin: 8px 0 2px; font-size: 17px; }
     
     #hud { display: flex; justify-content: space-between; font-size: 22px; font-weight: bold; margin-bottom: 10px; padding: 0 20px; color: #fbc531; }
     #msgBox { min-height: 30px; font-size: 18px; font-weight: bold; color: #fff; margin-top: 15px; }
@@ -65,17 +69,28 @@
             <canvas id="gameCanvas" width="600" height="550"></canvas>
             
             <div id="menuScreen" class="menu">
-                <h2 style="color: #fbc531; margin-bottom: 20px;">난이도를 선택하세요</h2>
-                <button class="btn btn-easy" onclick="startGame('easy')">초급 (안 움직이는 키퍼)</button>
-                <button class="btn btn-normal" onclick="startGame('normal')">중급 (좌우로 움직이는 키퍼)</button>
-                <button class="btn btn-hard" onclick="startGame('hard')">고급 (빠르고 현란한 키퍼)</button>
-                <p style="color: #ccc; margin-top: 20px; font-size: 16px;">조작법: 화면 터치(정지 및 파워충전) ➡️ 떼기(슈팅!)</p>
-                <p style="color: #f1c40f; font-weight: bold; font-size: 14px;">팁: 원주각을 따라 움직여도 각도는 변하지 않아요!</p>
+                <h2 style="color: #fbc531; margin: 0 0 10px;">⚽ 원주각 슛돌이</h2>
+                <div class="intro-box">
+                    <strong>게임 방법</strong><br>
+                    ① 움직이는 선수를 원하는 위치에서 누르면 멈춥니다.<br>
+                    ② 누르고 있는 동안 슛 파워가 변합니다.<br>
+                    ③ 손을 떼면 슈팅! 60초 동안 최대한 많은 골을 넣으세요.
+                    <div style="color:#f1c40f; margin-top:6px;">💡 같은 현을 보는 원주각의 크기는 같다는 성질을 활용해 보세요!</div>
+                </div>
+                <div id="bestRecordDisplay" class="record-box">🏆 최고 기록 불러오는 중...</div>
+                <h3 style="margin: 10px 0 2px;">난이도 선택</h3>
+                <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:4px;">
+                    <button id="diffEasyBtn" class="btn btn-easy" onclick="selectDifficulty('easy')">초급 (안 움직이는 키퍼)</button>
+                    <button id="diffNormalBtn" class="btn btn-normal" onclick="selectDifficulty('normal')">중급 (좌우로 움직이는 키퍼)</button>
+                    <button id="diffHardBtn" class="btn btn-hard" onclick="selectDifficulty('hard')">고급 (빠르고 현란한 키퍼)</button>
+                </div>
+                <button class="btn btn-play" onclick="startSelectedGame()">▶ 플레이</button>
             </div>
             
             <div id="resultScreen" class="menu" style="display: none;">
                 <h2 style="color: #fbc531; font-size: 40px;">경기 종료!</h2>
                 <h3 id="finalScore" style="font-size: 30px;">총 0골 달성</h3>
+                <div id="resultBestRecord" class="record-box"></div>
                 <button class="btn btn-easy" onclick="showMenu()">다시 하기 🔄</button>
             </div>
         </div>
@@ -104,6 +119,9 @@ window.onload = function() {
     
     let state = "MENU"; 
     let difficulty = "easy";
+    let selectedDifficulty = "easy";
+    const difficultyNames = { easy: "초급", normal: "중급", hard: "고급" };
+    const recordKeys = { easy: "shootBest_easy", normal: "shootBest_normal", hard: "shootBest_hard" };
     let score = 0;
     let timeLeft = 60;
     let timerId;
@@ -125,13 +143,36 @@ window.onload = function() {
     let aimT = 0.5; 
     let aimDir = 1;
 
+    function getBestRecord(diff) {
+        return parseInt(localStorage.getItem(recordKeys[diff]) || "0", 10);
+    }
+
+    function updateBestRecordDisplay() {
+        const best = getBestRecord(selectedDifficulty);
+        document.getElementById("bestRecordDisplay").innerText = `🏆 ${difficultyNames[selectedDifficulty]} 최고 기록: ${best}골`;
+    }
+
+    window.selectDifficulty = function(diff) {
+        selectedDifficulty = diff;
+        ["easy", "normal", "hard"].forEach(d => {
+            const id = d === "easy" ? "diffEasyBtn" : d === "normal" ? "diffNormalBtn" : "diffHardBtn";
+            document.getElementById(id).classList.toggle("btn-selected", d === diff);
+        });
+        updateBestRecordDisplay();
+    };
+
+    window.startSelectedGame = function() {
+        startGame(selectedDifficulty);
+    };
+
     window.showMenu = function() {
         document.getElementById("menuScreen").style.display = "flex";
         document.getElementById("resultScreen").style.display = "none";
         state = "MENU";
+        selectDifficulty(selectedDifficulty);
     };
 
-    window.startGame = function(diff) {
+    function startGame(diff) {
         difficulty = diff;
         score = 0;
         timeLeft = 60;
@@ -157,8 +198,19 @@ window.onload = function() {
     function endGame() {
         state = "GAMEOVER";
         clearInterval(timerId);
+        const oldBest = getBestRecord(difficulty);
+        let best = oldBest;
+        let newRecord = false;
+        if (score > oldBest) {
+            localStorage.setItem(recordKeys[difficulty], String(score));
+            best = score;
+            newRecord = true;
+        }
         document.getElementById("resultScreen").style.display = "flex";
         document.getElementById("finalScore").innerText = `총 ${score}골 달성!`;
+        document.getElementById("resultBestRecord").innerText = newRecord
+            ? `🎉 신기록! ${difficultyNames[difficulty]} 최고 ${best}골`
+            : `🏆 ${difficultyNames[difficulty]} 최고 기록: ${best}골`;
     }
 
     function resetPlayer() {
@@ -196,6 +248,8 @@ window.onload = function() {
             ball.vy = Math.sin(aimAngle) * speed;
         }
     }
+
+    selectDifficulty("easy");
 
     canvas.addEventListener("mousedown", handleInputStart);
     canvas.addEventListener("mouseup", handleInputEnd);

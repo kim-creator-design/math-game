@@ -55,6 +55,9 @@
     .screen-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 50; }
     .btn { padding: 12px 25px; font-size: 18px; margin: 8px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; background: #27ae60; }
     .btn-diff { background: #3498db; }
+    .btn-diff.selected { outline: 4px solid #f1c40f; transform: scale(1.04); box-shadow: 0 0 12px rgba(241,196,15,0.6); }
+    .intro-guide { width: 82%; max-width: 500px; background: rgba(255,255,255,0.08); border-radius: 12px; padding: 14px 18px; line-height: 1.7; margin: 8px 0; }
+    .start-btn { background: #27ae60; font-size: 22px; padding: 14px 38px; margin-top: 16px; }
     .back-btn { display: inline-block; margin-top: 40px; padding: 10px 20px; background: #7f8fa6; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; }
 </style>
 </head>
@@ -91,14 +94,22 @@
             <div id="stageInfo" class="hud" style="display:none;">진격의 괴물</div>
 
             <div id="menuScreen" class="screen-overlay">
-                <h2 style="color: #f1c40f;">진격의 괴물</h2>
-                <p>수학 지식으로 대포를 발사해 성벽을 지키세요!</p>
-                <div style="display:flex; gap: 10px; margin-top:20px; flex-wrap: wrap; justify-content: center; padding: 0 20px;">
+                <h2 style="color: #f1c40f; margin-bottom:4px;">🧟 진격의 괴물</h2>
+                <div class="intro-guide">
+                    <strong>게임 방법</strong><br>
+                    ① 내려오는 괴물의 자료에서 평균·중앙값·최빈값을 구하세요.<br>
+                    ② 정답을 입력하고 <strong>발사!</strong>를 누르면 해당 괴물을 공격합니다.<br>
+                    ③ 괴물이 성벽에 닿기 전에 막아내고 <strong>100초 동안 생존</strong>하면 성공!<br>
+                    <span style="color:#f1c40f;">👹 평균 · 👽 중앙값 · 👾 최빈값</span>
+                </div>
+                <h3 style="margin:10px 0 4px;">난이도 선택</h3>
+                <div style="display:flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding: 0 20px;">
                     <button class="btn btn-diff" id="btnDiffEasy">쉬움 (3개, 느림)</button>
                     <button class="btn btn-diff" style="background:#e67e22" id="btnDiffNormal">보통 (5개, 느림)</button>
                     <button class="btn btn-diff" style="background:#e74c3c" id="btnDiffHard">어려움 (5개, 빠름)</button>
                     <button class="btn btn-diff" style="background:#8e44ad" id="btnDiffExtreme">극악 (7개, 매우 빠름)</button>
                 </div>
+                <button class="btn start-btn" id="btnMonsterStart">▶ 게임 시작</button>
             </div>
             
             <div id="resultScreen" class="screen-overlay"></div>
@@ -143,6 +154,7 @@
     // 철통 보안용 내부 변수 (새로고침을 하지 않으므로 닫기 전까지 유지됨)
     let isMonsterUnlocked = false;
     let isRouletteUnlocked = false;
+    let selectedMonsterDifficulty = 'easy';
 
     // 수학적 일방향 해시 검증
     function verifyAuth(pwd, type) {
@@ -197,10 +209,22 @@
             startRouletteGame();
         });
 
-        document.getElementById("btnDiffEasy").addEventListener("click", () => { if(isMonsterUnlocked) startMonsterGame('easy'); });
-        document.getElementById("btnDiffNormal").addEventListener("click", () => { if(isMonsterUnlocked) startMonsterGame('normal'); });
-        document.getElementById("btnDiffHard").addEventListener("click", () => { if(isMonsterUnlocked) startMonsterGame('hard'); });
-        document.getElementById("btnDiffExtreme").addEventListener("click", () => { if(isMonsterUnlocked) startMonsterGame('extreme'); });
+        function selectMonsterDifficulty(diff) {
+            selectedMonsterDifficulty = diff;
+            const map = { easy: 'btnDiffEasy', normal: 'btnDiffNormal', hard: 'btnDiffHard', extreme: 'btnDiffExtreme' };
+            Object.entries(map).forEach(([key, id]) => {
+                document.getElementById(id).classList.toggle('selected', key === diff);
+            });
+        }
+
+        document.getElementById("btnDiffEasy").addEventListener("click", () => selectMonsterDifficulty('easy'));
+        document.getElementById("btnDiffNormal").addEventListener("click", () => selectMonsterDifficulty('normal'));
+        document.getElementById("btnDiffHard").addEventListener("click", () => selectMonsterDifficulty('hard'));
+        document.getElementById("btnDiffExtreme").addEventListener("click", () => selectMonsterDifficulty('extreme'));
+        document.getElementById("btnMonsterStart").addEventListener("click", () => {
+            if(isMonsterUnlocked) startMonsterGame(selectedMonsterDifficulty);
+        });
+        selectMonsterDifficulty('easy');
 
         document.getElementById("fireActionBtn").addEventListener("click", () => { if(isMonsterUnlocked) fireCannon(); });
         document.getElementById("answerInput").addEventListener("keypress", (e) => { 
