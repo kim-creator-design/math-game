@@ -34,7 +34,7 @@
     
     .battle-arena { position: relative; width: 90%; height: 150px; background: #34495e; border: 3px solid #7f8fa6; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
     .player-sprite { position: absolute; left: 20px; bottom: 10px; font-size: 50px; z-index: 2; transform: scaleX(-1); }
-    .boss-sprite { position: absolute; right: 20px; bottom: 10px; font-size: 60px; z-index: 2; transition: right 0.5s ease, transform 0.5s ease, font-size 0.5s ease; }
+    .boss-sprite { position: absolute; right: 20px; bottom: 10px; width: 110px; height: auto; z-index: 2; transition: right 0.5s ease, transform 0.5s ease, filter 0.5s ease, width 0.5s ease; transform-origin: center bottom; object-fit: contain; user-select: none; pointer-events: none; }
     .bullet-sprite { position: absolute; left: 60px; bottom: 35px; font-size: 24px; z-index: 1; display: none; }
     
     .hp-container { position: absolute; top: 35px; right: 20px; width: 150px; background: #c0392b; height: 15px; border-radius: 5px; border: 2px solid #ecf0f1; }
@@ -118,7 +118,7 @@
                 <div class="battle-arena">
                     <div class="player-sprite">🔫</div>
                     <div id="bulletSprite" class="bullet-sprite">💨</div>
-                    <div id="bossSprite" class="boss-sprite">🐍</div>
+                    <img id="bossSprite" class="boss-sprite" src="roulette_boss1.png" alt="보스 몬스터">
                     <div class="hp-container">
                         <div class="hp-text" id="bossHpTextUi">HP: 60</div>
                         <div id="bossHpBar" class="hp-bar"></div>
@@ -406,7 +406,8 @@
     }
 
     const BOSS_HP_LEVELS = [60, 80, 100];
-    const BOSS_EMOJIS = ["🐍", "🦖", "🐉"]; 
+    const BOSS_IMAGES = ["roulette_boss1.png", "roulette_boss2.png", "roulette_boss3.png"];
+    const BONUS_BOSS_IMAGE = "roulette_boss4.png"; 
     let currentBossStage = 0, maxBossHp = 60, bossHp = 60, bossTurns = 4, bossPos = 20, isFiring = false, isBonusStage = false;
     const magContainer = document.getElementById("magazines");
     let magInputs = [];
@@ -420,7 +421,7 @@
     function startRouletteStage() {
         maxBossHp = BOSS_HP_LEVELS[currentBossStage]; bossHp = maxBossHp; bossTurns = 4; bossPos = 20; isFiring = false;
         const bossEl = document.getElementById("bossSprite");
-        bossEl.innerText = BOSS_EMOJIS[currentBossStage]; bossEl.style.transform = "none"; bossEl.style.right = bossPos + "px"; bossEl.style.fontSize = "60px";
+        bossEl.src = BOSS_IMAGES[currentBossStage]; bossEl.style.transform = "none"; bossEl.style.filter = "none"; bossEl.style.right = bossPos + "px"; bossEl.style.width = "110px";
         document.getElementById("resultScreen").style.display = "none";
         initMagazines(); updateBossUI();
     }
@@ -428,7 +429,7 @@
     function startBonusStage() {
         isBonusStage = true; maxBossHp = 120; bossHp = maxBossHp; bossTurns = 4; bossPos = 20; isFiring = false;
         const bossEl = document.getElementById("bossSprite");
-        bossEl.innerText = "💀"; bossEl.style.transform = "none"; bossEl.style.right = bossPos + "px"; bossEl.style.fontSize = "70px"; 
+        bossEl.src = BONUS_BOSS_IMAGE; bossEl.style.transform = "none"; bossEl.style.filter = "none"; bossEl.style.right = bossPos + "px"; bossEl.style.width = "125px"; 
         document.getElementById("resultScreen").style.display = "none";
         initMagazines(); updateBossUI();
     }
@@ -505,7 +506,7 @@
             updateBossUI();
 
             if (bossHp <= 0) {
-                const bossEl = document.getElementById("bossSprite"); bossEl.innerText = "😵"; bossEl.style.transform = "rotate(-90deg)";
+                const bossEl = document.getElementById("bossSprite"); bossEl.style.transform = "rotate(-90deg)"; bossEl.style.filter = "grayscale(100%)";
             }
 
             setTimeout(() => {
