@@ -38,7 +38,7 @@
     #gameArea.roulette-active .battle-arena { width: 92%; height: 245px; margin-bottom: 12px; }
     .player-sprite { position: absolute; left: 15px; bottom: 5px; width: 175px; height: auto; z-index: 2; object-fit: contain; user-select: none; pointer-events: none; }
     #gameArea.roulette-active .player-sprite { width: 190px; }
-    .boss-sprite { position: absolute; right: 20px; bottom: 10px; width: 110px; height: auto; z-index: 2; transition: right 0.5s ease, transform 0.5s ease, filter 0.5s ease, width 0.5s ease; transform-origin: center bottom; object-fit: contain; user-select: none; pointer-events: none; }
+    .boss-sprite { position: absolute; right: 20px; bottom: 10px; width: 110px; height: auto; z-index: 2; transition: right 0.5s linear, transform 0.5s ease, filter 0.5s ease, width 0.5s ease; transform-origin: center bottom; object-fit: contain; user-select: none; pointer-events: none; }
     #gameArea.roulette-active .boss-sprite { width: 175px; max-height: 225px; }
     .bullet-sprite { position: absolute; left: 60px; bottom: 35px; font-size: 24px; z-index: 1; display: none; }
     
@@ -448,7 +448,7 @@
     const BOSS_HP_LEVELS = [60, 80, 100];
     const BOSS_IMAGES = ["roulette_boss1.png", "roulette_boss2.png", "roulette_boss3.png"];
     const BONUS_BOSS_IMAGE = "roulette_boss4.png"; 
-    let currentBossStage = 0, maxBossHp = 60, bossHp = 60, bossTurns = 4, bossPos = 20, isFiring = false, isBonusStage = false;
+    let currentBossStage = 0, maxBossHp = 60, bossHp = 60, bossTurns = 4, bossPos = 20, bossStartPos = 20, bossContactPos = 20, bossStepDistance = 0, isFiring = false, isBonusStage = false;
     const magContainer = document.getElementById("magazines");
     let magInputs = [];
 
@@ -463,6 +463,21 @@
                 step.classList.add("current");
             }
         });
+    }
+
+    function prepareBossMovement() {
+        const arenaEl = document.querySelector(".battle-arena");
+        const bossEl = document.getElementById("bossSprite");
+        const playerEl = document.getElementById("playerSprite");
+        if (!arenaEl || !bossEl || !playerEl) return;
+
+        bossStartPos = 20;
+        const playerRight = playerEl.offsetLeft + playerEl.offsetWidth;
+        const contactOverlap = 8;
+        bossContactPos = Math.max(bossStartPos, arenaEl.offsetWidth - bossEl.offsetWidth - playerRight + contactOverlap);
+        bossStepDistance = (bossContactPos - bossStartPos) / 4;
+        bossPos = bossStartPos;
+        bossEl.style.right = bossPos + "px";
     }
 
     function startRouletteGame() {
@@ -587,16 +602,22 @@
                         showResultOverlay(`<h1 style="color: #3498db; font-size: 40px;">보스 격파!</h1><p>더 강력한 몬스터가 등장합니다!</p><button class="btn" id="btnNextStage">다음 스테이지</button>`);
                         document.getElementById("btnNextStage").addEventListener("click", startRouletteStage);
                     }
-                } else if (bossTurns <= 0) {
-                    document.getElementById("bossSprite").style.right = (arenaWidth - 100) + "px";
-                    setTimeout(() => { 
-                        showResultOverlay(`<h1 style="color: #e74c3c; font-size: 50px;">패배... 😭</h1><p>보스에게 먹히고 말았습니다.</p><button class="btn" id="btnResultReturn5">모드 선택으로 돌아가기</button>`); 
-                        document.getElementById("btnResultReturn5").addEventListener("click", resetToLobby);
-                    }, 500);
                 } else {
-                    let step = (arenaWidth - 350) / 4; bossPos += step;
-                    document.getElementById("bossSprite").style.right = bossPos + "px";
-                    initMagazines(); isFiring = false;
+                    // 스테이지 시작 시 계산한 고정 좌표를 사용해 매번 정확히 같은 거리만큼 전진
+                    const bossEl = document.getElementById("bossSprite");
+                    const moveCount = 4 - bossTurns; // 1, 2, 3, 4
+                    bossPos = Math.min(bossContactPos, bossStartPos + bossStepDistance * moveCount);
+                    bossEl.style.right = bossPos + "px";
+
+                    if (bossTurns <= 0) {
+                        // 마지막(4번째) 전진 애니메이션이 끝난 뒤 패배 처리
+                        setTimeout(() => { 
+                            showResultOverlay(`<h1 style="color: #e74c3c; font-size: 50px;">패배... 😭</h1><p>보스에게 먹히고 말았습니다.</p><button class="btn" id="btnResultReturn5">모드 선택으로 돌아가기</button>`); 
+                            document.getElementById("btnResultReturn5").addEventListener("click", resetToLobby);
+                        }, 550);
+                    } else {
+                        initMagazines(); isFiring = false;
+                    }
                 }
             }, 1000); 
         }, 320); 
