@@ -88,6 +88,10 @@
     .intro-guide { width: 82%; max-width: 500px; background: rgba(255,255,255,0.08); border-radius: 12px; padding: 14px 18px; line-height: 1.7; margin: 8px 0; }
     .start-btn { background: #27ae60; font-size: 22px; padding: 14px 38px; margin-top: 16px; }
     .back-btn { display: inline-block; margin-top: 40px; padding: 10px 20px; background: #7f8fa6; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; }
+    .legend-row { display:flex; align-items:center; gap:8px; margin:6px 0; }
+    .legend-icon { width:28px; height:28px; object-fit:contain; vertical-align:middle; }
+    .type-inline { display:inline-flex; align-items:center; gap:6px; margin-right:12px; }
+    .type-inline img { width:22px; height:22px; object-fit:contain; vertical-align:middle; }
 </style>
 </head>
 <body>
@@ -95,9 +99,9 @@
         <h1>📊 대푯값과 통계 마스터</h1>
         
         <div id="legendBox" class="legend" style="display:none;">
-            <strong>👹 평균 요격!</strong><br>
-            <strong>👽 중앙값 요격!</strong><br>
-            <strong>👾 최빈값 요격!</strong>
+            <div class="legend-row"><img class="legend-icon" src="monster_mean.png" alt="평균 괴물"><strong>평균 요격!</strong></div>
+            <div class="legend-row"><img class="legend-icon" src="monster_median.png" alt="중앙값 괴물"><strong>중앙값 요격!</strong></div>
+            <div class="legend-row"><img class="legend-icon" src="monster_mode.png" alt="최빈값 괴물"><strong>최빈값 요격!</strong></div>
         </div>
 
         <div id="subLobby">
@@ -129,7 +133,11 @@
                     ① 내려오는 괴물의 자료에서 평균·중앙값·최빈값을 구하세요.<br>
                     ② 정답을 입력하고 <strong>발사!</strong>를 누르면 해당 괴물을 공격합니다.<br>
                     ③ 괴물이 성벽에 닿기 전에 막아내고 <strong>100초 동안 생존</strong>하면 성공!<br>
-                    <span style="color:#f1c40f;">👹 평균 · 👽 중앙값 · 👾 최빈값</span>
+                    <span style="color:#f1c40f;">
+                        <span class="type-inline"><img src="monster_mean.png" alt="평균 괴물">평균</span>
+                        <span class="type-inline"><img src="monster_median.png" alt="중앙값 괴물">중앙값</span>
+                        <span class="type-inline"><img src="monster_mode.png" alt="최빈값 괴물">최빈값</span>
+                    </span>
                 </div>
                 <h3 style="margin:10px 0 4px;">난이도 선택</h3>
                 <div style="display:flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding: 0 20px;">
@@ -292,6 +300,14 @@
     let state = "MENU", stage1Timer = 100, spawnTimer = 0; 
     let monsters = [], projectiles = [], explosions = [];
     let intervalId, animId, currentDifficulty = {};
+    const monsterImages = {
+        mean: new Image(),
+        median: new Image(),
+        mode: new Image()
+    };
+    monsterImages.mean.src = "monster_mean.png";
+    monsterImages.median.src = "monster_median.png";
+    monsterImages.mode.src = "monster_mode.png";
     
     function generateData(type, count) {
         let arr = []; let targetAnswer = 0;
@@ -343,7 +359,11 @@
     }
 
     function spawnMonster() {
-        const types = [{ type: 'mean', emoji: '👹' }, { type: 'median', emoji: '👽' }, { type: 'mode', emoji: '👾' }];
+        const types = [
+            { type: 'mean', label: '평균' },
+            { type: 'median', label: '중앙값' },
+            { type: 'mode', label: '최빈값' }
+        ];
         const selected = types[Math.floor(Math.random() * types.length)];
         let count = currentDifficulty.count;
         if (selected.type === 'median' && count % 2 === 0) count += 1;
@@ -354,7 +374,7 @@
         monsters.push({
             id: Math.random().toString(36).substr(2, 9),
             x: 50 + Math.random() * (canvas.width - 100), y: -50,
-            emoji: selected.emoji, dataStr: q.data.join(', '), answer: q.answer,
+            monsterType: selected.type, label: selected.label, dataStr: q.data.join(', '), answer: q.answer,
             speed: baseSpeed * currentDifficulty.speedMulti, targeted: false
         });
     }
@@ -422,8 +442,15 @@
 
         ctx.textAlign = "center";
         for (let m of monsters) {
-            ctx.font = "40px Arial"; ctx.fillText(m.emoji, m.x, m.y + 15);
-            ctx.fillStyle = "#2c3e50"; ctx.font = "bold 16px Arial"; ctx.fillText(m.dataStr, m.x, m.y - 20);
+            const monsterImg = monsterImages[m.monsterType];
+            if (monsterImg && monsterImg.complete) {
+                ctx.drawImage(monsterImg, m.x - 32, m.y - 32, 64, 64);
+            } else {
+                ctx.fillStyle = "#8e44ad";
+                ctx.beginPath(); ctx.arc(m.x, m.y, 28, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "white"; ctx.font = "bold 14px Arial"; ctx.fillText(m.label, m.x, m.y + 5);
+            }
+            ctx.fillStyle = "#2c3e50"; ctx.font = "bold 16px Arial"; ctx.fillText(m.dataStr, m.x, m.y - 26);
         }
 
         ctx.fillStyle = "#e67e22";
