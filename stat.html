@@ -5,21 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>대푯값과 통계 마스터</title>
 <style>
-    body { font-family: 'Malgun Gothic', sans-serif; background: linear-gradient(180deg, #dff5f2 0%, #f8e7f1 46%, #e8f1ff 100%); color: #33485a; text-align: center; margin: 0; padding: 20px; }
-    .container { max-width: 850px; margin: 0 auto; background: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(255,250,252,0.96) 100%); padding: 20px; border-radius: 22px; box-shadow: 0 12px 32px rgba(86,106,135,0.18); border: 1px solid #ead8e7; position: relative; min-height: 650px; }
-    h1 { color: #4a6e92; margin-top: 0; font-size: 26px; text-shadow: 0 1px 0 rgba(255,255,255,0.9); }
+    body { font-family: 'Malgun Gothic', sans-serif; background: linear-gradient(-45deg, #a8edea, #fed6e3, #e0c3fc, #8ec5fc); background-size: 400% 400%; animation: gradientBG 15s ease infinite; color: #33485a; text-align: center; margin: 0; padding: 20px; min-height: 100vh; }
+    @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    .container { max-width: 850px; margin: 0 auto; background: rgba(255,255,255,0.84); padding: 20px; border-radius: 22px; box-shadow: 0 12px 32px rgba(75,83,118,0.22); border: 1px solid rgba(255,255,255,0.72); position: relative; min-height: 650px; backdrop-filter: blur(5px); }
+    h1 { color: #426b91; margin-top: 0; font-size: 26px; text-shadow: 0 1px 0 rgba(255,255,255,0.9); }
     
     #subLobby { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 50px; }
     .mode-cards { display: flex; gap: 20px; margin-top: 30px; }
-    .mode-card { background: linear-gradient(180deg, #ffffff 0%, #f8fbff 45%, #f8f1f7 100%); color: #355066; padding: 30px; border-radius: 18px; cursor: pointer; transition: 0.3s; width: 250px; box-shadow: 0 8px 18px rgba(104,119,145,0.18); border: 1px solid #e2d6e9; }
+    .mode-card { background: linear-gradient(180deg, rgba(197, 244, 230, 0.96) 0%, rgba(176, 235, 217, 0.96) 100%); color: #355066; padding: 30px; border-radius: 18px; cursor: pointer; transition: 0.3s; width: 250px; box-shadow: 0 8px 18px rgba(75,83,118,0.17); border: 1px solid #9fd9c4; }
+    .mode-card.roulette { background: linear-gradient(180deg, rgba(255, 207, 228, 0.96) 0%, rgba(248, 182, 213, 0.96) 100%); border: 1px solid #e5a6c6; }
     .mode-card:hover { transform: translateY(-10px); box-shadow: 0 14px 28px rgba(104,119,145,0.26); }
-    .mode-card h2 { color: #e74c3c; margin-top: 0; }
-    .mode-card.roulette h2 { color: #8e44ad; }
+    .mode-card h2 { color: #1f7c68; margin-top: 0; }
+    .mode-card.roulette h2 { color: #ac4677; }
     
-    #gameArea { position: relative; width: 600px; height: 666px; margin: 0 auto; background: linear-gradient(180deg, #f7ecd9 0%, #f3dfc4 58%, #ebceb0 100%); border-radius: 14px; overflow: hidden; border: 4px solid #d1ae83; display: none; box-shadow: inset 0 0 30px rgba(255,255,255,.45), 0 8px 20px rgba(120,96,76,.18); transition: width 0.25s ease, height 0.25s ease; }
+    #gameArea { position: relative; width: 600px; height: 666px; margin: 0 auto; background: linear-gradient(180deg, #e7f7ff 0%, #f9fdff 62%, #eef8ee 100%); border-radius: 12px; overflow: hidden; border: 4px solid #9fc9df; display: none; box-shadow: inset 0 0 30px rgba(255,255,255,.8), 0 6px 18px rgba(70,110,140,.14); transition: width 0.25s ease, height 0.25s ease; }
     .container.roulette-active { max-width: 1040px; }
-    .container.monster-active #gameArea { background: linear-gradient(180deg, #f7ecd9 0%, #f2ddc2 55%, #e9c9a7 100%); border-color: #c89c6d; box-shadow: inset 0 0 34px rgba(255,255,255,.32), 0 10px 24px rgba(137,101,71,.22); }
-    .container.roulette-active #gameArea { background: linear-gradient(180deg, #2c3147 0%, #252a3e 55%, #202334 100%); border-color: #5d6087; box-shadow: inset 0 0 24px rgba(255,255,255,.05), 0 10px 24px rgba(39,41,63,.30); }
     .container.monster-active { max-width: 960px; }
     #monsterPlayLayout { display: flex; justify-content: center; align-items: flex-start; gap: 18px; }
     #monsterSidePanel { display: none; width: 270px; flex-direction: column; gap: 16px; }
@@ -27,9 +27,9 @@
     #gameArea.roulette-active { width: 820px; height: 610px; }
     canvas { position: absolute; top: 0; left: 0; }
     
-    #stage1UI { display: none; width: 100%; justify-content: center; gap: 10px; background: linear-gradient(180deg, #fff8ef 0%, #f7ead8 100%); padding: 14px; border-radius: 14px; border: 3px solid #d3b08b; box-sizing: border-box; box-shadow: 0 5px 14px rgba(126,98,73,.16); color:#5b4736; }
+    #stage1UI { display: none; width: 100%; justify-content: center; gap: 10px; background: #f4fbff; padding: 14px; border-radius: 12px; border: 3px solid #9fc9df; box-sizing: border-box; box-shadow: 0 5px 14px rgba(67,110,138,.14); color:#26384a; }
     #monsterSidePanel #stage1UI { flex-direction: column; align-items: stretch; }
-    #answerInput { font-size: 24px; padding: 10px; width: 100%; border-radius: 10px; border: 2px solid #e4c8a6; background: #fffdfa; text-align: center; font-weight: bold; box-sizing: border-box; color:#5a4636; }
+    #answerInput { font-size: 24px; padding: 10px; width: 100%; border-radius: 8px; border: none; text-align: center; font-weight: bold; box-sizing: border-box; }
     #fireActionBtn { font-size: 22px; padding: 10px 25px; border-radius: 8px; border: none; background: #e74c3c; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px #c0392b; }
     #fireActionBtn:active { transform: translateY(4px); box-shadow: 0 0 #c0392b; }
 
@@ -44,11 +44,11 @@
     #timerDisplay.final-countdown { color:#e74c3c; animation:timerPulse .65s infinite; }
     #timerDisplay.critical-countdown { color:#ff1e1e; animation:timerCritical .4s infinite; text-shadow:0 0 8px rgba(231,76,60,.6); }
     
-    .legend { position: static; font-size: 15px; text-align: left; color: #5b4736; background: linear-gradient(180deg, #fff8ef 0%, #f7ead8 100%); padding: 15px; border-radius: 14px; border: 3px solid #d3b08b; box-shadow: 0 5px 14px rgba(126,98,73,.16); z-index: 100; line-height: 1.8; box-sizing:border-box; }
+    .legend { position: static; font-size: 15px; text-align: left; color: #26384a; background: #f4fbff; padding: 15px; border-radius: 12px; border: 3px solid #9fc9df; box-shadow: 0 5px 14px rgba(67,110,138,.14); z-index: 100; line-height: 1.8; box-sizing:border-box; }
 
-    #stage2UI { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, #2f3550 0%, #292d43 58%, #24283a 100%); display: none; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 20px; z-index: 20; color: #eef2ff; box-sizing: border-box; }
+    #stage2UI { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, #eef7ff 0%, #fff8fb 100%); display: none; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 20px; z-index: 20; color: #26384a; box-sizing: border-box; }
     
-    .battle-arena { position: relative; width: 90%; height: 150px; background: linear-gradient(180deg, #414864 0%, #39415c 52%, #30364e 52%, #2a3047 100%); border: 3px solid #6d78a5; border-radius: 14px; margin-bottom: 20px; overflow: hidden; box-shadow: inset 0 -10px 20px rgba(0,0,0,.18), 0 7px 16px rgba(20,24,40,.28); }
+    .battle-arena { position: relative; width: 90%; height: 150px; background: linear-gradient(180deg, #dff3ff 0%, #f4fbff 68%, #e8f2e4 68%, #dcead6 100%); border: 3px solid #8dbbd3; border-radius: 12px; margin-bottom: 20px; overflow: hidden; box-shadow: inset 0 -8px 20px rgba(91,130,88,.08), 0 5px 14px rgba(70,110,140,.14); }
     #gameArea.roulette-active .battle-arena { width: 92%; height: 245px; margin-bottom: 12px; }
     .player-sprite { position: absolute; left: 15px; bottom: 5px; width: 175px; height: auto; z-index: 2; object-fit: contain; user-select: none; pointer-events: none; }
     #gameArea.roulette-active .player-sprite { width: 190px; }
@@ -64,7 +64,7 @@
     .boss-sprite.hit { animation: bossHitShake 0.32s ease-out; }
     .bullet-sprite { position: absolute; left: 60px; bottom: 35px; font-size: 24px; z-index: 1; display: none; }
     
-    .hp-container { position: absolute; top: 35px; right: 20px; width: 150px; background: #4c2730; height: 15px; border-radius: 5px; border: 2px solid #eef2ff; }
+    .hp-container { position: absolute; top: 35px; right: 20px; width: 150px; background: #c0392b; height: 15px; border-radius: 5px; border: 2px solid #ecf0f1; }
     #gameArea.roulette-active .hp-container { top: 28px; right: 28px; width: 190px; }
     .hp-bar { width: 100%; height: 100%; background: #2ecc71; transition: width 0.3s; }
     .hp-text { position: absolute; top: -22px; right: 0; font-size: 14px; font-weight: bold; }
@@ -72,14 +72,14 @@
     .magazine-container { display: flex; gap: 10px; margin: 10px 0; }
     .roulette-controls { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 4px 0 10px; width: 92%; }
     .roulette-controls .magazine-container { margin: 0; flex-wrap: nowrap; }
-    .magazine-input { font-size: 24px; width: 66px; height: 66px; text-align: center; border-radius: 12px; border: 2px solid #8189bc; background: linear-gradient(180deg, #f9fbff 0%, #eef1ff 100%); color: #5b4b9a; font-weight: bold; transition: 0.3s; box-sizing: border-box; box-shadow: inset 0 2px 5px rgba(40,48,74,.10), 0 2px 6px rgba(0,0,0,.12); }
+    .magazine-input { font-size: 24px; width: 66px; height: 66px; text-align: center; border-radius: 10px; border: 2px solid #a8c7da; background: #ffffff; color: #7b4ca0; font-weight: bold; transition: 0.3s; box-sizing: border-box; box-shadow: inset 0 2px 4px rgba(70,110,140,.08); }
     .magazine-input.selected { background: #e74c3c; color: white; border: 3px solid #f1c40f; transform: scale(1.15); box-shadow: 0 0 15px #e74c3c; }
     
-    .boss-progress { width: 86%; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 2px 0 6px; padding: 6px 10px; background: rgba(245, 241, 255, 0.18); border: 1px solid rgba(173, 180, 225, 0.45); border-radius: 12px; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,.14); backdrop-filter: blur(2px); }
-    .boss-progress-title { font-size: 13px; font-weight: bold; color: #e8d8ff; margin-right: 4px; white-space: nowrap; }
+    .boss-progress { width: 86%; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 2px 0 6px; padding: 6px 10px; background: #ffffffcc; border: 1px solid #d8e6ef; border-radius: 12px; box-sizing: border-box; box-shadow: 0 3px 10px rgba(70,110,140,.10); }
+    .boss-progress-title { font-size: 13px; font-weight: bold; color: #7b4ca0; margin-right: 4px; white-space: nowrap; }
     .boss-step { position: relative; width: 68px; text-align: center; opacity: 0.48; transition: 0.25s ease; }
     .boss-step img { width: 54px; height: 54px; object-fit: contain; border-radius: 10px; border: 2px solid transparent; background: rgba(255,255,255,0.05); box-sizing: border-box; }
-    .boss-step span { display: block; font-size: 11px; margin-top: 1px; color: #d4dcff; white-space: nowrap; }
+    .boss-step span { display: block; font-size: 11px; margin-top: 1px; color: #526777; white-space: nowrap; }
     .boss-step.current { opacity: 1; transform: translateY(-2px); }
     .boss-step.current img { border-color: #f1c40f; box-shadow: 0 0 10px rgba(241,196,15,0.8); background: rgba(241,196,15,0.08); }
     .boss-step.defeated { opacity: 0.75; filter: grayscale(35%); }
@@ -87,7 +87,7 @@
     .boss-step.defeated .boss-check { display: block; }
     .boss-arrow { color: #7f8c8d; font-size: 18px; margin: 0 -2px; }
 
-    #statsDisplay { margin-bottom: 15px; background: rgba(246, 246, 255, 0.94); border: 1px solid #c7cff1; padding: 15px; border-radius: 14px; width: 80%; font-size: 14px; color:#33405d; box-shadow: 0 6px 14px rgba(20,24,40,.18); }
+    #statsDisplay { margin-bottom: 15px; background: #ffffffd9; border: 1px solid #d8e6ef; padding: 15px; border-radius: 12px; width: 80%; font-size: 14px; box-shadow: 0 4px 12px rgba(70,110,140,.10); }
     #stdDevBarContainer { width: 100%; height: 15px; background: #bdc3c7; border-radius: 10px; margin-top: 10px; overflow: hidden; }
     #stdDevBar { height: 100%; width: 0%; background: #2ecc71; transition: 0.3s; }
     
@@ -99,7 +99,7 @@
     .btn { padding: 12px 25px; font-size: 18px; margin: 8px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; background: #27ae60; }
     .btn-diff { background: #3498db; }
     .btn-diff.selected { outline: 4px solid #f1c40f; transform: scale(1.04); box-shadow: 0 0 12px rgba(241,196,15,0.6); }
-    .intro-guide { width: 82%; max-width: 500px; background: rgba(255,250,245,0.78); border: 1px solid rgba(211,176,139,0.65); border-radius: 14px; padding: 14px 18px; line-height: 1.7; margin: 8px 0; color:#5b4736; box-shadow: 0 4px 10px rgba(126,98,73,.10); }
+    .intro-guide { width: 82%; max-width: 500px; background: rgba(255,255,255,0.08); border-radius: 12px; padding: 14px 18px; line-height: 1.7; margin: 8px 0; }
     .start-btn { background: #27ae60; font-size: 22px; padding: 14px 38px; margin-top: 16px; }
     .back-btn { display: inline-block; margin-top: 40px; padding: 10px 20px; background: linear-gradient(180deg, #90b2c5 0%, #7899ac 100%); color: white; text-decoration: none; border-radius: 10px; font-weight: bold; cursor: pointer; border: none; box-shadow: 0 4px 10px rgba(70,110,140,.18); }
     .legend-row { display:flex; align-items:center; gap:8px; margin:6px 0; }
