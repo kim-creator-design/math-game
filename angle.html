@@ -11,6 +11,7 @@
     
     #gameArea { position: relative; display: inline-block; margin-top: 10px; }
     canvas { background: #4cd137; border-radius: 10px; border: 4px solid #dcdde1; box-shadow: inset 0 0 50px rgba(0,0,0,0.2); cursor: pointer; }
+    #shotEffect { position:absolute; left:50%; top:48%; transform:translate(-50%,-50%) scale(0.8); font-size:56px; font-weight:900; letter-spacing:-1px; opacity:0; pointer-events:none; z-index:12; text-shadow:0 3px 10px rgba(0,0,0,0.28); transition:opacity 0.18s ease, transform 0.18s ease; }
     
     .menu { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(47, 54, 64, 0.9); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; }
     
@@ -22,6 +23,8 @@
     .btn-play { background: #3498db; margin-top: 16px; }
     .btn-selected { outline: 4px solid #fbc531; transform: scale(1.04); box-shadow: 0 0 14px rgba(251,197,49,0.65); }
     .intro-box { width: 82%; max-width: 500px; background: rgba(255,255,255,0.08); border-radius: 12px; padding: 14px 18px; margin-bottom: 8px; line-height: 1.65; }
+    .shot-goal { color:#ffe66d; }
+    .shot-save { color:#8fd3ff; }
     .record-box { color: #fbc531; font-weight: bold; margin: 8px 0 2px; font-size: 17px; }
     
     #hud { display: flex; justify-content: space-between; font-size: 22px; font-weight: bold; margin-bottom: 10px; padding: 0 20px; color: #fbc531; }
@@ -87,6 +90,8 @@
                 <button class="btn btn-play" onclick="startSelectedGame()">▶ 플레이</button>
             </div>
             
+            <div id="shotEffect"></div>
+
             <div id="resultScreen" class="menu" style="display: none;">
                 <h2 style="color: #fbc531; font-size: 40px;">경기 종료!</h2>
                 <h3 id="finalScore" style="font-size: 30px;">총 0골 달성</h3>
@@ -106,16 +111,17 @@ window.onload = function() {
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     
-    // 안전한 골키퍼 이미지 로딩
+    // 골키퍼/키커 이미지 로딩
     let isGkImageLoaded = false;
+    let isKickerImageLoaded = false;
     const gkImage = new Image();
-    gkImage.onload = function() {
-        isGkImageLoaded = true; // 성공적으로 불러왔을 때만 true
-    };
-    gkImage.onerror = function() {
-        isGkImageLoaded = false; // 실패하면 에러를 뱉지 않고 그냥 기본 이모지를 쓰도록 설정
-    };
-    gkImage.src = "화면 캡처 2026-09-02 141843.jpg";
+    const kickerImage = new Image();
+    gkImage.onload = function() { isGkImageLoaded = true; };
+    gkImage.onerror = function() { isGkImageLoaded = false; };
+    kickerImage.onload = function() { isKickerImageLoaded = true; };
+    kickerImage.onerror = function() { isKickerImageLoaded = false; };
+    gkImage.src = "goalkeeper_front.png";
+    kickerImage.src = "kicker_rear.png";
     
     let state = "MENU"; 
     let difficulty = "easy";
@@ -130,7 +136,10 @@ window.onload = function() {
     const goalLeft = 200, goalRight = 400, goalY = 60;
     let player = { x: 300, y: 400 };
     let ball = { x: 300, y: 400, vx: 0, vy: 0 };
-    let gk = { x: 300, y: 65, width: 45, speed: 0, targetX: 300 }; 
+    let gk = { x: 300, y: 68, width: 54, height: 84, speed: 0, targetX: 300, reactX: 0, reactTilt: 0, reactScale: 1 }; 
+    let ballTrail = [];
+    let shotEffectTimer = null;
+    let gkReactTimer = null;
     
     let aimAngle = 0;
     let power = 0;
@@ -142,6 +151,36 @@ window.onload = function() {
     let playerDir = 1;
     let aimT = 0.5; 
     let aimDir = 1;
+
+    function showShotEffect(textValue, className) {
+        const el = document.getElementById("shotEffect");
+        el.className = className;
+        el.innerText = textValue;
+        el.style.opacity = "1";
+        el.style.transform = "translate(-50%, -50%) scale(1)";
+        if (shotEffectTimer) clearTimeout(shotEffectTimer);
+        shotEffectTimer = setTimeout(() => {
+            el.style.opacity = "0";
+            el.style.transform = "translate(-50%, -50%) scale(0.8)";
+        }, 700);
+    }
+
+    function triggerKeeperReaction(kind) {
+        gk.reactScale = 1.02;
+        if (kind === "save") {
+            gk.reactX = (ball.x < gk.x) ? -16 : 16;
+            gk.reactTilt = (ball.x < gk.x) ? -0.12 : 0.12;
+        } else {
+            gk.reactX = (ball.x < gk.x) ? 10 : -10;
+            gk.reactTilt = (ball.x < gk.x) ? 0.08 : -0.08;
+        }
+        if (gkReactTimer) clearTimeout(gkReactTimer);
+        gkReactTimer = setTimeout(() => {
+            gk.reactX = 0;
+            gk.reactTilt = 0;
+            gk.reactScale = 1;
+        }, 220);
+    }
 
     function getBestRecord(diff) {
         return parseInt(localStorage.getItem(recordKeys[diff]) || "0", 10);
@@ -229,6 +268,8 @@ window.onload = function() {
         aimT = 0.5; 
         aimDir = 1;
         
+        ballTrail = [];
+        gk.reactX = 0; gk.reactTilt = 0; gk.reactScale = 1;
         state = "AIMING";
     }
 
@@ -266,20 +307,24 @@ window.onload = function() {
 
     function update() {
         if (difficulty === "normal") {
-            gk.x = 300 + Math.sin(Date.now() / 300) * 80;
+            gk.x = 300 + Math.sin(Date.now() / 330) * 74;
         } else if (difficulty === "hard") {
             if (Math.abs(gk.x - gk.targetX) < 10) {
                 if (gk.targetX <= 300) {
-                    gk.targetX = 360 + Math.random() * 40; 
+                    gk.targetX = 352 + Math.random() * 22; 
                 } else {
-                    gk.targetX = 200 + Math.random() * 40; 
+                    gk.targetX = 226 + Math.random() * 22; 
                 }
-                gk.speed = 5 + Math.random() * 4; 
+                gk.speed = 4.5 + Math.random() * 3.6; 
             }
             if (gk.x < gk.targetX) gk.x += gk.speed;
             else gk.x -= gk.speed;
         } else {
             gk.x = 300; 
+        }
+
+        if (state !== "SHOOTING") {
+            ballTrail = [];
         }
 
         if (state === "AIMING") {
@@ -306,6 +351,8 @@ window.onload = function() {
             if (power >= 100 || power <= 0) powerDir *= -1;
         }
         else if (state === "SHOOTING") {
+            ballTrail.unshift({ x: ball.x, y: ball.y, r: 16, a: 0.36 });
+            if (ballTrail.length > 6) ballTrail.pop();
             ball.x += ball.vx;
             ball.y += ball.vy;
             
@@ -318,10 +365,13 @@ window.onload = function() {
                 setTimeout(resetPlayer, 1000);
             }
 
-            if (ball.y <= goalY + 15 && ball.y >= goalY - 10) {
-                if (Math.abs(ball.x - gk.x) < 35) { 
-                    setMessage("✋ 골키퍼 선방!");
-                    ball.vy *= -0.5; 
+            if (ball.y <= goalY + 18 && ball.y >= goalY - 16) {
+                if (Math.abs(ball.x - gk.x) < 43) { 
+                    setMessage("선방!");
+                    showShotEffect("선방!", "shot-save");
+                    triggerKeeperReaction("save");
+                    ball.vy *= -0.55; 
+                    ball.vx *= 0.82;
                     state = "RESULT";
                     setTimeout(resetPlayer, 1000);
                 }
@@ -329,11 +379,13 @@ window.onload = function() {
 
             if (ball.y <= goalY && state === "SHOOTING") {
                 if (power > 85) { 
-                    setMessage("⚾ 홈런! 너무 쎄게 찼습니다!");
+                    setMessage("❌ 홈런! 너무 세게 찼습니다!");
                 } else if (ball.x > goalLeft && ball.x < goalRight) {
                     score++;
                     document.getElementById("scoreDisplay").innerText = `누적: ${score} 골`;
-                    setMessage("🎉 GOAL!!");
+                    setMessage("골!");
+                    showShotEffect("골!", "shot-goal");
+                    triggerKeeperReaction("goal");
                 } else {
                     setMessage("❌ 노골! 빗나갔습니다.");
                 }
@@ -416,20 +468,44 @@ window.onload = function() {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
-        // 에러 방지: 성공적으로 이미지를 불러왔을 때만 그려주고, 아니면 기본 이모지로 대체
+        if (ballTrail.length) {
+            for (let i = 0; i < ballTrail.length; i++) {
+                const t = ballTrail[i];
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, t.a - i * 0.05);
+                ctx.beginPath();
+                ctx.arc(t.x, t.y, Math.max(6, t.r - i * 1.5), 0, Math.PI * 2);
+                ctx.fillStyle = i < 3 ? "rgba(255,255,255,0.9)" : "rgba(255,235,150,0.65)";
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // 골키퍼
         if (isGkImageLoaded) {
-            ctx.drawImage(gkImage, gk.x - 30, gk.y - 35, 60, 70);
+            ctx.save();
+            ctx.translate(gk.x + gk.reactX, gk.y);
+            ctx.rotate(gk.reactTilt);
+            ctx.scale(gk.reactScale, gk.reactScale);
+            ctx.drawImage(gkImage, -gk.width, -gk.height / 2, gk.width * 2, gk.height);
+            ctx.restore();
         } else {
-            ctx.font = "50px Arial";
+            ctx.font = "60px Arial";
             ctx.fillText("🧍‍♂️", gk.x, gk.y);
         }
 
+        // 키커
         if (state === "AIMING" || state === "POWERING") {
-            ctx.font = "55px Arial";
-            ctx.fillText("🏃", player.x - 25, player.y - 15);
+            if (isKickerImageLoaded) {
+                ctx.drawImage(kickerImage, player.x - 48, player.y - 68, 96, 132);
+            } else {
+                ctx.font = "55px Arial";
+                ctx.fillText("🏃", player.x - 25, player.y - 15);
+            }
         }
 
-        ctx.font = "40px Arial";
+        // 공
+        ctx.font = "38px Arial";
         ctx.fillText("⚽", ball.x, ball.y);
     }
 };
