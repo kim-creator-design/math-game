@@ -495,7 +495,7 @@ window.onload = function() {
         }
 
         // 키커
-        if (state === "AIMING" || state === "POWERING") {
+        if (state === "AIMING" || state === "POWERING" || state === "SHOOTING" || state === "RESULT") {
             if (isKickerImageLoaded) {
                 ctx.drawImage(kickerImage, player.x - 48, player.y - 68, 96, 132);
             } else {
