@@ -133,7 +133,10 @@ window.onload = function() {
     let timerId;
     let animId;
     
-    const goalLeft = 200, goalRight = 400, goalY = 60;
+    const goalLeft = 180, goalRight = 420, goalY = 60;
+    const goalWidth = goalRight - goalLeft;
+    const goalPostWidth = 12;
+    const goalHeight = 20;
     let player = { x: 300, y: 400 };
     let ball = { x: 300, y: 400, vx: 0, vy: 0 };
     let gk = { x: 300, y: 68, width: 54, height: 84, speed: 0, targetX: 300, reactX: 0, reactTilt: 0, reactScale: 1 }; 
@@ -402,9 +405,12 @@ window.onload = function() {
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        ctx.strokeStyle = "rgba(255,255,255,0.5)";
+        const goalBoxLeft = goalLeft - 80;
+        const goalBoxWidth = goalWidth + 160;
+
+        ctx.strokeStyle = "rgba(255,255,255,0.45)";
         ctx.lineWidth = 3;
-        ctx.strokeRect(100, -10, 400, 150);
+        ctx.strokeRect(goalBoxLeft, -10, goalBoxWidth, 150);
         ctx.beginPath();
         ctx.arc(300, 140, 60, 0, Math.PI, false);
         ctx.stroke();
@@ -434,12 +440,59 @@ window.onload = function() {
             ctx.stroke();
         }
 
-        ctx.fillStyle = "#fff";
-        ctx.fillRect(goalLeft - 5, goalY - 10, 10, 20);
-        ctx.fillRect(goalRight - 5, goalY - 10, 10, 20);
-        
-        ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-        ctx.fillRect(goalLeft, goalY - 10, 200, 10); 
+        // 업그레이드된 골대 그리기
+        const goalTop = goalY - goalHeight / 2;
+        const netDepth = 36;
+
+        // 골망 내부 배경
+        ctx.fillStyle = "rgba(255,255,255,0.14)";
+        ctx.fillRect(goalLeft, goalTop, goalWidth, netDepth);
+
+        // 골망 세로줄
+        ctx.strokeStyle = "rgba(255,255,255,0.22)";
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 10; i++) {
+            const x = goalLeft + (goalWidth / 10) * i;
+            ctx.beginPath();
+            ctx.moveTo(x, goalTop);
+            ctx.lineTo(x, goalTop + netDepth);
+            ctx.stroke();
+        }
+
+        // 골망 가로줄
+        for (let i = 0; i <= 4; i++) {
+            const y = goalTop + (netDepth / 4) * i;
+            ctx.beginPath();
+            ctx.moveTo(goalLeft, y);
+            ctx.lineTo(goalRight, y);
+            ctx.stroke();
+        }
+
+        // 골대 그림자
+        ctx.fillStyle = "rgba(0,0,0,0.18)";
+        ctx.fillRect(goalLeft + 4, goalTop + 4, goalWidth, goalPostWidth);
+        ctx.fillRect(goalLeft + 4, goalTop + 4, goalPostWidth, goalHeight + netDepth - 4);
+        ctx.fillRect(goalRight - goalPostWidth + 4, goalTop + 4, goalPostWidth, goalHeight + netDepth - 4);
+
+        // 골대 기둥과 크로스바
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(goalLeft - goalPostWidth / 2, goalTop, goalPostWidth, goalHeight + netDepth);
+        ctx.fillRect(goalRight - goalPostWidth / 2, goalTop, goalPostWidth, goalHeight + netDepth);
+        ctx.fillRect(goalLeft - goalPostWidth / 2, goalTop, goalWidth + goalPostWidth, goalPostWidth);
+
+        // 골대 하이라이트
+        ctx.fillStyle = "rgba(255,255,255,0.45)";
+        ctx.fillRect(goalLeft - goalPostWidth / 2 + 2, goalTop + 2, goalWidth + goalPostWidth - 4, 3);
+        ctx.fillRect(goalLeft - goalPostWidth / 2 + 2, goalTop + 2, 3, goalHeight + netDepth - 4);
+        ctx.fillRect(goalRight + goalPostWidth / 2 - 5, goalTop + 2, 3, goalHeight + netDepth - 4);
+
+        // 골라인 강조
+        ctx.strokeStyle = "rgba(255,255,255,0.9)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(goalLeft - 20, goalTop + netDepth + 6);
+        ctx.lineTo(goalRight + 20, goalTop + netDepth + 6);
+        ctx.stroke();
 
         if (state === "AIMING" || state === "POWERING") {
             ctx.beginPath();
